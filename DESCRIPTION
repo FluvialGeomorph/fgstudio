@@ -1,0 +1,40 @@
+Package: fgstudio
+Title: FluvialGeomorph Studio
+Version: 0.0.0.9007
+Authors@R: c(
+    person("Michael", "Dougherty", , "Michael.P.Dougherty@usace.army.mil", role = "aut",
+           comment = c(ORCID = "0000-0002-1465-5927")),
+    person("Christopher", "Haring", , "Christopher.P.Haring@usace.army.mil", role = "aut"),
+    person("Barrie", "Chileen Martinez", , "Barrie.V.Chileen@usace.army.mil", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-6960-8167")),
+    person("Thomas", "Darby", role = "rev"),
+    person("Davi", "Michl", role = "rev")
+  )
+Description: A browser workspace for defining FluvialGeomorph studies.
+    Provides a modular Shiny interface to shared fluvgeo capabilities,
+    beginning with durable local Study Area drafts.
+License: CC0
+URL: https://github.com/FluvialGeomorph/fgstudio
+BugReports: https://github.com/FluvialGeomorph/fgstudio/issues
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Roxygen: list(markdown = TRUE)
+Suggests: 
+    pkgload,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Imports: 
+    bslib (>= 0.9.0),
+    callr,
+    fluvgeo (>= 2026.09.14.9021),
+    httr2,
+    htmltools,
+    htmlwidgets,
+    leafem (>= 0.2.3),
+    leaflet (>= 2.2.3),
+    leaflet.extras (>= 2.0.2),
+    openssl,
+    sf,
+    shiny (>= 1.8.1)
+Config/roxygen2/version: 8.1.0

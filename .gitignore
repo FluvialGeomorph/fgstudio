@@ -1,0 +1,8 @@
+.local-data/
+dev/local-library/
+dev/check-output/
+*.Rcheck/
+*.tar.gz
+.Rhistory
+.RData
+.Renviron
