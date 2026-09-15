@@ -9,13 +9,11 @@ fgstudio_app <- function(data_dir = file.path(getwd(), ".local-data")) {
   ui <- bslib::page_fluid(
     title = "FluvialGeomorph Studio",
     theme = bslib::bs_theme(version = 5, primary = "#245c4f"),
-    shiny::div(class = "container-xl py-4",
+    shiny::div(class = "container-fluid py-2",
       shiny::tags$header(
         shiny::p("FLUVIALGEOMORPH STUDIO", class = "text-uppercase text-body-secondary mb-1"),
-        shiny::tags$h1("Define your Study Area"),
-        shiny::p("A working home for your study, from its first question to its eventual analysis.",
-          class = "lead")),
-      shiny::div(class = "alert alert-light border",
+        shiny::tags$h1("Define your Study Area", class = "h3 mb-1")),
+      shiny::div(class = "small text-body-secondary mb-2",
         "Development preview | Local storage | Not connected to FGDB"),
       mod_study_ui("study"),
       shiny::tags$footer(class = "text-body-secondary mt-3 small",

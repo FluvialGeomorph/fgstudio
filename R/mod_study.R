@@ -1,22 +1,23 @@
 mod_study_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::layout_columns(
-    col_widths = c(4, 8),
+    col_widths = c(3, 9),
     bslib::card(
-      bslib::card_header("1. Start a Study Area"),
-      shiny::p("Give your study a working name. Its geographic scope can come next."),
-      shiny::textInput(ns("name"), "Study Area name", placeholder = "e.g., Papillion Creek"),
-      shiny::textAreaInput(ns("notes"), "Purpose / customer question (optional)",
-        placeholder = "What do you want to understand about this study area?", rows = 4),
-      shiny::actionButton(ns("create"), "Create Study Area", class = "btn-primary"),
-      shiny::uiOutput(ns("message")),
-      shiny::tags$hr(),
-      shiny::tags$h3("Continue a saved study", class = "h5"),
-      shiny::selectInput(ns("saved"), "Saved in this local workspace", choices = character()),
-      bslib::layout_columns(
-        shiny::actionButton(ns("open"), "Open study"),
-        shiny::actionButton(ns("refresh"), "Refresh list")),
-      shiny::uiOutput(ns("catalog_note"))
+      bslib::card_header("Study workspace"),
+      shiny::tabsetPanel(id = ns("workspace_task"), type = "pills", selected = "new",
+        shiny::tabPanel("New", value = "new",
+          shiny::textInput(ns("name"), "Study Area name", placeholder = "e.g., Papillion Creek"),
+          shiny::tags$details(class = "small mb-2", shiny::tags$summary("Purpose / customer question (optional)"),
+            shiny::textAreaInput(ns("notes"), "Purpose",
+              placeholder = "What do you want to understand about this study area?", rows = 2)),
+          shiny::actionButton(ns("create"), "Create Study Area", class = "btn-primary btn-sm")),
+        shiny::tabPanel("Open", value = "open",
+          shiny::selectInput(ns("saved"), "Saved studies", choices = character()),
+          shiny::div(class = "d-flex gap-2 flex-wrap",
+            shiny::actionButton(ns("open"), "Open study", class = "btn-primary btn-sm"),
+            shiny::actionButton(ns("refresh"), "Refresh list", class = "btn-outline-secondary btn-sm")),
+          shiny::uiOutput(ns("catalog_note")))),
+      shiny::uiOutput(ns("message"))
     ),
     bslib::card(
       bslib::card_header("Your Study Area"),
@@ -40,8 +41,12 @@ mod_study_server <- function(id, store) {
     streams_editor <- NULL
     editor_key <- NULL
     generation <- 0L
+    pending_selection <- NULL
     shiny::observeEvent(current(), {
       x <- current()
+      selection_draft <- if (!is.null(editor) && !is.null(x) && identical(editor_key, x$key))
+        editor$selection_state() else pending_selection
+      pending_selection <<- NULL
       stream_draft <- if (!is.null(streams_editor) && !is.null(x) && identical(editor_key, x$key))
         streams_editor$draft() else list(names = "", rationale = "")
       if (!is.null(editor)) editor$destroy()
@@ -64,9 +69,9 @@ mod_study_server <- function(id, store) {
           !is.null(active) && identical(active$key, x$key) && identical(active$path, x$path)
         }, on_saved = function(study) {
           current(study)
-          notice(list(kind = "success", text = "Boundary saved. The previous Study Area revision was retained."))
-        })
-      output$boundary_editor <- shiny::renderUI(mod_boundary_ui(session$ns(editor_id)))
+          notice(list(kind = "success", text = "Geometry saved. Earlier revisions were retained."))
+        }, selection_draft = selection_draft)
+      output$boundary_editor <- shiny::renderUI(mod_boundary_ui(session$ns(editor_id), selection_draft = selection_draft, study = x))
       streams_id <- paste0("streams_", generation)
       streams_editor <<- mod_streams_server(streams_id, x, store,
         is_active = function() {
@@ -94,6 +99,7 @@ mod_study_server <- function(id, store) {
         current(study)
         notice(list(kind = "success", text = "Study Area saved and reopened from local storage."))
         refresh(study$key)
+        shiny::updateTabsetPanel(session, "workspace_task", selected = "open")
       }, error = function(e) {
         # Avoid exposing paths or database internals in user-facing errors.
         notice(list(kind = "danger", text = paste(
@@ -104,14 +110,16 @@ mod_study_server <- function(id, store) {
     }
     shiny::observeEvent(input$create, {
       if (!is.null(current())) {
-        notice(list(kind = "info", text = "A study is already open. Choose 'Start another study' before creating a new one."))
+        notice(list(kind = "info", text = "Choose Workspace - New to start a different study."))
       } else if (is.null(input$name) || !nzchar(trimws(input$name))) {
         notice(list(kind = "warning", text = "Enter a Study Area name to begin."))
       } else {
+        pending_selection <<- if (is.null(editor)) NULL else editor$selection_state()
         attempt(function() store$create(input$name, if (is.null(input$notes)) "" else input$notes))
       }
     }, ignoreInit = TRUE)
     shiny::observeEvent(input$open, {
+      pending_selection <<- NULL
       if (is.null(input$saved) || !nzchar(input$saved)) {
         notice(list(kind = "warning", text = "Choose a saved Study Area first."))
       } else {
@@ -154,11 +162,28 @@ mod_study_server <- function(id, store) {
         shiny::removeModal()
       }, error = function(e) rename_error("Name could not be saved. Reopen the study before retrying; earlier revisions were retained."))
     }, ignoreInit = TRUE)
-    shiny::observeEvent(input$another, {
+    start_new <- function() {
+      pending_selection <<- NULL
       current(NULL)
       notice(NULL)
       shiny::updateTextInput(session, "name", value = "")
       shiny::updateTextAreaInput(session, "notes", value = "")
+    }
+    shiny::observeEvent(input$workspace_task, {
+      if (!identical(input$workspace_task, "new") || is.null(current())) return()
+      if ((!is.null(editor) && editor$has_unsaved()) ||
+          (!is.null(streams_editor) && any(nzchar(unlist(streams_editor$draft()))))) {
+        shiny::updateTabsetPanel(session, "workspace_task", selected = "open")
+        shiny::showModal(shiny::modalDialog(title = "Start a new study?",
+          "Your saved study is safe. Unsaved drawing, selections and form entries will be discarded.",
+          footer = shiny::tagList(shiny::modalButton("Keep working"),
+            shiny::actionButton(session$ns("confirm_new"), "Discard draft and start new", class = "btn-primary"))))
+      } else start_new()
+    }, ignoreInit = TRUE)
+    shiny::observeEvent(input$confirm_new, {
+      start_new()
+      shiny::removeModal()
+      shiny::updateTabsetPanel(session, "workspace_task", selected = "new")
     }, ignoreInit = TRUE)
     shiny::observeEvent(input$edit_purpose, {
       x <- current()
@@ -206,36 +231,19 @@ mod_study_server <- function(id, store) {
     })
     output$summary <- shiny::renderUI({
       x <- current()
-      if (is.null(x)) return(shiny::tagList(
-        shiny::tags$h2("Begin with the study, not the files"),
-        shiny::p("Create a Study Area or open a saved draft to continue."),
-        shiny::tags$h3("A small first step", class = "h5"),
-        shiny::p("No DEM, coordinate system, boundary or completed project hierarchy is needed to start."),
-        shiny::p("This first working increment saves your study definition. It does not run an L1 analysis.")))
+      if (is.null(x)) return(compact_table(data.frame(Step = c("Explore", "Create", "Save"),
+        Action = c("Find and select candidates below", "Name the study in New; map/results/choices carry forward", "Preview and save the boundary"))))
       purpose <- if (is.null(x$purpose) || is.na(x$purpose) || !nzchar(x$purpose)) "No purpose recorded yet." else x$purpose
       shiny::tagList(
-        shiny::span("Saved draft", class = "badge text-bg-success"),
         shiny::div(class = "d-flex align-items-baseline gap-3 flex-wrap",
-          shiny::tags$h2(x$name),
-          shiny::actionLink(session$ns("edit_name"), "Edit name")),
-        shiny::p(purpose, style = "white-space: pre-wrap; overflow-wrap: anywhere;"),
-        shiny::actionLink(session$ns("edit_purpose"), "Edit purpose"),
-        shiny::tags$h3("What is known", class = "h5"),
-        shiny::tags$ul(
-          shiny::tags$li("Your Study Area has a stable identity and a saved local record."),
-          shiny::tags$li("Boundary: ", if (x$boundary) "recorded" else "not defined yet"),
-          shiny::tags$li(sprintf("Recorded: %d Streams, %d Reaches, %d Survey Events.",
-            x$streams, x$reaches, x$events))),
-        bslib::card(
-          bslib::card_header("What comes next"),
-          shiny::p(if (x$streams > 0L) "Your Stream inventory is saved. Next we will define spatial extents and Reach divisions." else
-            "Define the initial Streams using the form below the map. A Study Area boundary may be drawn before or after naming Streams."),
-          shiny::p("Use Explore drainage on the map to compare reference watersheds and channels. Adopting those geometries and defining Reaches are not implemented yet.")),
-        shiny::tags$details(shiny::tags$summary("Saved record details"),
-          if (!is.na(x$notes)) shiny::p(x$notes, style = "white-space: pre-wrap; overflow-wrap: anywhere;"),
-          shiny::p("Study Area ID: ", shiny::tags$code(x$study_id)),
-          shiny::p("Stored as a GeoPackage on the computer running FG Studio. This is not an FGDB submission.")),
-        shiny::actionButton(session$ns("another"), "Start another study")
+          shiny::tags$h2(x$name, class = "h4 mb-0"),
+          shiny::span("Saved draft", class = "badge text-bg-success"),
+          shiny::actionLink(session$ns("edit_name"), "Edit name"),
+          shiny::actionLink(session$ns("edit_purpose"), "Edit purpose")),
+        compact_table(data.frame(Item = c("Purpose", "Boundary", "Streams / Reaches / Surveys", "Next"),
+          Status = c(purpose, if (x$boundary) "Saved - editable" else "Not defined",
+            sprintf("%d / %d / %d", x$streams, x$reaches, x$events),
+            if (x$boundary) "Choose Streams on the map to define a Stream" else "Select or draw a Study Area boundary")))
       )
     })
     list(current = shiny::reactive(current()), notice = shiny::reactive(notice()))

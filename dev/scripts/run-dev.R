@@ -1,4 +1,6 @@
-# Run from the fgstudio root. No changes to shared/production libraries.
+# Run from the fgstudio root in a FRESH R process (run-dev.ps1).
+# Never source this script in an R process used for tests or mocked bindings.
+# No changes to shared/production libraries.
 if (!file.exists("DESCRIPTION") || read.dcf("DESCRIPTION")[1, "Package"] != "fgstudio")
   stop("Run this script from the fgstudio repository root.")
 lib <- normalizePath("dev/local-library", winslash = "/", mustWork = TRUE)

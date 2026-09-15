@@ -1,17 +1,33 @@
 drainage_groups <- c(huc12 = "HUC12", basin = "Upstream basin", upstream = "Upstream channels", downstream = "Downstream path")
 
+service_activity_ui <- function(operation, seconds = 0) {
+  shiny::div(role = "status", `aria-live` = "polite",
+    shiny::strong(if (operation == "locate") "USGS: snapping to stream" else "USGS: retrieving drainage features"),
+    shiny::tags$progress(style = "display:block;width:100%;height:.6rem;", `aria-label` = "Service request in progress"),
+    shiny::span(class = "small", paste0(seconds, " seconds elapsed. Waiting for service response; Cancel is available.")))
+}
+
 drainage_explorer_ui <- function(ns) {
   shiny::tagList(
-    shiny::p("Click near a channel, then Snap to stream. Review the orange channel and snapped point before retrieving its drainage context."),
-    shiny::actionButton(ns("locate_stream"), "Snap to stream", class = "btn-primary"),
+    shiny::uiOutput(ns("workflow_next")),
+    shiny::div(class = "d-flex gap-2 flex-wrap mb-1",
+      shiny::actionButton(ns("locate_stream"), "Snap to stream", class = "btn-primary btn-sm"),
+      shiny::actionButton(ns("get_drainage"), "Explore this stream", class = "btn-primary btn-sm"),
+      shiny::actionButton(ns("cancel_drainage"), "Cancel", class = "btn-outline-secondary btn-sm")),
     shiny::uiOutput(ns("drainage_status")),
     shiny::uiOutput(ns("drainage_failure")),
     shiny::uiOutput(ns("drainage_location")),
-    shiny::numericInput(ns("navigation_km"), "Upstream / downstream search distance (km)", value = 50, min = 1, max = 200),
-    shiny::actionButton(ns("get_drainage"), "Explore this stream", class = "btn-primary"),
-    shiny::actionButton(ns("cancel_drainage"), "Cancel request"),
+    shiny::numericInput(ns("navigation_km"), "Channel search distance (km)", value = 50, min = 1, max = 200, width = "100%"),
+    shiny::conditionalPanel("input.selection_target === 'boundary'", ns = ns,
+      shiny::radioButtons(ns("polygon_action"), NULL,
+        c("Find watersheds" = "point", "Select polygons" = "select"), inline = TRUE)),
+    shiny::conditionalPanel("input.selection_target === 'stream'", ns = ns,
+      shiny::radioButtons(ns("stream_action"), NULL,
+        c("Find channels" = "point", "Select lines" = "select"), inline = TRUE)),
     shiny::uiOutput(ns("drainage_results")),
-    shiny::p(class = "small text-body-secondary", "Exploration only: nothing is saved or assigned to a Study Area, Stream or Reach. Coordinates go to public USGS services. Use only locations appropriate for public services. Requests can be cancelled; each request has a two-minute limit."))
+    shiny::conditionalPanel("input.selection_target === 'boundary'", ns = ns, polygon_selection_ui(ns)),
+    shiny::conditionalPanel("input.selection_target === 'stream'", ns = ns, stream_selection_ui(ns)),
+    shiny::p(class = "small text-body-secondary mb-0", "Public USGS queries: use public locations only."))
 }
 
 launch_drainage_job <- function(operation, argument, distance = 50) {
@@ -23,12 +39,15 @@ launch_drainage_job <- function(operation, argument, distance = 50) {
 # Lives inside the boundary module so exploration and drawing share one map.
 # No storage adapter is passed here: exploration cannot publish project records.
 drainage_explorer <- function(input, output, session, is_active, launch = launch_drainage_job,
-                             clock = Sys.time) {
-  clicked <- shiny::reactiveVal(NULL)
-  located <- shiny::reactiveVal(NULL)
-  result <- shiny::reactiveVal(NULL)
-  status <- shiny::reactiveVal("Select a location on the map to begin.")
+                             clock = Sys.time, polygon_controls = NULL, draft = NULL) {
+  clicked <- shiny::reactiveVal(draft$clicked)
+  located <- shiny::reactiveVal(draft$located)
+  result <- shiny::reactiveVal(draft$result)
+  status <- shiny::reactiveVal(if (is.null(draft$result)) "" else "Previous discovery retained.")
   failure <- shiny::reactiveVal(NULL)
+  busy <- shiny::reactiveVal(NULL)
+  elapsed <- shiny::reactiveVal(0L)
+  notification_id <- session$ns("service_activity")
   job <- NULL
   operation <- NULL
   started <- NULL
@@ -40,13 +59,16 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
       try(job$kill(), silent = TRUE)
       job <<- NULL
     }
+    busy(NULL)
+    shiny::removeNotification(notification_id, session = session)
   }
   clear_layers <- function() {
     m <- proxy()
     for (g in unname(drainage_groups)) m <- leaflet::clearGroup(m, g)
   }
   choose <- function(x) {
-    if (!enabled() || !is.list(x) || !is.numeric(x$lng) || !is.numeric(x$lat) ||
+    selecting <- if (identical(input$selection_target, "stream")) identical(input$stream_action, "select") else identical(input$polygon_action, "select")
+    if (!enabled() || selecting || !is.list(x) || !is.numeric(x$lng) || !is.numeric(x$lat) ||
         length(x$lng) != 1L || length(x$lat) != 1L ||
         !is.finite(x$lng) || !is.finite(x$lat) || abs(x$lng) > 180 || abs(x$lat) > 90) return()
     cancel(); clear_layers()
@@ -57,7 +79,7 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
       leaflet::addCircleMarkers(lng = x$lng, lat = x$lat, group = "Selected location", radius = 6,
         color = "#222222", fillOpacity = 1, label = "Your clicked point",
         options = leaflet::pathOptions(interactive = FALSE))
-    status("Location selected. Snap to stream to identify the nearest mapped channel within 200 m.")
+    status("Location selected.")
   }
   clicking <- shiny::observeEvent(input$map_click, choose(input$map_click), ignoreInit = TRUE)
   shape_clicking <- shiny::observeEvent(input$map_shape_click, choose(input$map_shape_click), ignoreInit = TRUE)
@@ -65,11 +87,17 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
     cancel()
     failure(NULL)
     tryCatch({
+      busy(kind); elapsed(0L)
+      shiny::showNotification(service_activity_ui(kind), id = notification_id,
+        duration = NULL, closeButton = FALSE, session = session)
       job <<- launch(kind, arg, distance)
       operation <<- kind
       started <<- clock()
       status(if (kind == "locate") "Finding a nearby stream..." else "Retrieving HUC12, upstream basin and channel layers...")
-    }, error = function(e) status("The service request could not start. Saved records are unchanged. Please retry."))
+    }, error = function(e) {
+      cancel()
+      status("The service request could not start. Saved records are unchanged. Please retry.")
+    })
   }
   locating <- shiny::observeEvent(input$locate_stream, {
     if (!enabled()) return()
@@ -95,12 +123,11 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
   }, ignoreInit = TRUE)
   mode <- shiny::observeEvent(input$map_mode, {
     if (!identical(input$map_mode, "explore")) {
+      if (!is.null(job)) status("Request stopped when leaving discovery. Saved records are unchanged.")
       cancel()
       clear_layers()
       proxy() |> leaflet::clearGroup("Located stream") |> leaflet::clearGroup("Selected location")
-      clicked(NULL); located(NULL); result(NULL)
-      failure(NULL)
-      status("Select a location on the map to begin.")
+      # Viewing/editing a saved boundary must not discard completed discovery.
     }
   }, ignoreInit = TRUE)
   poll <- function() {
@@ -109,8 +136,15 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
     if (as.numeric(difftime(clock(), started, units = "secs")) > 120) {
       cancel(); status("The USGS request exceeded two minutes and was stopped. Your point is retained; retry the same point. This is not evidence that it was too far from a stream."); return()
     }
+    seconds <- floor(as.numeric(difftime(clock(), started, units = "secs")))
+    if (seconds != shiny::isolate(elapsed())) {
+      elapsed(seconds)
+      shiny::showNotification(service_activity_ui(operation, seconds), id = notification_id,
+        duration = NULL, closeButton = FALSE, session = session)
+    }
     if (job$is_alive()) return()
     done <- job; job <<- NULL
+    cancel()
     tryCatch({
       value <- done$get_result()
       if (operation == "locate") {
@@ -120,20 +154,11 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
           leaflet::addCircleMarkers(data = value$snapped_point, group = "Located stream", radius = 7,
             color = "#d95f02", fillOpacity = 1, label = "Snapped stream location",
             options = leaflet::pathOptions(interactive = FALSE))
-        status("Review the orange channel. If it is the intended stream, select Explore this stream; otherwise click again.")
+        status("Stream located; highlighted in orange.")
       } else {
         result(value)
-        colors <- c(huc12 = "#756bb1", basin = "#31a354", upstream = "#3182bd", downstream = "#de2d26")
         m <- proxy()
-        for (key in names(drainage_groups)) {
-          shape <- value$layers[[key]]
-          if (is.null(shape)) next
-          if (key %in% c("huc12", "basin")) {
-            m <- leaflet::addPolygons(m, data = shape, group = drainage_groups[[key]], color = colors[[key]],
-              weight = 2, fillOpacity = 0.08, options = leaflet::pathOptions(interactive = FALSE))
-          } else m <- leaflet::addPolylines(m, data = shape, group = drainage_groups[[key]],
-            color = colors[[key]], weight = 3, options = leaflet::pathOptions(interactive = FALSE))
-        }
+        # The context-aware map observer paints the available discovery layers.
         # Keep the reviewed location prominent; never replace the drawing group.
         m <- leaflet::clearGroup(m, "Located stream") |>
           leaflet::addPolylines(data = value$location$flowline, group = "Located stream", color = "#d95f02", weight = 6,
@@ -146,7 +171,8 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
           b <- sf::st_bbox(area)
           leaflet::fitBounds(m, b[[1]], b[[2]], b[[3]], b[[4]])
         }
-        status("Candidate layers are ready to compare. Toggle layers using the map control; no project records were changed.")
+        status(if (all(value$status$status == "available")) "Candidate features loaded. Nothing saved." else
+          "Some requests were incomplete; see each feature list for its outcome.")
       }
     }, error = function(e) {
       # callr's wrapper message includes no useful UI detail; the parent is the backend error.
@@ -158,7 +184,10 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
     })
   }
   polling <- shiny::observe({ shiny::invalidateLater(500, session); poll() })
-  output$drainage_status <- shiny::renderUI(shiny::p(role = "status", status()))
+  output$drainage_status <- shiny::renderUI({
+    if (!is.null(busy())) service_activity_ui(busy(), elapsed()) else
+      shiny::p(class = "small mb-1", role = "status", status())
+  })
   output$drainage_failure <- shiny::renderUI({
     x <- failure()
     if (!is.null(x)) shiny::tags$details(shiny::tags$summary("Last failed request details"),
@@ -166,38 +195,20 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
   })
   output$drainage_location <- shiny::renderUI({
     x <- located()
-    if (!is.null(x)) shiny::p(sprintf("Mapped stream ID %s; snap distance %.0f m. Orange marks the service's stream location; black marks your click.", x$comid, x$snap_distance_m))
+    if (!is.null(x)) compact_table(data.frame(`Located COMID` = x$comid,
+      `Snap distance (m)` = round(x$snap_distance_m), check.names = FALSE))
   })
   output$drainage_results <- shiny::renderUI({
     x <- result()
-    if (is.null(x)) return(NULL)
-    questions <- c(huc12 = "Would this named hydrologic unit be a useful Study Area or Stream area?",
-      basin = "Does this upstream drainage area match the scope of your question?",
-      upstream = "Which upstream channels belong in your study?", downstream = "How far downstream does the study need to extend?")
-    shiny::tagList(shiny::tags$h4("Use these candidates to frame your study", class = "h6"),
-      shiny::tags$ul(lapply(names(drainage_groups), function(key) {
-        row <- x$status[x$status$layer == key, ]
-        shiny::tags$li(shiny::strong(paste0(drainage_groups[[key]], ": ")),
-          if (row$status == "available") paste(row$features, "reference features.", questions[[key]]) else
-            "Unavailable for this request; this does not establish that no coverage exists.")
-      })),
-      if (!is.null(x$layers$huc12)) {
-        h <- sf::st_drop_geometry(x$layers$huc12)
-        fields <- intersect(c("huc12", "name", "name_huc12", "hutype"), names(h))
-        if (length(fields)) shiny::p(paste(apply(as.data.frame(h[fields]), 1, paste, collapse = " - "), collapse = "; "))
-      },
-      shiny::p(sprintf("HUC12: WBD 2025 at the snapped point. Basin: simplified NHDPlusV2 catchments, not an exact pour-point delineation. Both channel searches are limited to %g km; a complete upstream network is not guaranteed.", x$distance_km)),
-      shiny::p("These alternatives support your next decision; adopting or combining them into saved Study Area/Stream geometry is the next design step."),
-      shiny::tags$details(shiny::tags$summary("Source and request details"),
-        shiny::p("Retrieved: ", x$retrieved_at),
-        shiny::p(paste(x$sources, collapse = "; ")),
-        shiny::tags$ul(lapply(seq_len(nrow(x$status)), function(i) shiny::tags$li(
-          drainage_groups[[x$status$layer[i]]], ": ", x$status$detail[i])))))
+    if (identical(input$selection_target, "stream") && !is.null(polygon_controls))
+      shiny::tagList(shiny::tags$h4("Stream line candidates", class = "h6 mb-1"),
+        polygon_controls[c("upstream", "downstream")]) else drainage_result_ui(x, polygon_controls)
   })
   destroy <- function() {
     alive <<- FALSE; cancel()
     for (o in list(clicking, shape_clicking, locating, fetching, cancelling, mode, polling)) o$destroy()
   }
   session$onSessionEnded(destroy)
-  list(destroy = destroy, poll = poll, clicked = clicked, located = located, result = result, status = status)
+  list(destroy = destroy, poll = poll, clicked = clicked, located = located, result = result, status = status, busy = busy,
+    state = function() shiny::isolate(list(clicked = clicked(), located = located(), result = result())))
 }

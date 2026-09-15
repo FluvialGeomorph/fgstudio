@@ -30,4 +30,10 @@ test_that("worker distinguishes HTTP failure from distance and unknown responses
   expect_equal(e$code,"unresolved")
   expect_match(conditionMessage(e),"does not establish")
   expect_equal(unserialize(serialize(e,NULL))$details,e$details)
+  testthat::local_mocked_bindings(locate_drainage_stream = function(...) {
+    stop(errorCondition("Empty response", code = "no_features"))
+  }, .package="fluvgeo")
+  e <- tryCatch(drainage_request("locate",NULL),error=identity)
+  expect_equal(e$code,"no_features")
+  expect_match(conditionMessage(e),"returned no matching features")
 })

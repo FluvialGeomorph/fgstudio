@@ -33,7 +33,7 @@ test_that("name form validates and refreshes the saved study", {
     expect_identical(current()$study_id, original$study_id)
     expect_match(names(catalog_state()$choices), "Updated")
     expect_null(rename_target())
-    session$setInputs(another = 1, save_name = 3)
+    session$setInputs(workspace_task = "new", save_name = 3)
     expect_null(current())
   })
 })

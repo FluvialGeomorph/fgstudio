@@ -81,10 +81,22 @@ local_study_store <- function(data_dir) {
     read(key)
   }
   save_boundary <- function(key, boundary, expected_path) {
+    check_boundary(key, boundary, expected_path)
     revise(key, expected_path, study_area_boundary = boundary,
       add_note = paste("Drawn and explicitly saved by the user in FG Studio as the working",
         "Study Area extent. Browser coordinates are WGS 84 longitude/latitude;",
         "this does not establish the terrain analysis CRS or authorize clipping."))
+  }
+  check_boundary <- function(key, boundary, expected_path) {
+    if (!identical(context_path(key), expected_path))
+      stop("This study has a newer revision. Reopen it before saving.", call. = FALSE)
+    context <- fluvgeo::read_study_context(expected_path)
+    check <- fluvgeo::check_study_area_containment(boundary, context$streams, context$reaches)
+    outside <- check[check$status == "outside", ]
+    if (nrow(outside)) stop(paste("Boundary would exclude saved areas:",
+      paste(paste(outside$level, outside$name), collapse = "; "),
+      ". Enlarge the boundary; child areas were not changed."), call. = FALSE)
+    invisible(check)
   }
   rename <- function(key, name, expected_path) {
     if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(trimws(name)))
@@ -94,6 +106,36 @@ local_study_store <- function(data_dir) {
       stop("This study has a newer revision. Reopen it before saving.", call. = FALSE)
     if (identical(current$name, trimws(name))) return(current)
     revise(key, expected_path, study_area_name = trimws(name))
+  }
+  save_selected_boundary <- function(key, sources, expected_path, rationale = "") {
+    if (!identical(context_path(key), expected_path))
+      stop("This study has a newer revision. Reopen it before saving.", call. = FALSE)
+    required <- c("candidate_key", "source_type", "source_id", "name", "retrieved_at", "source_description")
+    if (!inherits(sources, "sf") || !all(required %in% names(sources)) ||
+        anyDuplicated(sources$candidate_key)) stop("Supply the reviewed source polygons.", call. = FALSE)
+    if (!is.character(rationale) || length(rationale) != 1L || is.na(rationale))
+      stop("Rationale must be text.", call. = FALSE)
+    combined <- fluvgeo::combine_study_area_polygons(sources)
+    check_boundary(key, combined$boundary, expected_path)
+    sources$selected_at <- format(Sys.time(), tz = "UTC", usetz = TRUE)
+    # Publish evidence first. A later context failure may leave an unreferenced
+    # evidence file, but cannot change prior revisions or falsely claim a save.
+    evidence <- file.path(dirname(expected_path), paste0("boundary-selection-",
+      paste(format(openssl::rand_bytes(16)), collapse = ""), ".gpkg"))
+    if (file.exists(evidence)) stop("Evidence destination already exists.", call. = FALSE)
+    sf::st_write(sources, evidence, layer = "selected_polygons", quiet = TRUE, append = FALSE)
+    retained <- sf::st_read(evidence, layer = "selected_polygons", quiet = TRUE)
+    if (nrow(retained) != nrow(sources) || !identical(retained$candidate_key, sources$candidate_key))
+      stop("Source evidence could not be verified; boundary was not saved.", call. = FALSE)
+    equal <- sf::st_equals(retained, sources)
+    if (!all(vapply(seq_len(nrow(sources)), function(i) i %in% equal[[i]], logical(1))))
+      stop("Source geometry changed during storage; boundary was not saved.", call. = FALSE)
+    digest <- local({ con <- file(evidence, "rb"); on.exit(close(con)); as.character(openssl::sha256(con)) })
+    revise(key, expected_path, study_area_boundary = combined$boundary,
+      add_note = paste0("Explicitly selected and reviewed in FG Studio: spherical union of ",
+        nrow(sources), " reference polygons, retaining holes and disconnected parts. ",
+        "Source geometry and identifiers: ", basename(evidence), " / selected_polygons; SHA256 ", digest,
+        ". No buffering, repair, clipping or analysis CRS assignment. ", trimws(rationale)))
   }
   set_purpose <- function(key, purpose, expected_path) {
     if (!is.character(purpose) || length(purpose) != 1L || is.na(purpose))
@@ -109,6 +151,12 @@ local_study_store <- function(data_dir) {
     revise(key, expected_path, streams = data.frame(stream_name = names),
       add_note = rationale, writer = fluvgeo::define_study_streams)
   }
+  save_stream <- function(key, lines, name, distance, unit, rationale, expected_path, stream_id = NULL) {
+    revise(key, expected_path, lines = lines, stream_name = name, distance = distance,
+      unit = unit, add_note = rationale, stream_id = stream_id,
+      writer = fluvgeo::add_study_stream_corridor)
+  }
   list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
-    rename = rename, set_purpose = set_purpose, define_streams = define_streams)
+    rename = rename, set_purpose = set_purpose, define_streams = define_streams,
+    save_selected_boundary = save_selected_boundary, save_stream = save_stream)
 }

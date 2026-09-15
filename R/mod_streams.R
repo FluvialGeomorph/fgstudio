@@ -13,20 +13,20 @@ stream_names_input <- function(text) {
 mod_streams_ui <- function(id, study, draft = list(names = "", rationale = "")) {
   ns <- shiny::NS(id)
   bslib::card(
-    bslib::card_header("3. Define Streams"),
-    if (isTRUE(study$can_define_streams)) shiny::tagList(
-      shiny::p("Which Streams belong in this study? Enter the initial set below. Names establish the study inventory; Stream areas and channel lines can be defined separately."),
+    bslib::card_header("3. Saved Stream inventory"),
+    compact_table(data.frame(Step = c("Add Stream", "Next stage"),
+      Action = c("Choose Streams above the map; follow Do next", "Define nested Reaches (next increment)"))),
+    if (isTRUE(study$can_define_streams)) shiny::tags$details(
+      shiny::tags$summary("Optional: record names before geometry"),
+      shiny::p(class = "small", "Planning only. Multiple names-only Streams require their areas together in a later tool. Use the map to save one complete Stream at a time."),
       shiny::textAreaInput(ns("names"), "Stream names (one per line)", value = draft$names,
         placeholder = "Cole Creek\nAnother Creek", rows = 3),
       shiny::textInput(ns("rationale"), "Why these Streams? (optional)", value = draft$rationale,
         placeholder = "For example: Streams requested by the customer"),
-      shiny::p(class = "small text-body-secondary", "Review the full initial list before saving. Adding, renaming or removing Streams after this first save is not implemented yet."),
       shiny::actionButton(ns("save"), "Save Streams", class = "btn-primary")
     ) else if (study$streams > 0L) shiny::tagList(
-      shiny::p(paste("Saved Streams in", study$name)),
       shiny::tableOutput(ns("inventory")),
-      shiny::p("Stream identities and their Study Area links are saved. Next: define the Streams' spatial extents and Reach divisions; names alone do not provide analysis geometry."),
-      shiny::p(class = "small text-body-secondary", "Changing this saved inventory is a later editing step. It will not be replaced by another initial definition.")
+      shiny::p(class = "small text-body-secondary", "Saved spatial Streams are retained when adding another. Editing their lines/areas is a later step.")
     ) else shiny::p("This study already has related hierarchy or network records. Initial Stream definition cannot safely replace them."),
     shiny::uiOutput(ns("status"))
   )

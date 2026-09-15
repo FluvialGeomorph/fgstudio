@@ -1,0 +1,15 @@
+test_that("checkbox additions focus features without jumping on removal or synchronization", {
+  pool <- channel_candidates(stream_test_context())
+  map <- leaflet::leaflet()
+  focused <- focus_checked_features(map,pool,character(),"c101")
+  bounds <- focused$x$fitBounds
+  expect_length(bounds,5)
+  b <- sf::st_bbox(pool[pool$candidate_key=="c101",])
+  expect_equal(unlist(bounds[1:4]),unname(as.numeric(b[c(2,1,4,3)])))
+  expect_equal(bounds[[5]]$maxZoom,16)
+  expect_identical(focus_checked_features(map,pool,"c101","c101"),map)
+  expect_identical(focus_checked_features(map,pool,"c101",character()),map)
+  expect_identical(focus_checked_features(map,pool,character(),"unknown"),map)
+  polygons <- sf::st_sf(candidate_key="p1",geometry=sf::st_geometry(stream_test_parent()))
+  expect_length(focus_checked_features(map,polygons,character(),"p1")$x$fitBounds,5)
+})

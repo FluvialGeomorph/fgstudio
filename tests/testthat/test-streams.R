@@ -87,7 +87,7 @@ test_that("Stream form carries unfinished text across same-study revisions", {
     expect_match(output$streams_editor$html, "Customer choice", fixed = TRUE)
     session$setInputs("streams_2-names" = "Cole Creek", "streams_2-save" = 1)
     expect_equal(current()$streams, 1L)
-    expect_match(output$streams_editor$html, "Saved Streams", fixed = TRUE)
+    expect_match(output$streams_editor$html, "Saved Stream inventory", fixed = TRUE)
     expect_false(grepl("Save Streams", output$streams_editor$html, fixed = TRUE))
   })
 })

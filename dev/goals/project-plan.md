@@ -8,24 +8,50 @@ reuse fluvgeo, identify actual gaps and design QGIS views alongside the new UI.
 
 ## Current slice
 
-The owner saved one Stream each in two studies and now approved drainage
-exploration to inform geographic scope before defining geometry. A map click
-snaps to the nearest mapped stream; the user reviews it and retrieves reference
-HUC12, basin and upstream/downstream channel alternatives. Shared methods live
-in fluvgeo; fgstudio presents them without writing or assigning project records.
-See [the current slice](../features/drainage-exploration.md).
+9011 implemented the owner's requested Stream-selection step: select discovered
+channel lines, supply a name and per-side buffer distance/unit, preview, save,
+and repeat for another Stream. Shared fluvgeo methods own buffering, containment,
+identities and evidence publication. See [the feature record](../features/drainage-exploration.md).
 
-Owner accepted discovery functionality and metadata. Current follow-up adds
-lightweight matching NHDPlusV2 vector-tile guidance and actionable service-failure
-feedback before the next review of adopting/combining candidate geometries.
+9012 responds to owner feedback on that slice: use one View/Study Area/Streams
+selector, context-sensitive Do next guidance, automatic line-selection mode after
+retrieval, and Workspace - New instead of a separate Start another study action.
+Remove non-decision-oriented record/map disclosures from the working screen while
+retaining their data and README guidance. No new backend method or schema change.
+
+9013 adds visible service activity, task-aware layer controls and the owner's
+revised Stream rule: selected lines must be covered by the Study Area, but buffer
+overflow is automatically clipped and disclosed in the preview and saved evidence.
+
+9014 follows owner review: checking a new candidate focuses the map on that
+feature. Fix false clipped-area rejection at slanted boundary intersections in
+the shared backend; keep strict flowline coverage and real outside-area rejection.
+
+9015 corrects a test double leaking into the analyst runtime. The app must start
+in a fresh R process, never the process that ran its tests. Verify test cleanup
+and the real backend before asking the owner to retry the Stream workflow.
 
 ## Next
 
-Owner confirmed drawing and reopening two projects after refresh worked as expected.
-The owner accepted compact map search and the define/update/search interface.
-Current increment: explore and compare drainage candidates. Owner reviews the
-working map, then guides adoption/combination into Study Area and Stream geometry.
-Appending/editing saved Streams and the remaining Study Area boundary entry
-methods remain future bounded increments, not implicit replacements of identity.
+9016 owner correction: clip selected flowlines to the Study Area first, then
+buffer and clip the area. Replace the earlier strict-line rejection rule.
+Geospatial topology must use mature CRS-aware R GIS tools, not raw coordinate
+tests. Preview discloses retained channel length; original selections and
+processed lines are separate evidence. See the current Stream-selection contract.
+
+Owner review: choose Streams, follow Do next from empty discovery to a saved Stream.
+Confirm that the active task and Workspace - New behavior are clear.
+Review a boundary-coincident Stream: preview the clipped buffer, then save.
+Confirm service activity and the available-layer menu. Try editing the parent
+after saving a Stream. Pending Stream choices survive a parent revision but
+require a new preview against its changed boundary.
+
+After owner review, design nested Reach selection using retained Stream lines.
+Editing/removing saved spatial Streams, mixed names-only/spatial inventories,
+cross-Stream overlap rules and network acceptance remain future increments.
 Do not automatically advance into terrain or L1 processing. The app is local-only;
 Enterprise support remains a goal.
+
+Existing active studies are retained. The earlier owner-authorized retirement
+of four test studies remains recoverable under dev/check-output; it is not a
+standing instruction to clear new studies.

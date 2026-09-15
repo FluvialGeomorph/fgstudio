@@ -2,6 +2,14 @@
 
 ## Accepted direction
 
+Owner requirement, 2026-09-15: inside/outside and coincidence analysis must be
+CRS-aware and use mature GIS R tooling. Leaflet's Web Mercator display is not a
+processing CRS. Do not implement raw-coordinate topology in the app or remove
+CRS labels to force planar predicates. The shared backend owns projection,
+clipping, numerical precision and validation. Stream selection now follows
+clip lines -> buffer retained portions -> clip area; see
+[the current evidence contract](../schemas/stream-selection.md).
+
 User-directed, 2026-09-14: create fgstudio independently from ohwm2, using working
 increments to design the new-project-to-L1 experience. Keep existing apps and the
 ArcGIS toolbox intact. Backend capabilities belong to fluvgeo and should also
@@ -162,3 +170,93 @@ feature retrieval. The client uses leafem's bundled Protomaps renderer only for
 reference display, with explicit mode/zoom limits and no event interception.
 Failed worker requests retain transport evidence for meaningful retry guidance;
 the shared fluvgeo scientific/persistence contracts are unchanged.
+
+9008 uses fluvgeo 9022's additive per-layer outcome field to distinguish explicit
+empty results, transport errors and ambiguous responses. Available/unavailable
+compatibility is retained. Named candidate inventories and responsive compact
+layout are client presentation only; their source-row links are session-local,
+not new FG identities or selections. No persistence boundary is changed.
+
+The owner subsequently accepted stepwise selection and clarified future geometry
+construction: selected HUC12s/basin define a Study Area; selected Stream/Reach
+flowlines are retained and buffered using user-defined distances to produce
+their analysis extent polygons. Shared buffering methods belong in fluvgeo;
+client controls supply explicit parameters and preview/confirmation. This is
+accepted intent, not implemented functionality or automatic floodplain mapping.
+See the feature record's accepted geometry construction clarification.
+
+9010 implements Study Area polygon selection only. The selection helper owns
+server-retained HUC12/basin candidates, choices and preview state. Browser values
+are identifiers checked against that pool, never accepted geometry or file paths.
+The read-only drainage helper still has no storage adapter. Selection can carry
+from pre-study exploration into explicit creation, or across revisions of the
+same study; explicit opening of another study discards it. Draft polygons block
+competing drawing/child-publication operations until saved or cleared.
+
+The app storage adapter saves a separate source-evidence GeoPackage before
+publishing a new context revision through the existing fluvgeo writer. The note
+records its relative filename and SHA256. Old revisions remain unchanged. These
+two outputs are not a single transaction: a failed revision may leave orphan
+evidence, which is retained for inspection, not interpreted as a completed save.
+See the [selection evidence contract](../schemas/boundary-selection.md).
+
+## Stream corridors and edit lifecycle (9011)
+
+The map opens saved boundaries in view mode with explicit Edit/Define Streams
+actions. Creation and same-study revisions carry completed discovery, clicked/
+snapped location, map bounds, pools and selections. Live jobs are cancelled, not
+transferred. Explicit open/switch starts fresh transient state. Previews are never
+carried across revisions: the changed parent must be checked again. Pending
+Stream choices can remain during parent editing, but cannot publish while parent
+changes are unfinished. No unsaved browser-refresh persistence is claimed.
+
+`stream_selection_server` owns checked COMID choices, a 2,000-line pool, form
+parameters and preview lifecycle. At most 500 lines enter a shared backend
+preview. Browser IDs are checked against server-held sf, not browser geometry.
+Adapter `save_stream` calls fluvgeo::add_study_stream_corridor; identities,
+buffering and evidence publication stay in fluvgeo. The names-only API remains
+unchanged. See [the evidence contract](../schemas/stream-selection.md).
+
+Both app boundary writers call fluvgeo::check_study_area_containment before
+publication and polygon evidence writes. Stream/Reach areas outside the proposed
+parent block saving with names; names-only records remain unknown. This is a
+conservative app rule for owner review, not a global FGDB acceptance rule or a
+breaking change to the legacy context writer. As revised by the owner in 9016,
+selected Stream lines are clipped first; their buffer is clipped to the parent
+and disclosed before save. The backend's regional CRS and fixed numerical
+precision contract applies, not the superseded strict-line rule. Cross-Stream overlap, directed connectivity, Reach-within-
+Stream editing and Enterprise integrity remain separate future contracts.
+
+## Single task navigation (9012)
+
+9015 runtime isolation: never launch the analyst app in a test R process.
+`run-dev.ps1` starts fresh R; `check-runtime-isolation.R` verifies test doubles
+are restored. A local mock inside Shiny's test evaluation leaked past the suite
+and made the subsequently launched app reject every containment check. Explicit
+`with_mocked_bindings` scope plus separate launch processes prevent recurrence.
+
+9013 adds session-scoped service activity: native indeterminate progress plus
+elapsed seconds, both beside the controls and in a persistent Shiny notification.
+The callr worker stays asynchronous. Finish, error, launch failure, timeout,
+Cancel, mode departure and editor destruction clear activity; no fictitious
+completion percentage is shown. Available-overlay controls derive from the same
+reactive discovery/selection/preview state, not a fixed list of potential layers.
+Stream mode omits watershed candidates; View omits transient discovery.
+
+Owner feedback exposed overlapping controls: Edit/Define were ordinary actions,
+not selected states, and a reopened study had no transient discovery candidates.
+Replace these buttons and visible map-mode controls with one Working on radio:
+View, Study Area, Streams. The Study Area task alone exposes boundary method.
+A router updates the hidden compatibility map_mode input used by existing helpers;
+guards retain unfinished parent work and show a notice beside the task selector.
+No geometry is written by changing task. Do next derives guidance from current
+discovery, selection, form and preview state. Successful channel retrieval switches
+to Select lines and opens the line lists. Stream mode displays only line inventories.
+
+Workspace - New now starts a fresh transient session; creation/open selects Open
+so New can be clicked again. Pending geometry or names-only form work prompts
+before discard; saved projects are never removed. Pre-creation exploration still
+carries into creation. Remove the redundant Start another study button and raw
+Saved record details / Map and coordinate information sections from the UI.
+Evidence remains in GeoPackages; source/CRS/storage guidance remains in README,
+attribution/search tooltip and the compact public-service disclosure.

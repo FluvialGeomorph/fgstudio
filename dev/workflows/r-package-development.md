@@ -16,6 +16,12 @@
 4. Run focused `testthat` tests, regenerate documentation when needed, then run package-level checks.
 5. Review generated-file changes separately from hand-authored source changes.
 
+Keep test execution and the analyst preview in different R processes. Start the
+preview with `dev/scripts/run-dev.ps1`, not by sourcing the app after a test suite.
+Inside Shiny `testServer` evaluation, use `with_mocked_bindings()` for explicit
+mock scope; do not assume `local_mocked_bindings()` will clean up on leaving that
+evaluation environment. Run `check-runtime-isolation.R` to verify restoration.
+
 For map-search JavaScript changes, also run `node dev/scripts/check-map-search.cjs`
 from the repository root. This is a pure contract test, not browser acceptance.
 

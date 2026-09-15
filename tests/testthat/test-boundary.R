@@ -36,7 +36,7 @@ test_that("boundary revisions preserve study identity, original and geometry", {
   next_saved <- store$save_boundary(saved$key, shape, saved$path)
   expect_identical(next_saved$study_id, saved$study_id)
   expect_identical(tools::md5sum(saved$path), before)
-  expect_error(store$save_boundary(saved$key, sf::st_sf(x = 1, geometry = sf::st_sfc(sf::st_point(c(0, 0)), crs = 4326)), next_saved$path), "POLYGON")
+  expect_error(store$save_boundary(saved$key, sf::st_sf(x = 1, geometry = sf::st_sfc(sf::st_point(c(0, 0)), crs = 4326)), next_saved$path), "polygon")
   expect_identical(store$read(saved$key)$path, next_saved$path)
 })
 
@@ -85,7 +85,7 @@ test_that("switching study destroys the earlier editor and preserves identity", 
     session$setInputs(saved = second$key, open = 2)
     expect_false(identical(output$boundary_editor$html, first_editor))
     expect_identical(current()$key, second$key)
-    session$setInputs(another = 1)
+    session$setInputs(workspace_task = "new")
     expect_null(current())
   })
 })

@@ -1,3 +1,11 @@
+test_that("workspace separates create and open forms without duplicating inputs", {
+  html <- as.character(mod_study_ui("study"))
+  expect_match(html, 'data-value="new"', fixed = TRUE)
+  expect_match(html, 'data-value="open"', fixed = TRUE)
+  expect_match(html, "Purpose / customer question (optional)", fixed = TRUE)
+  expect_equal(length(gregexpr('id="study-name"', html, fixed=TRUE)[[1]]), 1L)
+})
+
 test_that("module saves once, resets explicitly and opens saved records", {
   store <- local_study_store(withr::local_tempdir())
   shiny::testServer(mod_study_server, args = list(store = store), {
@@ -11,7 +19,7 @@ test_that("module saves once, resets explicitly and opens saved records", {
     session$setInputs(create = 3)
     expect_length(store$catalog()$choices, 1)
     expect_identical(current()$study_id, saved$study_id)
-    session$setInputs(another = 1)
+    session$setInputs(workspace_task = "new")
     expect_null(current())
     session$setInputs(saved = saved$key, open = 1)
     expect_identical(current(), saved)
@@ -39,8 +47,8 @@ test_that("UI escapes study content and shows a clear next step", {
     html <- output$summary$html
     expect_match(html, "&lt;script&gt;", fixed = TRUE)
     expect_false(grepl("<script>bad", html, fixed = TRUE))
-    expect_match(html, "What comes next", fixed = TRUE)
-    expect_match(html, "not implemented", fixed = TRUE)
+    expect_match(html, "Next", fixed = TRUE)
+    expect_match(html, "Select or draw a Study Area boundary", fixed = TRUE)
   })
   expect_s3_class(fgstudio_app(withr::local_tempdir()), "shiny.appobj")
 })

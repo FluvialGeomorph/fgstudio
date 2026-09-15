@@ -18,6 +18,13 @@ location <- collect(launch_drainage_job("locate", point))
 cat("Located COMID", location$comid, "at", round(location$snap_distance_m, 2), "metres.\n")
 result <- collect(launch_drainage_job("context", location, 30))
 print(result$status)
+print(result$name_lookup)
+for (key in names(result$layers)) {
+  inventory <- drainage_feature_inventory(result$layers[[key]], key, location$comid)
+  cat(key, "inventory:", nrow(inventory), "rows; source fields:",
+    paste(names(result$layers[[key]]), collapse = ", "), "\n")
+  if (nrow(inventory)) print(utils::head(inventory[c("name", "source_id")], 2))
+}
 if (any(result$status$status != "available"))
   stop("Some candidate layers were unavailable; inspect service status before attributing a regression.")
 # Verify the same process control used by the Cancel button, without another request.
