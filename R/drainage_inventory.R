@@ -23,6 +23,14 @@ drainage_feature_inventory <- function(shape, key, comid) {
   label <- paste0(name, " - ", ifelse(is.na(id),
     paste("returned feature", seq_len(nrow(fields)), "(source ID not supplied)"), id))
   out <- data.frame(feature_row = seq_len(nrow(fields)), name = name, source_id = id, label = label)
+  if (key %in% c("upstream","downstream")) {
+    reference <- sf::st_sf(source_id=id,geometry=sf::st_geometry(shape))
+    walk <- fluvgeo::order_drainage_flowlines(reference,NULL,"upstream","source_id")
+    out <- out[walk$source_row,]
+    out$navigation_order <- walk$navigation_order
+    out$order_status <- walk$order_status
+    return(out)
+  }
   out[order(tolower(out$name), out$source_id, out$feature_row, na.last = TRUE), ]
 }
 

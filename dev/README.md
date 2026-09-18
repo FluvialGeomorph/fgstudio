@@ -13,3 +13,7 @@ This directory contains durable, repository-owned context for human and agentic 
 - `scripts/`: supporting development automation
 
 Chat transcripts and generated output are not canonical project context.
+
+Start with [the current project plan](goals/project-plan.md). The
+[2026-09-18 documentation review](governance/documentation-review-2026-09-18.md)
+records the local hierarchy milestone, corrected drift and evidence limits.

@@ -1,5 +1,13 @@
 # Study Area draft
 
+Current status (2026-09-18): creation/reopening, drawn and selected-watershed
+boundaries, compact map search, name and Purpose editing are implemented.
+The owner accepted the define/update/search workflow. Workspace - New replaced
+Start another study; search is the map magnifying glass, not a separate form.
+Polygon import is still future work. Use [README](../../README.md) for current
+instructions. Dated sections below retain increment evidence, including older
+UI and review requests that were subsequently superseded.
+
 First slice, 2026-09-14. Implements the owner-approved create-and-display increment
 plus reopening its saved record so the result is durable across browser sessions.
 

@@ -1,0 +1,77 @@
+test_that("two spatial Streams can be saved consecutively without reopening", {
+  store <- local_study_store(withr::local_tempdir())
+  study <- store$create("Repeat study")
+  study <- store$save_boundary(study$key,stream_test_parent(),study$path)
+  shiny::testServer(mod_study_server,args=list(store=store),{
+    session$flushReact()
+    current(study); session$flushReact()
+    live_editor <- function() get("editor",environment(refresh))
+    child_env <- environment(live_editor()$selection_state)
+    get("exploring",child_env)$result(stream_test_context())
+    session$flushReact()
+    send <- function(...) {
+      values <- list(...)
+      names(values) <- paste0("boundary_",get("generation",environment(refresh)),"-",names(values))
+      do.call(session$setInputs,values)
+    }
+    for (i in 1:2) {
+      send(selection_target="stream",map_mode="explore",stream_action="select",
+        buffer_distance=100,buffer_unit="m",stream_name=paste("Stream",i))
+      send(lines_upstream=paste0("c",100+i))
+      send(preview_stream=1)
+      child <- get("stream_selection",environment(live_editor()$selection_state))
+      expect_equal(child$preview()$containment,"inside")
+      send(save_stream=1)
+      expect_equal(current()$streams,i)
+      expect_equal(store$read(study$key)$streams,i)
+      # UI defaults must survive a rebuild before any client update messages.
+      draft <- get("selection_draft",environment(live_editor()$selection_state))
+      expect_equal(nrow(draft$stream$pool),2L)
+      expect_length(draft$stream$selected,0L)
+      expect_equal(draft$stream$name,"")
+      expect_equal(draft$stream$distance,100)
+      expect_true(draft$stream$after_save)
+      html <- as.character(mod_boundary_ui("next",selection_draft=draft,study=current()))
+      expect_match(html,'value="select" checked="checked"',fixed=TRUE)
+      expect_match(html,'value="100"',fixed=TRUE)
+      expect_match(get("stream_selection",environment(live_editor()$selection_state))$status(),"Stream saved")
+      # Reproduce the owner's next action: click another location after Save,
+      # with the newly mounted browser form still in Select lines mode.
+      send(selection_target="stream",map_mode="explore",stream_action="select")
+      send(map_click=list(lng=-90.001,lat=40.01+i/1000))
+      discovery <- get("exploring",environment(live_editor()$selection_state))
+      expect_equal(unname(sf::st_coordinates(discovery$clicked())[1,]),c(-90.001,40.01+i/1000))
+      expect_match(discovery$status(),"Select Snap to stream")
+      expect_null(discovery$result())
+      expect_equal(nrow(get("stream_selection",environment(live_editor()$selection_state))$pool()),2L)
+      expect_equal(get("stream_selection",environment(live_editor()$selection_state))$state()$origin,"101")
+    }
+    expect_equal(current()$stream_inventory$stream_name,c("Stream 1","Stream 2"))
+  })
+})
+
+test_that("new location clicks preserve pending selections and line clicks stay selective", {
+  store <- local_study_store(withr::local_tempdir())
+  study <- store$create("Click routing")
+  study <- store$save_boundary(study$key,stream_test_parent(),study$path)
+  shiny::testServer(mod_boundary_server,args=list(study=study,store=store,
+    is_active=function() TRUE,on_saved=function(x) stop("Unexpected save")),{
+    session$flushReact()
+    exploring$result(stream_test_context()); session$flushReact()
+    session$setInputs(selection_target="stream",map_mode="explore",stream_action="select")
+    session$setInputs(map_shape_click=list(id="c101",lng=-90,lat=40.005))
+    expect_equal(stream_selection$selected(),"c101")
+    expect_null(exploring$clicked())
+    session$setInputs(map_click=list(lng=-90.001,lat=40.01))
+    expect_equal(stream_selection$selected(),"c101")
+    expect_null(exploring$clicked())
+    expect_match(exploring$status(),"selection is retained")
+    expect_false(is.null(exploring$result()))
+    session$setInputs(clear_stream=1)
+    session$setInputs(map_click=list(lng=-90.002,lat=40.01))
+    expect_length(stream_selection$selected(),0L)
+    expect_equal(unname(sf::st_coordinates(exploring$clicked())[1,]),c(-90.002,40.01))
+    expect_match(exploring$status(),"Select Snap to stream")
+    expect_equal(nrow(stream_selection$pool()),2L)
+  })
+})

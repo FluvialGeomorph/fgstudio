@@ -42,7 +42,8 @@ test_that("Stream task explains discovery and selection and preserves candidates
     # A completed service result provides a pool; no remote dependency.
     exploring$result(stream_test_context()); session$flushReact()
     session$setInputs(stream_action="select")
-    expect_match(output$workflow_next$html,"Check the channel segments",fixed=TRUE)
+    expect_match(output$workflow_next$html,"Check channel segments",fixed=TRUE)
+    expect_match(output$workflow_next$html,"click an empty map location",fixed=TRUE)
     expect_match(output$select_upstream$html,"checkbox",fixed=TRUE)
     expect_match(output$select_upstream$html,"open",fixed=TRUE)
     session$setInputs(lines_upstream="c101")

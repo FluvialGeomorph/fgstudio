@@ -13,9 +13,9 @@ stream_names_input <- function(text) {
 mod_streams_ui <- function(id, study, draft = list(names = "", rationale = "")) {
   ns <- shiny::NS(id)
   bslib::card(
-    bslib::card_header("3. Saved Stream inventory"),
-    compact_table(data.frame(Step = c("Add Stream", "Next stage"),
-      Action = c("Choose Streams above the map; follow Do next", "Define nested Reaches (next increment)"))),
+    bslib::card_header("3. Saved Streams and Reaches"),
+    compact_table(data.frame(Step = c("Add Stream", "Define Reaches"),
+      Action = c("Choose Streams above the map; follow Do next", "Choose Reaches above the map, then select a parent Stream"))),
     if (isTRUE(study$can_define_streams)) shiny::tags$details(
       shiny::tags$summary("Optional: record names before geometry"),
       shiny::p(class = "small", "Planning only. Multiple names-only Streams require their areas together in a later tool. Use the map to save one complete Stream at a time."),
@@ -37,10 +37,7 @@ mod_streams_server <- function(id, study, store, is_active, boundary_pending, on
     status <- shiny::reactiveVal(NULL)
     saved_once <- FALSE
     output$inventory <- shiny::renderTable({
-      x <- study$stream_inventory
-      if (is.null(x) || !nrow(x)) return(NULL)
-      data.frame(Stream = x$stream_name,
-        Area = if (inherits(x, "sf")) "Recorded" else "Not defined")
+      saved_hierarchy_inventory(study)
     }, striped = TRUE, spacing = "xs", width = "100%", rownames = FALSE)
     saving <- shiny::observeEvent(input$save, {
       if (!is_active() || saved_once || !isTRUE(study$can_define_streams)) return()

@@ -19,12 +19,14 @@ channel_candidates <- function(context) {
   x[!duplicated(x$candidate_key), ]
 }
 
-stream_selection_ui <- function(ns) {
+stream_selection_ui <- function(ns, draft = NULL) {
   shiny::tagList(
     shiny::uiOutput(ns("stream_identity")),
     bslib::layout_columns(col_widths = c(7, 5),
-      shiny::numericInput(ns("buffer_distance"), "Buffer on EACH side", value = NA_real_, min = .01),
-      shiny::selectInput(ns("buffer_unit"), "Unit", c("Metres" = "m", "Feet (international)" = "ft"))),
+      shiny::numericInput(ns("buffer_distance"), "Buffer on EACH side",
+        value = if (is.null(draft$distance)) NA_real_ else draft$distance, min = .01),
+      shiny::selectInput(ns("buffer_unit"), "Unit", c("Metres" = "m", "Feet (international)" = "ft"),
+        selected = if (is.null(draft$unit)) "m" else draft$unit)),
     shiny::uiOutput(ns("stream_summary")),
     shiny::div(class = "d-flex gap-2 flex-wrap mb-1",
       shiny::actionButton(ns("preview_stream"), "Preview Stream", class = "btn-outline-primary btn-sm"),
@@ -36,15 +38,19 @@ stream_selection_ui <- function(ns) {
         "Distance on each side; total corridor is approximately twice this distance",
         "Clip lines to Study Area, buffer in a local metre-based CRS, then clip the buffer",
         "User-defined analysis extent; not a floodplain delineation or topology repair"))),
-      shiny::textInput(ns("stream_rationale"), "Why these lines and this width? (optional)")))
+      shiny::textInput(ns("stream_rationale"), "Why these lines and this width? (optional)",
+        value = if (is.null(draft$rationale)) "" else draft$rationale)))
 }
 
 stream_selection_server <- function(input, output, session, exploration, study, store,
                                     is_active, on_saved, draft = NULL) {
   pool <- shiny::reactiveVal(draft$pool)
+  navigation_origin <- shiny::reactiveVal(draft$origin)
   selected <- shiny::reactiveVal(if (is.null(draft$selected)) character() else draft$selected)
   preview <- shiny::reactiveVal(NULL)
-  status <- shiny::reactiveVal("Choose lines from the upstream/downstream lists; enter a name and buffer distance.")
+  status <- shiny::reactiveVal(if (isTRUE(draft$after_save))
+    "Stream saved. Choose existing lines or click an empty map location to find more channels. Buffer settings are retained; enter a new Stream name." else
+    "Choose lines from the upstream/downstream lists; enter a name and buffer distance.")
   alive <- TRUE
   saved_once <- FALSE
   active <- function() alive && is_active() && identical(input$map_mode, "explore")
@@ -57,6 +63,7 @@ stream_selection_server <- function(input, output, session, exploration, study, 
     if (!alive) return()
     incoming <- channel_candidates(exploration$result())
     if (is.null(incoming)) return()
+    navigation_origin(exploration$result()$location$comid)
     old <- pool()
     if (!is.null(old)) {
       for (id in intersect(old$candidate_key, incoming$candidate_key)) {
@@ -76,6 +83,10 @@ stream_selection_server <- function(input, output, session, exploration, study, 
     output[[paste0("select_", key)]] <- shiny::renderUI({
       x <- pool(); rows <- if (is.null(x)) NULL else x[grepl(key, x$direction), ]
       count <- if (is.null(rows)) 0L else nrow(rows)
+      walk <- if (count) fluvgeo::order_drainage_flowlines(rows,NULL,"upstream","source_id") else NULL
+      if (count) rows <- rows[walk$source_row,]
+      labels <- if (count) paste0(ifelse(is.na(walk$navigation_order),"Order unresolved - ",
+        paste0(walk$navigation_order,". ")),rows$name," - ",rows$source_id) else character()
       latest <- exploration$result()$status
       row <- if (is.null(latest)) NULL else latest[latest$layer == key, , drop = FALSE]
       state <- if (is.null(row) || !nrow(row)) "Not queried" else
@@ -86,11 +97,13 @@ stream_selection_server <- function(input, output, session, exploration, study, 
         shiny::tags$summary(shiny::strong(drainage_groups[[key]]), paste0(" (", count, ") - ", state)),
         if (count) shiny::div(style = "max-height:14rem; overflow-y:auto; overflow-wrap:anywhere;",
           if (identical(input$selection_target, "stream") && identical(input$stream_action, "select"))
-            shiny::checkboxGroupInput(session$ns(paste0("lines_", key)), NULL,
-              choices = stats::setNames(rows$candidate_key, paste(rows$name, rows$source_id, sep = " - ")),
-              selected = shiny::isolate(intersect(selected(), rows$candidate_key))) else
+            shiny::tagList(shiny::p(class="small my-1",
+                "Downstream to upstream. Branch ties are stable; list numbers are not stations."),
+              shiny::checkboxGroupInput(session$ns(paste0("lines_", key)), NULL,
+                choices = stats::setNames(rows$candidate_key, labels),
+                selected = shiny::isolate(intersect(selected(), rows$candidate_key)))) else
             shiny::tags$ul(class = "small ps-3", lapply(seq_len(count), function(i)
-              shiny::tags$li(paste(rows$name[i], rows$source_id[i], sep = " - "))))))
+              shiny::tags$li(labels[i])))))
     })
     shiny::observeEvent(input[[paste0("lines_", key)]], {
       if (!enabled() || !identical(input$stream_action, "select")) return()
@@ -198,8 +211,9 @@ stream_selection_server <- function(input, output, session, exploration, study, 
   output$stream_status <- shiny::renderUI(shiny::p(class = "small my-1", role = "status", status()))
   list(pool = pool, selected = selected, preview = preview, status = status,
     has_pending = function() shiny::isolate(length(selected()) > 0L),
-    state = function() shiny::isolate(list(pool = pool(), selected = selected(), name = if (saved_once) "" else input$stream_name,
-      distance = input$buffer_distance, unit = input$buffer_unit, rationale = input$stream_rationale)),
+    state = function() shiny::isolate(list(pool = pool(), origin = navigation_origin(), selected = selected(), name = if (saved_once) "" else input$stream_name,
+      distance = input$buffer_distance, unit = input$buffer_unit,
+      rationale = if (saved_once) "" else input$stream_rationale, after_save = saved_once)),
     destroy = function() {
       alive <<- FALSE
       for (o in c(list(collecting, syncing, clicking, clear, parameters, restored, previewing, saving, painting), choices)) o$destroy()

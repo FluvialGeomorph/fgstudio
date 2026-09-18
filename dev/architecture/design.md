@@ -16,10 +16,20 @@ ArcGIS toolbox intact. Backend capabilities belong to fluvgeo and should also
 serve QGIS. Begin with local storage; ultimately support approved FGDB read/write
 access on USACE ArcGIS Enterprise. Enterprise transport/authentication are unknown.
 
-## First implementation
+## Current implementation (9022)
+
+`reach_selection_server`, `reach_merge_server` and `reach_split_server` implement
+Add new / Combine existing / Split existing in the shared map's Reaches task.
+The local adapter calls fluvgeo's retained-segment/piece readers, previews and writers.
+The app cannot supply an independent Reach buffer or arbitrary source geometry.
+See [the feature and evidence boundary](../features/reach-selection.md).
 
 - `R/app.R`: app assembly and loopback launcher, exported as fgstudio_app/run_app.
 - `R/mod_study.R`: namespaced module, per-session current study and feedback.
+- `R/mod_boundary.R`: map/editor lifecycle and task routing; selection helpers
+  maintain separate draft/preview/save state for boundaries, Streams and Reaches.
+- `R/study_feature_names.R`, `R/saved_feature_display.R`: name-only revisions,
+  Stream-first Reach rename choices, saved-feature identification, zoom and inventory.
 - `R/study_store.R`: ordinary local storage adapter, injectable into the module.
   Calls fluvgeo::start_study_context/read_study_context; does not duplicate schema
   logic or invent scientific metadata.
@@ -36,12 +46,21 @@ This follows Posit's [modules](https://shiny.posit.co/r/articles/improve/modules
 
 ## Storage contract
 
-Adapter methods: create(name, notes), read(key), catalog(),
-save_boundary(key, boundary, expected_path), rename(key, name, expected_path). The adapter returns a
+Adapter groups (exact signatures remain in `R/study_store.R`):
+
+| Responsibility | Methods |
+| --- | --- |
+| Catalog and Study Area metadata | create, read, catalog, rename, set_purpose |
+| Boundary | save_boundary, save_selected_boundary |
+| Streams | define_streams, save_stream, stream_segments |
+| Reaches | preview_reach, save_reach, preview_reach_merge, merge_reaches, preview_reach_split, split_reach |
+| Hierarchy names | rename_feature |
+
+The adapter returns a
 small presentation record only after rereading the saved backend context. A random
 128-bit hex folder key is app storage identity, NOT the Study Area UUID. The backend
 owns that UUID. Catalog/reads accept only opaque keys, never a browser-supplied path.
-Every new draft uses a new folder. Boundary revisions are immutable, sequential
+Every new draft uses a new folder. Context revisions are immutable, sequential
 `revision-000001.gpkg` files beside the original `study.gpkg`; the catalog reopens
 the highest numbered revision. Stale expected paths are rejected, and backend
 non-replacing publication prevents collision overwrites. This is not a complete
@@ -58,8 +77,9 @@ does not establish that Enterprise integration is an interchangeable connection.
 ## Evidence boundaries
 
 Verified: source contracts and local tests described in the feature record.
-Verified user feedback: the owner accepted the starter UI and selected drawing
-first, with import and watershed selection required later. Unknown: final
+Verified user feedback: the owner accepted Study Area and Stream definition,
+Reach creation/combination, renaming and saved-Reach splitting. Watershed selection
+is implemented; polygon import remains future work. Unknown: final
 FGDB schema and Enterprise service access. Proposed future capabilities are not
 authorization to implement another geospatial operation.
 
@@ -75,9 +95,15 @@ starting another draw/edit/delete clears the candidate. No silent geometry repai
 
 Each opened revision has an isolated module/map ID. Switching studies or saving
 disposes the old editor's event observers; inactive editors cannot save. The map
-is rebuilt only at a study/revision boundary, not per vertex, and draws one polygon
-with a canvas-preferred renderer. Throughput for large networks/rasters is not
-claimed or benchmarked by this small boundary slice.
+is rebuilt only at a study/revision boundary, not per vertex, with a
+canvas-preferred renderer. The drawing tool accepts one boundary; saved hierarchy
+and candidate layers can contain many features. Throughput for large networks
+or rasters has not been qualified by this local hierarchy workflow.
+
+Saved-feature identification is active in View only, keeping labels/popups from
+consuming editing clicks. Dropdown zoom uses sf-transformed geographic bounds;
+it changes neither the selection's identity nor its geometry. Labels and popup
+values are escaped. Layer controls let users reveal overlapping Stream/Reach areas.
 
 WGS 84 GeoJSON coordinates are converted to sf without changing their meaning.
 Map display projection is not terrain analysis CRS. OpenStreetMap tiles disclose
@@ -101,7 +127,8 @@ The public service's
 [usage/availability limitations](https://github.com/komoot/photon#photon)
 make this a preview dependency, not a high-throughput production service promise.
 The server-owned fgstudio.photon_url option allows another Photon deployment.
-Search disclosure is in the input tooltip and Map and coordinate information.
+Search disclosure is in the input tooltip and README; the old Map and coordinate
+information panel was removed.
 Labels use textContent in Leaflet result nodes; result coordinates are validated
 before map navigation. Request tokens reject obsolete responses. The R bridge
 uses leafletProxy to return results, not to replace the map. The search-options
@@ -109,6 +136,14 @@ formatter accommodates both installed Leaflet Search callback signatures.
 Deterministic tests inject search results and failures without network access.
 
 ## Name editing
+
+9020 extends name editing to saved Streams/Reaches via a separate modal and
+`rename_feature` adapter calling `fluvgeo::rename_study_feature`. Parent-scoped
+duplicate checks live in fluvgeo. Same-study draft protection and stale revision
+checks apply; only the display-name column changes. Immutable source evidence
+retains its historical name and is still linked by identity, not current label.
+Saved-Reach splitting is implemented under ADR 0005; pre-assembly and Stream
+cutting remain future entry points. Versioned piece evidence is owned by fluvgeo.
 
 Edit name opens a prefilled modal; explicit Save name calls the existing
 fluvgeo::revise_study_context(study_area_name=...) through the adapter's common
@@ -129,7 +164,8 @@ not the latest accumulated provenance notes. No writes occur while reopening.
 Blank UI text maps to NA_character_, meaning intentionally unspecified, not
 permission to fall back to an older question. Unchanged values do not save.
 The Edit purpose modal uses the same stale-revision and unfinished-drawing guards
-as Edit name. Supporting notes remain available under Saved record details.
+as Edit name. Supporting notes remain in the context GeoPackage; the old
+Saved record details panel is no longer displayed.
 Only the isolated app backend library is upgraded; no production client change.
 
 ## Initial Stream inventory
@@ -177,12 +213,12 @@ compatibility is retained. Named candidate inventories and responsive compact
 layout are client presentation only; their source-row links are session-local,
 not new FG identities or selections. No persistence boundary is changed.
 
-The owner subsequently accepted stepwise selection and clarified future geometry
+The owner accepted stepwise selection and clarified geometry
 construction: selected HUC12s/basin define a Study Area; selected Stream/Reach
 flowlines are retained and buffered using user-defined distances to produce
 their analysis extent polygons. Shared buffering methods belong in fluvgeo;
 client controls supply explicit parameters and preview/confirmation. This is
-accepted intent, not implemented functionality or automatic floodplain mapping.
+implemented for Study Area, Stream and Reach definition, not automatic floodplain mapping.
 See the feature record's accepted geometry construction clarification.
 
 9010 implements Study Area polygon selection only. The selection helper owns
@@ -202,8 +238,8 @@ See the [selection evidence contract](../schemas/boundary-selection.md).
 
 ## Stream corridors and edit lifecycle (9011)
 
-The map opens saved boundaries in view mode with explicit Edit/Define Streams
-actions. Creation and same-study revisions carry completed discovery, clicked/
+The map opens saved boundaries in View with a Working on selector for Study Area,
+Streams and Reaches. Creation and same-study revisions carry completed discovery, clicked/
 snapped location, map bounds, pools and selections. Live jobs are cancelled, not
 transferred. Explicit open/switch starts fresh transient state. Previews are never
 carried across revisions: the changed parent must be checked again. Pending
@@ -224,8 +260,10 @@ conservative app rule for owner review, not a global FGDB acceptance rule or a
 breaking change to the legacy context writer. As revised by the owner in 9016,
 selected Stream lines are clipped first; their buffer is clipped to the parent
 and disclosed before save. The backend's regional CRS and fixed numerical
-precision contract applies, not the superseded strict-line rule. Cross-Stream overlap, directed connectivity, Reach-within-
-Stream editing and Enterprise integrity remain separate future contracts.
+precision contract applies, not the superseded strict-line rule. Reach creation,
+combining and splitting clip inherited buffers to their parent Stream. General
+spatial editing, cross-Stream overlap policy, scientific network acceptance and
+Enterprise integrity remain separate future contracts.
 
 ## Single task navigation (9012)
 
@@ -246,12 +284,20 @@ Stream mode omits watershed candidates; View omits transient discovery.
 Owner feedback exposed overlapping controls: Edit/Define were ordinary actions,
 not selected states, and a reopened study had no transient discovery candidates.
 Replace these buttons and visible map-mode controls with one Working on radio:
-View, Study Area, Streams. The Study Area task alone exposes boundary method.
+View, Study Area, Streams and (since 9018) Reaches. The Study Area task alone exposes boundary method.
 A router updates the hidden compatibility map_mode input used by existing helpers;
 guards retain unfinished parent work and show a notice beside the task selector.
 No geometry is written by changing task. Do next derives guidance from current
 discovery, selection, form and preview state. Successful channel retrieval switches
 to Select lines and opens the line lists. Stream mode displays only line inventories.
+
+9017 distinguishes empty-map clicks from candidate-shape clicks in Stream mode.
+An empty-map click with no pending selection switches to Find channels and retains
+the clicked location. Candidate clicks continue to toggle lines. A pending
+selection blocks that automatic switch with guidance; explicit Find channels can
+still explore while retaining choices. Saving rebuilds the form with candidate
+pool and buffer defaults, empty selection/name, and next-Stream instructions.
+The map uses bslib's filling/full-screen card, not a custom resize mechanism.
 
 Workspace - New now starts a fresh transient session; creation/open selects Open
 so New can be clicked again. Pending geometry or names-only form work prompts

@@ -1,5 +1,17 @@
 # Stream selection evidence
 
+Candidate browsing order (9020 onward) is transient, not an FG Stream identity or a
+scientific stream-order metric. The backend returns source-row mapping, source
+ID, navigation_order and order_status. The app requests whole-network
+downstream-to-upstream ordering with a NULL origin for both query lists;
+the older discovery-origin traversal is superseded. Unresolved candidates
+remain selectable, visibly labelled after the ordered portion. COMIDs stay the
+checkbox keys regardless of row order. Saving clears selection/name/rationale
+but retains the candidate pool and buffer settings for the next Stream.
+The discovery origin remains retrieval context, not the candidate sort anchor.
+Reach selection uses selection_id (whole COMID or local piece ID), not necessarily
+COMID; see [the piece contract](../../../fluvgeo/dev/schemas/reach-pieces.md).
+
 One explicit save publishes a new context revision and a companion
 `stream-selection-<uuid>.gpkg`, layers `selected_lines` and `clipped_lines`. The existing context schema
 holds Stream ID, Study Area ID, name and area. COMIDs never become FG identities.

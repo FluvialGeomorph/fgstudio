@@ -42,6 +42,7 @@ local_study_store <- function(data_dir) {
       stream_inventory = context$streams,
       can_define_streams = all(vapply(context[c("streams", "reaches", "survey_events", "network")], is.null, logical(1))),
       reaches = if (is.null(context$reaches)) 0L else nrow(context$reaches),
+      reach_inventory = context$reaches,
       events = if (is.null(context$survey_events)) 0L else nrow(context$survey_events))
   }
   create <- function(name, notes = "") {
@@ -156,7 +157,53 @@ local_study_store <- function(data_dir) {
       unit = unit, add_note = rationale, stream_id = stream_id,
       writer = fluvgeo::add_study_stream_corridor)
   }
+  stream_segments <- function(key, stream_id, expected_path) {
+    if (!identical(context_path(key), expected_path))
+      stop("This study has a newer revision. Reopen it before defining Reaches.", call. = FALSE)
+    fluvgeo::read_study_stream_segments(expected_path, stream_id)
+  }
+  preview_reach <- function(key, stream_id, source_id, expected_path) {
+    stream_segments(key, stream_id, expected_path)
+    fluvgeo::preview_study_reach_corridor(expected_path, stream_id, source_id)
+  }
+  save_reach <- function(key, stream_id, source_id, name, expected_path) {
+    revise(key, expected_path, stream_id = stream_id, source_id = source_id,
+      reach_name = name, writer = fluvgeo::add_study_reach_corridor)
+  }
+  preview_reach_merge <- function(key, reach_ids, retain_reach_id, expected_path) {
+    if (!identical(context_path(key), expected_path))
+      stop("This study has a newer revision. Reopen it before combining Reaches.", call. = FALSE)
+    fluvgeo::preview_study_reach_merge(expected_path, reach_ids, retain_reach_id)
+  }
+  merge_reaches <- function(key, reach_ids, retain_reach_id, name, expected_path) {
+    revise(key, expected_path, reach_ids = reach_ids, retain_reach_id = retain_reach_id,
+      reach_name = name, writer = fluvgeo::merge_study_reaches)
+  }
+  rename_feature <- function(key, level, id, name, expected_path) {
+    x <- read(key)
+    if (!identical(x$path, expected_path))
+      stop("This study has a newer revision. Reopen it before saving.", call. = FALSE)
+    if (!is.character(level) || length(level) != 1L || !level %in% c("stream","reach"))
+      stop("Choose Stream or Reach.", call. = FALSE)
+    inventory <- x[[paste0(level,"_inventory")]]
+    j <- match(id, inventory[[paste0(level,"_id")]])
+    if (is.character(name) && length(name) == 1L && !is.na(name) &&
+        length(j) == 1L && !is.na(j) && identical(trimws(name), inventory[[paste0(level,"_name")]][j])) return(x)
+    revise(key, expected_path, level = level, feature_id = id, name = name,
+      writer = fluvgeo::rename_study_feature)
+  }
+  preview_reach_split <- function(key,reach_id,point,keep_side,expected_path) {
+    if (!identical(context_path(key),expected_path)) stop("This study has a newer revision. Reopen it before splitting.",call.=FALSE)
+    fluvgeo::preview_study_reach_split(expected_path,reach_id,point,keep_side)
+  }
+  split_reach <- function(key,reach_id,point,name,keep_side,expected_path) {
+    revise(key,expected_path,reach_id=reach_id,point=point,new_reach_name=name,keep_side=keep_side,
+      writer=fluvgeo::split_study_reach)
+  }
   list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
     rename = rename, set_purpose = set_purpose, define_streams = define_streams,
-    save_selected_boundary = save_selected_boundary, save_stream = save_stream)
+    save_selected_boundary = save_selected_boundary, save_stream = save_stream,
+    stream_segments = stream_segments, preview_reach = preview_reach, save_reach = save_reach,
+    preview_reach_merge = preview_reach_merge, merge_reaches = merge_reaches,
+    rename_feature = rename_feature,preview_reach_split=preview_reach_split,split_reach=split_reach)
 }

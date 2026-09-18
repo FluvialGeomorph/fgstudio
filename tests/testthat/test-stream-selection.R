@@ -10,7 +10,7 @@ test_that("Stream selections deduplicate source IDs and require a current contai
   shiny::testServer(host, {
     session$flushReact()
     expect_equal(nrow(p$pool()),2)
-    expect_equal(p$pool()$direction[1],"upstream,downstream")
+    expect_equal(p$pool()$direction[p$pool()$source_id == "101"],"upstream,downstream")
     session$setInputs(map_mode="explore",selection_target="stream",stream_action="select",
       buffer_distance=100,buffer_unit="m",stream_name="Creek")
     session$setInputs(lines_upstream="c101")

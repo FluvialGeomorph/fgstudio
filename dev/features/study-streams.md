@@ -1,5 +1,13 @@
 # Initial Stream definition
 
+This record covers the original names-only increment, not the full current
+Stream editor. Today the optional form is under **3. Saved Streams and Reaches**.
+The preferred spatial path selects and buffers flowlines above the map; append,
+rename and nested Reach creation/combining/splitting now exist. See
+[README](../../README.md#define-streams) and [hierarchy editing](hierarchy-editing.md).
+Spatial Stream replacement/removal and multiple names-only area assignment remain
+future work. The dated limitations and acceptance requests below are historical.
+
 Owner-directed next functional step after accepting Study Area define/update/search.
 The app now exposes existing fluvgeo initial Stream definition, without inventing
 a source-network selection or polygon-delineation rule.

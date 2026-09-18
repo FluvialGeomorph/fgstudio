@@ -34,7 +34,20 @@ test_that("watersheds have honest labels when services omit names or identity", 
 
 test_that("map and controls use responsive columns instead of a vertical sequence", {
   html <- as.character(mod_boundary_ui("test", TRUE))
-  expect_match(html, "clamp(300px, 54vh, 620px)", fixed=TRUE)
+  expect_match(html, "height:72vh", fixed=TRUE)
+  expect_match(html, "min-height:360px", fixed=TRUE)
+  expect_false(grepl("620px",html,fixed=TRUE))
+  expect_match(html,"aria-label=\"Expand card\"",fixed=TRUE)
   expect_match(html, "bslib-grid", fixed=TRUE)
   expect_match(html, "Public USGS queries", fixed=TRUE)
+})
+
+test_that("channel inventories use direction and connectivity instead of names", {
+  x <- stream_test_context()$layers$upstream
+  x$gnis_name <- c("Z first", "A second")
+  down <- drainage_feature_inventory(x,"downstream","101")
+  expect_equal(down$source_id,c("102","101"))
+  expect_equal(down$navigation_order,1:2)
+  up <- drainage_feature_inventory(x,"upstream","102")
+  expect_equal(up$source_id,c("102","101"))
 })

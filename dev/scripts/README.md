@@ -12,6 +12,9 @@ Run from the repository root:
   process previously used for tests.
 - `check-runtime-isolation.R`: full offline suite plus verification that the real
   backend containment function is restored afterward. Run separately from the app.
+- `check-reach-local.R`: read-only Reach previews for retained local Streams;
+  optional first argument selects a local study-store folder (default `.local-data`).
+  Checks file hashes before/after and never saves a Reach or queries USGS.
 - `check-saved-boundary-corridor.R`: explicit saved-study key, public COMID,
   distance/unit and optional cached public sf RDS. Reads active data, reports
   original/retained channel length and tests backend plus Shiny preview/save/reopen
@@ -23,3 +26,5 @@ Run from the repository root:
   uses temporary test studies, never edits active `.local-data` records.
 - `check-stream-services.R`: opt-in public USGS Madison geometry and Stream-save
   check in a fresh dev/check-output folder; never opens active studies.
+- `check-reach-split-local.R`: read-only split previews against retained Reaches,
+  with before/after file hashes; it does not publish splits or alter user records.

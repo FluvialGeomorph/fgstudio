@@ -1,5 +1,66 @@
 # Explore drainage to frame a study
 
+## Current behavior and historical evidence
+
+As of 9022, exploration, Study Area polygon adoption and Stream corridor creation
+are implemented and owner-reviewed. Both channel lists use downstream-to-upstream
+whole-network order (9020), superseding the origin-anchored ordering in the 9017
+entry below. Selected Stream lines are clipped before buffering (9016), superseding
+earlier strict-line rejection. Working on offers View, Study Area, Streams and
+Reaches; Workspace - New replaces Start another study.
+
+Use [README](../../README.md) for the current analyst path, the
+[Stream contract](../schemas/stream-selection.md) for evidence, and the
+[project plan](../goals/project-plan.md) for remaining work. The following dated
+increment records preserve debugging lessons and verification history. Their
+"next", "pending" and "not implemented" statements apply to those slices,
+not to current availability. The owner later accepted Stream specification as
+functional; earlier browser-review requests are not standing repeat-test requests.
+
+## Larger map, continued Stream entry and network ordering (9017 / backend 9028)
+
+Owner accepted the clip-first fix and requested better map sizing, consecutive
+Stream entry and channel-ordered candidates. The map now uses an uncapped 72vh
+bslib filling card (360px minimum) with its standard full-screen control. Wider
+screens allocate more columns to the map; small screens still stack controls.
+No custom resize framework or responsive-preview fixture is introduced.
+
+Owner clarified that clicking the map for the second Stream did nothing, with no
+error. The Select lines mode ignored new-location clicks; this is distinct from
+a failed save or unavailable service. An empty-map click now starts a new location
+and switches to Find channels when no lines are selected. Clicks on candidate
+lines still select them. Pending selections are preserved with an explicit prompt;
+Find channels remains an intentional way to explore while retaining a selection.
+
+Initialize Select lines, distance and units directly from the retained draft,
+rather than relying solely on queued updates. Clear the completed selection,
+name and rationale, retain discovery and map bounds, and prompt for the next
+Stream. Regression tests cover consecutive saves, rebuilt defaults and subsequent
+map clicks. Interactive acceptance of the updated browser behavior remains owner
+review.
+
+Channel lists use fluvgeo::order_drainage_flowlines, backed by sfnetworks and
+igraph. Start at the latest navigation COMID, follow upstream/downstream edges
+depth-first, and keep branches together. The service's NHDPlus downstream
+digitization convention is a prerequisite, not inferred terrain flow direction.
+Source IDs deterministically break branch ties; no mainstem preference is guessed.
+Unreachable, unsupported or ambiguous ordering stays visible and labelled last.
+Earlier discovery pools may include features unreachable from the latest origin.
+No additional web requests, geometry changes or scientific network acceptance.
+
+See [bslib filling cards](https://rstudio.github.io/bslib/articles/cards/) and
+the [backend ordering contract](../../../fluvgeo/man/order_drainage_flowlines.Rd).
+
+Verification (2026-09-15): backend ordering tests passed (12 assertions), including
+branch isolation, disconnected/cyclic inputs, shuffled rows and geographic versus
+projected CRS. The retained Spencer Creek reference network orders from COMID
+14804475 through connected branches. FG Studio package check is **OK**, with
+420 assertions passing; two test warnings concern installed sf/Shiny packages
+built under R 4.6.1 rather than this runtime's R 4.6.0. Runtime-isolation and both
+repositories' context validation passed. Tests use temporary studies; existing
+analyst studies were not modified. Browser layout/click acceptance remains the
+owner's next review, not claimed by these automated checks.
+
 ## Clip-first and CRS-aware topology (9016 / backend 9027)
 
 Owner correction: clip selected flowlines to the Study Area before buffering,

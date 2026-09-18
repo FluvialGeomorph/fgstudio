@@ -1,7 +1,7 @@
 mod_study_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::layout_columns(
-    col_widths = c(3, 9),
+    col_widths = bslib::breakpoints(sm = c(12, 12), lg = c(3, 9), xxl = c(2, 10)),
     bslib::card(
       bslib::card_header("Study workspace"),
       shiny::tabsetPanel(id = ns("workspace_task"), type = "pills", selected = "new",
@@ -42,6 +42,14 @@ mod_study_server <- function(id, store) {
     editor_key <- NULL
     generation <- 0L
     pending_selection <- NULL
+    feature_names <- study_feature_names(input, output, session, current, store,
+      on_focus = function(shape) if (!is.null(editor)) editor$focus_feature(shape),
+      has_pending = function() (!is.null(editor) && editor$has_unsaved()) ||
+        (!is.null(streams_editor) && any(nzchar(unlist(streams_editor$draft())))),
+      on_saved = function(x) {
+        current(x); refresh(x$key)
+        notice(list(kind = "success", text = "Name saved. Geometry, identities and associated records are unchanged."))
+      })
     shiny::observeEvent(current(), {
       x <- current()
       selection_draft <- if (!is.null(editor) && !is.null(x) && identical(editor_key, x$key))
@@ -239,11 +247,14 @@ mod_study_server <- function(id, store) {
           shiny::tags$h2(x$name, class = "h4 mb-0"),
           shiny::span("Saved draft", class = "badge text-bg-success"),
           shiny::actionLink(session$ns("edit_name"), "Edit name"),
-          shiny::actionLink(session$ns("edit_purpose"), "Edit purpose")),
+          shiny::actionLink(session$ns("edit_purpose"), "Edit purpose"),
+          if (x$streams > 0L) shiny::actionLink(session$ns("rename_stream"), "Rename Stream"),
+          if (x$reaches > 0L) shiny::actionLink(session$ns("rename_reach"), "Rename Reach")),
         compact_table(data.frame(Item = c("Purpose", "Boundary", "Streams / Reaches / Surveys", "Next"),
           Status = c(purpose, if (x$boundary) "Saved - editable" else "Not defined",
             sprintf("%d / %d / %d", x$streams, x$reaches, x$events),
-            if (x$boundary) "Choose Streams on the map to define a Stream" else "Select or draw a Study Area boundary")))
+            if (x$streams > 0L) "Choose Reaches on the map to define Reaches within a Stream" else
+              if (x$boundary) "Choose Streams on the map to define a Stream" else "Select or draw a Study Area boundary")))
       )
     })
     list(current = shiny::reactive(current()), notice = shiny::reactive(notice()))

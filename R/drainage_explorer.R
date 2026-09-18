@@ -7,7 +7,7 @@ service_activity_ui <- function(operation, seconds = 0) {
     shiny::span(class = "small", paste0(seconds, " seconds elapsed. Waiting for service response; Cancel is available.")))
 }
 
-drainage_explorer_ui <- function(ns) {
+drainage_explorer_ui <- function(ns, selection_draft = NULL) {
   shiny::tagList(
     shiny::uiOutput(ns("workflow_next")),
     shiny::div(class = "d-flex gap-2 flex-wrap mb-1",
@@ -23,10 +23,11 @@ drainage_explorer_ui <- function(ns) {
         c("Find watersheds" = "point", "Select polygons" = "select"), inline = TRUE)),
     shiny::conditionalPanel("input.selection_target === 'stream'", ns = ns,
       shiny::radioButtons(ns("stream_action"), NULL,
-        c("Find channels" = "point", "Select lines" = "select"), inline = TRUE)),
+        c("Find channels" = "point", "Select lines" = "select"),
+        selected = if (!is.null(selection_draft$stream$pool)) "select" else "point", inline = TRUE)),
     shiny::uiOutput(ns("drainage_results")),
     shiny::conditionalPanel("input.selection_target === 'boundary'", ns = ns, polygon_selection_ui(ns)),
-    shiny::conditionalPanel("input.selection_target === 'stream'", ns = ns, stream_selection_ui(ns)),
+    shiny::conditionalPanel("input.selection_target === 'stream'", ns = ns, stream_selection_ui(ns, selection_draft$stream)),
     shiny::p(class = "small text-body-secondary mb-0", "Public USGS queries: use public locations only."))
 }
 
@@ -39,7 +40,8 @@ launch_drainage_job <- function(operation, argument, distance = 50) {
 # Lives inside the boundary module so exploration and drawing share one map.
 # No storage adapter is passed here: exploration cannot publish project records.
 drainage_explorer <- function(input, output, session, is_active, launch = launch_drainage_job,
-                             clock = Sys.time, polygon_controls = NULL, draft = NULL) {
+                             clock = Sys.time, polygon_controls = NULL, draft = NULL,
+                             stream_pending = function() FALSE) {
   clicked <- shiny::reactiveVal(draft$clicked)
   located <- shiny::reactiveVal(draft$located)
   result <- shiny::reactiveVal(draft$result)
@@ -66,11 +68,21 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
     m <- proxy()
     for (g in unname(drainage_groups)) m <- leaflet::clearGroup(m, g)
   }
-  choose <- function(x) {
+  choose <- function(x, background = FALSE) {
+    stream <- identical(input$selection_target, "stream")
     selecting <- if (identical(input$selection_target, "stream")) identical(input$stream_action, "select") else identical(input$polygon_action, "select")
-    if (!enabled() || selecting || !is.list(x) || !is.numeric(x$lng) || !is.numeric(x$lat) ||
+    if (!enabled() || !is.list(x) || !is.numeric(x$lng) || !is.numeric(x$lat) ||
         length(x$lng) != 1L || length(x$lat) != 1L ||
         !is.finite(x$lng) || !is.finite(x$lat) || abs(x$lng) > 180 || abs(x$lat) > 90) return()
+    if (selecting) {
+      # Line/polygon clicks belong to selection, not to a new service location.
+      if (!stream || !background) return()
+      if (stream_pending()) {
+        status("Your line selection is retained. Save or Clear lines before clicking a new search location; use Find channels to explore while keeping your selection.")
+        return()
+      }
+      shiny::updateRadioButtons(session, "stream_action", selected = "point")
+    }
     cancel(); clear_layers()
     located(NULL); result(NULL)
     failure(NULL)
@@ -79,9 +91,9 @@ drainage_explorer <- function(input, output, session, is_active, launch = launch
       leaflet::addCircleMarkers(lng = x$lng, lat = x$lat, group = "Selected location", radius = 6,
         color = "#222222", fillOpacity = 1, label = "Your clicked point",
         options = leaflet::pathOptions(interactive = FALSE))
-    status("Location selected.")
+    status("Location selected. Select Snap to stream.")
   }
-  clicking <- shiny::observeEvent(input$map_click, choose(input$map_click), ignoreInit = TRUE)
+  clicking <- shiny::observeEvent(input$map_click, choose(input$map_click, background = TRUE), ignoreInit = TRUE)
   shape_clicking <- shiny::observeEvent(input$map_shape_click, choose(input$map_shape_click), ignoreInit = TRUE)
   start <- function(kind, arg, distance = 50) {
     cancel()
