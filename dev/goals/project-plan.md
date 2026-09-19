@@ -35,10 +35,14 @@ for evidence, test-version boundaries and the current uncommitted-work caveat.
 
 ## Current task and next decision
 
-Paused for a new chat after owner acceptance of the download-review UI on
-2026-09-19. Resume from the [acquisition checkpoint](../checkpoints/current/terrain-acquisition.md).
+Resumed on 2026-09-19 after owner acceptance of the download-review UI.
+The owner approved the [download design](../features/dem-download-proposal.md).
+It is implemented in fgstudio 9028 / fluvgeo 9038 and verified through synthetic
+tests and a bounded live source download. Detailed check limits are in the
+[feature record](../features/stream-dem-files.md). See the
+[acquisition checkpoint](../checkpoints/current/terrain-acquisition.md) for context.
 
-Implemented through fgstudio 9027 / fluvgeo 9037 (uncommitted working-tree work):
+Implemented through fgstudio 9027 / fluvgeo 9037 (committed at resumed inspection):
 
 - Study Area-scoped Survey Collection discovery, selection and saved product plans.
 - Stream-scoped DEM file discovery for supported USGS source directories, with
@@ -47,11 +51,12 @@ Implemented through fgstudio 9027 / fluvgeo 9037 (uncommitted working-tree work)
 - Compact Download review: counts, reported sizes, missing/coarse resolution and
   saved state. Empty results explain Stream versus Study Area scope.
 
-Next proposed implementation: explicit, cancellable download of saved DEM file
-choices with original-source evidence and failure-safe local storage. Transfer
-execution is not implemented. Confirm the bounded storage/verification contract
-with the owner before extending it to terrain processing. No mosaic, reprojection,
-clipping, suitability acceptance or Survey Event creation is implied.
+New increment: explicit, cancellable download of saved DEM file choices with
+original-source evidence and failure-safe local storage. Sequential transfers,
+immutable receipts, checksums, offline verification and retry are implemented.
+Next review is owner acceptance of the working download UI. Subsequent terrain
+inspection needs its own owner-led design; no mosaic, reprojection, clipping,
+suitability acceptance or Survey Event creation is implied.
 
 Acquisition AOI is the saved Stream polygon, not the full Study Area. Target
 Stream Survey Event terrain; derive Reach DEMs only if needed. Physical Reach DEM

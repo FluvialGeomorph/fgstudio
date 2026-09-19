@@ -1,5 +1,64 @@
 # Stream-scoped source DEM file discovery
 
+## Source download increment (9028 / fluvgeo 9038)
+
+The owner approved the [download design](dem-download-proposal.md). Download saved
+files revalidates current study/source/selection evidence and acquires originals
+under the study's `source-dem` folder. Sequential transfers have byte/time limits,
+per-file outcomes and immutable provenance receipts. Cancel stops and joins the
+worker before cleaning its incomplete files. Completed assets survive failure,
+cancel and explicit retries. Retry rehashes compatible sources before reuse;
+reopening checks local integrity in a background worker. RECORDED fallback states
+explicitly distinguish a saved receipt from a newly checked checksum.
+
+HTTP/catalog lengths, TIFF signatures and SHA-256 verify transferred bytes.
+Scientific suitability and Survey Event creation remain future capabilities.
+The exact backend schema is `fluvgeo/dev/schemas/stream-dem-downloads.md`.
+Only Studio's isolated development library adopts the backend update.
+Refreshed metadata must be saved again even when tile IDs are unchanged; the
+download start guard cannot substitute an earlier selection snapshot for the
+inventory currently shown in review.
+
+### Verification, 2026-09-19
+
+- Backend: 74 focused assertions passed, including real loopback HTTP streaming,
+  byte limits, cancellation, idle/file timeouts, receipt failures, corrupt-asset
+  reuse, relocation and unknown-size handling. One directory-symlink test skipped
+  because this Windows account cannot create those links.
+- App: full suite passed 629 assertions with restored containment/cancellation
+  bindings. After adding the outer eight-hour watchdog, the final focused suite
+  passed 62 assertions and again confirmed cancellation bindings were restored.
+  Existing sf/shiny/testthat R 4.6.1 build warnings occur under runtime R 4.6.0.
+- Live qualification: a fresh app worker downloaded one 10,295,641-byte public
+  USGS source for a synthetic Omaha Stream. HTTP/catalog lengths matched, TIFF
+  signature and SHA-256 checks passed, and a second attempt reused the rehashed
+  local asset. Evidence is under ignored
+  `dev/check-output/dem-live-39e84d9d32d7`. No analyst study was opened or mutated
+  by this qualification, and no analyst-selected tiles were downloaded.
+- App package check completed with tests (624 assertions at that earlier
+  refinement) and vignettes, zero errors and a non-ASCII source warning. Subsequent
+  controller refinements are covered by the full/focused runs above; touched
+  download source strings now use portable Unicode escapes.
+- Backend build/limited package check completed with one existing non-ASCII
+  warning and two notes about existing undeclared methods/global bindings. The
+  strict check initially stopped on unavailable optional fluvgeodata/gt; the
+  limited rerun used `_R_CHECK_FORCE_SUGGESTS_=false`, `--no-tests --no-examples
+  --no-manual`. The legacy full suite was deliberately not run: several report
+  tests delete/rewrite files under HOME, outside temporary test directories.
+  The build also reported existing R >=4.1 syntax in unrelated source files.
+- Final pkgdown rebuild succeeded. Navigation: 58 nodes, 72 static edges and 14
+  reviewed bridges; source freshness and bridge checks passed. The expected local
+  site diagnostic about an unset public URL remains. Article 06 and README contain
+  the implemented download workflow and refreshed-inventory guard.
+- The identified older preview was stopped and `run-dev.ps1` launched a fresh
+  hidden R process. HTTP 200 on port 8780 and the Download saved files/Cancel
+  download controls were verified. Browser interaction/owner UI acceptance is
+  still distinct from these automated checks.
+
+No commits, pushes or shared-library upgrades were performed.
+
+## Historical discovery/selection increment (through 9027)
+
 Owner-directed next increment, 2026-09-19. From Survey Collections / DEM files,
 choose a saved Stream polygon and an included collection with DEM in its plan.
 Find source DEM files uses a cancellable worker and fixed public USGS metadata

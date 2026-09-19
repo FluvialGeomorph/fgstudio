@@ -228,7 +228,7 @@ local_study_store <- function(data_dir) {
     path <- if(length(files)) utils::tail(files,1L) else NULL
     list(path=path,result=if(is.null(path)) NULL else fluvgeo::read_stream_dem_selection(path))
   }
-  save_dem_files <- function(key,inventory,selected,expected_path,expected_files) {
+  check_dem_files <- function(key,inventory,expected_path,expected_files) {
     sid <- inventory$stream$stream_id; cid <- inventory$collection$candidate_key
     if(length(sid)!=1L || length(cid)!=1L) stop("Choose one Stream and collection.")
     if(!identical(context_path(key),expected_path) || !identical(dem_files(key,sid,cid)$path,expected_files))
@@ -244,13 +244,56 @@ local_study_store <- function(data_dir) {
     c <- d$records[d$records$candidate_key==cid,]
     if(nrow(c)!=1L || !identical(c$snapshot_id,inventory$collection$snapshot_id) ||
         !identical(c$raw_metadata,inventory$collection$raw_metadata)) stop("Collection evidence changed; search again.",call.=FALSE)
+    invisible(TRUE)
+  }
+  save_dem_files <- function(key,inventory,selected,expected_path,expected_files) {
+    check_dem_files(key,inventory,expected_path,expected_files)
+    sid <- inventory$stream$stream_id; cid <- inventory$collection$candidate_key
     n <- if(is.null(expected_files)) 1L else as.integer(sub(".*-([0-9]{6})\\.gpkg$","\\1",expected_files))+1L
     if(n>999999L) stop("File selection revision limit reached.")
     path <- file.path(dirname(expected_path),paste0(dem_prefix(sid,cid),sprintf("%06d.gpkg",n)))
     fluvgeo::write_stream_dem_selection(inventory,selected,path,basename(expected_path))
     path
   }
+  dem_destination <- function(key) {
+    parent <- dirname(context_path(key))
+    path <- file.path(parent,"source-dem")
+    # Resolve existing filesystem links before accepting the study-local directory.
+    resolved_parent <- as.character(fs::path_real(parent))
+    if(dir.exists(path) && !startsWith(tolower(as.character(fs::path_real(path))),paste0(tolower(resolved_parent),"/")))
+      stop("Source DEM storage is outside this study.")
+    path
+  }
+  prepare_dem_download <- function(key,expected_path,expected_files,selected) {
+    if(is.null(expected_files)) stop("Save file choices before downloading.")
+    inventory <- fluvgeo::read_stream_dem_selection(expected_files)
+    if(!identical(inventory$context_revision,basename(expected_path))) stop("Saved file choices use an older study revision.")
+    check_dem_files(key,inventory,expected_path,expected_files)
+    if(!length(selected) || !setequal(selected,inventory$selected)) stop("Save the current nonempty file choices before downloading.")
+    fluvgeo::prepare_stream_dem_download(expected_files,dem_destination(key))
+  }
+  dem_download <- function(key,stream_id,candidate_key) {
+    latest <- dem_files(key,stream_id,candidate_key)$path
+    if(is.null(latest)) return(NULL)
+    root <- dem_destination(key)
+    attempts <- file.path(root,"attempts")
+    if(!dir.exists(attempts)) return(NULL)
+    if(!startsWith(tolower(as.character(fs::path_real(attempts))),paste0(tolower(as.character(fs::path_real(root))),"/")))
+      stop("Download attempts are outside this study.")
+    paths <- list.files(attempts,pattern="^[0-9a-f]{32}$",full.names=TRUE)
+    paths <- paths[order(file.info(file.path(paths,"request.json"))$mtime,decreasing=TRUE)]
+    for(path in paths) {
+      if(!startsWith(tolower(as.character(fs::path_real(path))),paste0(tolower(as.character(fs::path_real(attempts))),"/")))
+        stop("Download attempt is outside this study.")
+      manifest <- tryCatch(suppressWarnings(jsonlite::read_json(file.path(path,"request.json"),simplifyVector=TRUE)),error=function(e) NULL)
+      if(!is.null(manifest) && identical(manifest$selection_file,basename(latest)) &&
+          identical(manifest$context_revision,basename(context_path(key))) &&
+          identical(manifest$stream_id,stream_id) && identical(manifest$candidate_key,candidate_key)) return(path)
+    }
+    NULL
+  }
   list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
+    dem_destination=dem_destination,prepare_dem_download=prepare_dem_download,dem_download=dem_download,
     dem_files=dem_files,save_dem_files=save_dem_files,
     survey_collections=survey_collections,save_survey_collections=save_survey_collections,
     rename = rename, set_purpose = set_purpose, define_streams = define_streams,

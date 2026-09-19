@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "fgstudio",
-  "package_version": "0.0.0.9027",
+  "package_version": "0.0.0.9028",
   "generator": {
     "pkgnet": "0.6.1",
     "flow": "0.2.0"
@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "ef3d38700a4f3894552ee0b501b8d436f4558c677f784308636e3c6e7db443bb"
+      "sha256": "b11122b8b075806436d59b331c760e7d09fdc194c48bef66d76b56c8a22002d1"
     },
     {
       "file": "NAMESPACE",
@@ -89,8 +89,12 @@
       "sha256": "672fd4a38ce800b337618de8bcace59a6f38d6909b32a4a54923ac1d093824cf"
     },
     {
+      "file": "R/stream_dem_download.R",
+      "sha256": "5177b16773ce3bb40561e78e848311d6312ffcb574adccc81d9efad928a1405b"
+    },
+    {
       "file": "R/stream_dem_files.R",
-      "sha256": "8a4bbe2953057cea81eaea30ef46e7d46216677beb3d795eed9b2519bde3b695"
+      "sha256": "ea422d39b5a53ab81d0fecd0858669140dbe4acea3064e17ceb54f2cd9a1aa87"
     },
     {
       "file": "R/stream_selection.R",
@@ -102,11 +106,11 @@
     },
     {
       "file": "R/study_store.R",
-      "sha256": "06e94e9b75b819cf5072c847d7e8ddacc9e225b9e95bfbe8d1a0c749fb814247"
+      "sha256": "0b50b613b5b536febab52ede82f6ce7fc2dc0435ea3a33c981d158808231482f"
     },
     {
       "file": "dev/architecture/reviewed-call-bridges.json",
-      "sha256": "d870d58b3f819e2f11b657d407a0704af826fd52da4bc5f4186e8c5dc36acc49"
+      "sha256": "6b4a4d0c641f3922ed6d2a575251ce066feef95fa777f5a2973695045114d7c0"
     }
   ],
   "nodes": [
@@ -297,6 +301,16 @@
         {
           "file": "R/drainage_explorer.R",
           "line": 34
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_stream_dem_download_job",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_dem_download.R",
+          "line": 1
         }
       ]
     },
@@ -582,6 +596,26 @@
         {
           "file": "R/drainage_explorer.R",
           "line": 3
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::stream_dem_download_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_dem_download.R",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::stream_dem_download_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_dem_download.R",
+          "line": 8
         }
       ]
     },
@@ -1030,8 +1064,26 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::stream_dem_download_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::stream_dem_files_server",
       "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::stream_dem_files_server",
+      "to": "fgstudio::stream_dem_download_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::stream_dem_files_ui",
+      "to": "fgstudio::stream_dem_download_ui",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1072,12 +1124,39 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::local_study_store/prepare_dem_download",
+      "to": "fluvgeo::prepare_stream_dem_download",
+      "kind": "adapter-call",
+      "file": "R/study_store.R",
+      "anchor": "fluvgeo::prepare_stream_dem_download(expected_files,dem_destination(key))",
+      "line": 273,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_stream_dem_download_job",
+      "to": "fluvgeo::run_stream_dem_download",
+      "kind": "background-worker",
+      "file": "R/stream_dem_download.R",
+      "anchor": "else fluvgeo::run_stream_dem_download(attempt)",
+      "line": 3,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_stream_dem_download_job",
+      "to": "fluvgeo::read_stream_dem_download",
+      "kind": "background-worker",
+      "file": "R/stream_dem_download.R",
+      "anchor": "if(verify_only) fluvgeo::read_stream_dem_download(attempt)",
+      "line": 3,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
       "from": "fgstudio::local_study_store/save_dem_files",
       "to": "fluvgeo::write_stream_dem_selection",
       "kind": "adapter-call",
       "file": "R/study_store.R",
       "anchor": "fluvgeo::write_stream_dem_selection(inventory,selected,path,basename(expected_path))",
-      "line": 250,
+      "line": 255,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1172,9 +1251,9 @@
     }
   ],
   "evaluation": {
-    "static_nodes": 55,
-    "static_edges": 69,
-    "reviewed_bridges": 11,
+    "static_nodes": 58,
+    "static_edges": 72,
+    "reviewed_bridges": 14,
     "storage_closure_detected": false,
     "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]
   }

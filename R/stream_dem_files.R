@@ -18,7 +18,7 @@ stream_dem_files_ui <- function(id) {
       shiny::actionButton(ns("select_none"),"Clear",class="btn-outline-secondary btn-sm"),
       shiny::actionButton(ns("save_files"),"Save file choices",class="btn-success btn-sm")),
     shiny::uiOutput(ns("status")),shiny::uiOutput(ns("acquisition")),shiny::uiOutput(ns("files")),shiny::uiOutput(ns("details")),
-    shiny::p(class="small mb-0","Check tiles, then save choices for later acquisition. No rasters downloaded."))
+    stream_dem_download_ui(ns("download")))
 }
 
 stream_dem_files_server <- function(id,current,discovery,plan,included,launch=launch_stream_dem_job,store=NULL) {
@@ -26,6 +26,11 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
     result <- shiny::reactiveVal(NULL); status <- shiny::reactiveVal("Choose a Stream and a planned DEM collection.")
     busy <- shiny::reactiveVal(FALSE); job <- NULL; started <- NULL
     saved_path <- shiny::reactiveVal(NULL); saved_ids <- shiny::reactiveVal(character())
+    saved_inventory <- shiny::reactiveVal(FALSE)
+    download <- stream_dem_download_server("download",current,
+      selection=shiny::reactive(list(path=if(saved_inventory()) saved_path() else NULL,ids=saved_ids(),draft=input$visible,
+        stream=input$stream,collection=input$collection)),
+      scope=shiny::reactive(list(current()$path,input$stream,input$collection,discovery(),plan(),included(),saved_path(),saved_inventory())),store=store)
     streams <- shiny::reactive({
       x <- current(); s <- x$stream_inventory
       if(!inherits(s,"sf")) return(NULL)
@@ -56,7 +61,7 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
     # these session-only file candidates; never display them for another AOI.
     shiny::observeEvent(list(current()$path,discovery(),collections(),input$stream,input$collection),{
       cancel(); result(NULL); status("Choose a Stream and a planned DEM collection, then find files.")
-      saved_path(NULL); saved_ids(character())
+      saved_path(NULL); saved_ids(character()); saved_inventory(FALSE)
       if(!is.null(store) && length(input$stream)==1L && nzchar(input$stream) &&
           length(input$collection)==1L && nzchar(input$collection) && !is.null(current())) {
         tryCatch({
@@ -65,22 +70,23 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
           if(!is.null(old$result) && identical(old$result$context_revision,basename(current()$path)) &&
               input$collection %in% collections()$candidate_key &&
               identical(old$result$collection$snapshot_id,collections()$snapshot_id[collections()$candidate_key==input$collection])) {
-            saved_ids(old$result$selected); result(old$result); status("Saved file choices reopened. No download or suitability approval.")
+            saved_ids(old$result$selected); result(old$result); saved_inventory(TRUE)
+            status("Saved file choices reopened. Download outcomes appear below; suitability remains unreviewed.")
           }
         },error=function(e) status(paste("Saved file choices unavailable:",conditionMessage(e))))
       }
     },ignoreNULL=FALSE)
     shiny::observeEvent(input$find,{
-      if(!is.null(result()) && !setequal(input$visible,saved_ids())) {status("Save changed file choices before refreshing.");return()}
+      if(!is.null(result()) && (!saved_inventory() || !setequal(input$visible,saved_ids()))) {status("Save changed file choices before refreshing.");return()}
       s <- aoi(); c <- collections()
       if(is.null(s) || nrow(s)!=1L || is.null(c)) {status("Save a Stream polygon and include a DEM in the acquisition plan first.");return()}
       c <- c[c$candidate_key %in% input$collection,]
       if(nrow(c)!=1L) {status("Choose one planned DEM collection.");return()}
-      cancel(); result(NULL)
+      cancel(); result(NULL); saved_inventory(FALSE)
       tryCatch({
         job <<- launch(s,c); started <<- Sys.time(); busy(TRUE)
         status("Finding source DEM file metadata; no rasters are being downloaded.")
-        shiny::showNotification("Finding Stream DEM files…",id=session$ns("activity"),duration=NULL,session=session)
+        shiny::showNotification("Finding Stream DEM files\u2026",id=session$ns("activity"),duration=NULL,session=session)
       },error=function(e) status("File search could not start; no data changed."))
     },ignoreInit=TRUE)
     poll <- function() {
@@ -111,7 +117,8 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
       tryCatch({
         ids <- if(is.null(input$visible)) character() else input$visible
         path <- store$save_dem_files(x$key,r,ids,x$path,saved_path())
-        saved_path(path);saved_ids(ids);status("File choices saved. No rasters downloaded.")
+        saved_path(path);saved_ids(ids);saved_inventory(TRUE)
+        status("File choices saved. Use Download saved files to acquire sources.")
       },error=function(e) status(paste("File choices not saved:",conditionMessage(e))))
     },ignoreInit=TRUE)
     output$status <- shiny::renderUI(shiny::div(role="status",status(),
@@ -133,13 +140,13 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
         paste0(format(round(sum(f$size_bytes[known])/1e6,1),trim=TRUE)," MB",if(unknown_size) " known subtotal" else " reported")
       unknown_resolution <- sum(!is.finite(f$pixel_size_m) | f$pixel_size_m <= 0)
       coarse <- sum(is.finite(f$pixel_size_m) & f$pixel_size_m > 1)
-      state <- if(is.null(saved_path()) || !setequal(input$visible,saved_ids())) "Not saved" else "Saved"
+      state <- if(!saved_inventory() || is.null(saved_path()) || !setequal(input$visible,saved_ids())) "Not saved" else "Saved"
       shiny::tags$details(shiny::tags$summary(paste("Download review:",nrow(f),"selected /",nrow(r$files),"tiles;",state)),
         compact_table(data.frame(Item=c("Tiles","Download size","Unknown file sizes","Resolution screen","Choices"),
           Value=c(paste(nrow(f),"selected /",nrow(r$files),"returned"),size,as.character(unknown_size),
             paste(coarse,"coarser than 1 m;",unknown_resolution,"unknown"),state))),
         shiny::p(class="small mb-1",if(!nrow(f)) "Select tiles to show their details and map outlines." else
-          "Download review only: resolution does not establish terrain suitability. No rasters downloaded."),
+          "Save these choices before downloading. Resolution does not establish terrain suitability."),
         if(coarse) shiny::p(class="small text-warning mb-1","Tiles coarser than 1 m cannot serve as analysis DEMs; revise the selection or plan point-cloud acquisition."),
         if(identical(r$outcome,"PARTIAL")) shiny::p(class="small text-warning mb-1","Incomplete catalog result: these counts and sizes cover returned tiles only."))
     })
@@ -153,6 +160,6 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
     session$onSessionEnded(cancel)
     list(aoi=aoi,files=visible_files,result=result,poll=poll,status=status,
       has_pending=function() !is.null(shiny::isolate(result())) &&
-        !setequal(shiny::isolate(input$visible),shiny::isolate(saved_ids())))
+        (!shiny::isolate(saved_inventory()) || !setequal(shiny::isolate(input$visible),shiny::isolate(saved_ids()))))
   })
 }

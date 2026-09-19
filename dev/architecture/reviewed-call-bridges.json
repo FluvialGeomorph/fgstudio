@@ -1,6 +1,9 @@
 {
   "scope": "FG Studio navigation supplements; reviewed source relationships, not runtime traces",
   "edges": [
+    {"from":"fgstudio::local_study_store/prepare_dem_download","to":"fluvgeo::prepare_stream_dem_download","kind":"adapter-call","file":"R/study_store.R","anchor":"fluvgeo::prepare_stream_dem_download(expected_files,dem_destination(key))"},
+    {"from":"fgstudio::launch_stream_dem_download_job","to":"fluvgeo::run_stream_dem_download","kind":"background-worker","file":"R/stream_dem_download.R","anchor":"else fluvgeo::run_stream_dem_download(attempt)"},
+    {"from":"fgstudio::launch_stream_dem_download_job","to":"fluvgeo::read_stream_dem_download","kind":"background-worker","file":"R/stream_dem_download.R","anchor":"if(verify_only) fluvgeo::read_stream_dem_download(attempt)"},
     {"from":"fgstudio::local_study_store/save_dem_files","to":"fluvgeo::write_stream_dem_selection","kind":"adapter-call","file":"R/study_store.R","anchor":"fluvgeo::write_stream_dem_selection(inventory,selected,path,basename(expected_path))"},
     {"from":"fgstudio::launch_stream_dem_job","to":"fluvgeo::discover_stream_dem_files","kind":"background-worker","file":"R/stream_dem_files.R","anchor":"callr::r_bg(function(stream,collection) fluvgeo::discover_stream_dem_files(stream,collection)"},
     {"from":"fgstudio::launch_survey_collection_job","to":"fluvgeo::discover_survey_collections","kind":"background-worker","file":"R/mod_survey_collections.R","anchor":"callr::r_bg(function(boundary) fluvgeo::discover_survey_collections(boundary)"},

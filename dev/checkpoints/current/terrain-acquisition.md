@@ -1,104 +1,61 @@
-# Checkpoint: Terrain acquisition handoff
+# Checkpoint: Source DEM download review
 
 - Updated: 2026-09-19
-- Status: paused at owner request; ready for a new chat
+- Status: implementation and qualification complete; ready for owner UI review
 
-## Objective
+## Owner direction and implementation
 
-Continue FG Studio toward browser-based L1 analysis through owner-reviewed working
-increments. Next proposed slice is downloading explicitly saved source DEM tiles,
-not new terrain algorithms. The owner approved the latest UI and requested this
-documentation pause. Do not resume implementation merely because this file exists.
+The owner approved the study-local download design with "Proceed as proposed."
+FG Studio 0.0.0.9028 and fluvgeo 2026.09.19.9038 implement explicit acquisition of
+saved source DEM choices. Study-local `source-dem` storage keeps original files,
+immutable selection copies and transfer receipts, SHA-256 identities and failures.
+Transfers are sequential and bounded. Reopening verifies local checksums in a
+background worker; explicit retries reuse only matching, rehashed source assets.
 
-## Read first
+Start requires the current saved inventory and checked IDs. Refreshing metadata
+requires saving again even if IDs did not change. Scope changes stop and join the
+worker before incomplete-file cleanup; delayed results cannot attach to another
+study or selection. Downloaded does not mean scientifically suitable terrain.
 
-1. Workspace and repository AGENTS.md; `.agents/workstation.md` before R execution.
-2. `dev/goals/project-plan.md` and `dev/decisions/adr-0007-iterative-terrain-acquisition.md`.
-3. `dev/features/stream-dem-files.md` for behavior and dated verification.
-4. `vignettes/dev-06-stream-dem-files.Rmd` for the human call-flow explanation;
-   `dev/architecture/agent-routes.md` for concise source navigation.
-5. Sibling `fluvgeo/dev/schemas/survey-collections.md` before backend changes.
+Current work is uncommitted on main in both repositories. Initial resumed HEADs
+were fgstudio 04d5b89 and fluvgeo 9de01fa, with clean working trees. No commits,
+pushes, shared-library upgrades or production-client changes were performed.
+The prior preparation-only handoff is [archived](../archive/terrain-acquisition-before-downloads-2026-09-19.md).
 
-## Current state and completed work
+## Read to continue
 
-- fgstudio 0.0.0.9027, main; observed HEAD d697f75 (`added documentation`).
-- fluvgeo 2026.09.19.9037, main; observed HEAD 96e2888 (`added reach split/merge`).
-- Both contain substantial modified/untracked work from this development loop.
-  These features are working-tree state, not committed releases. Refresh status;
-  preserve existing edits. No commits or pushes were performed for this handoff.
-- Study hierarchy/Stream/Reach editing precedes the current acquisition work.
-- Survey Collections: USGS/USIEI discovery for Study Area, product planning,
-  immutable saved selections, shared map and distinct service outcomes.
-- DEM files: saved Stream polygon AOI; supported USGS source-directory matching;
-  intersecting reported file bounds; selectable tiles, Select all/Clear, scrolling
-  details, explicit Save file choices and compatible offline restoration.
-- Collapsible Download review presents counts, known size/subtotal, missing sizes,
-  unknown/coarser-than-1-m resolution and saved state. No transfer execution exists.
-- Backend: `discover_stream_dem_files`, `write_stream_dem_selection`,
-  `read_stream_dem_selection`. App: `R/stream_dem_files.R`, parent
-  `R/mod_survey_collections.R`, persistence adapter `R/study_store.R`.
-
-## Resolved confusion — do not reopen as an established defect
-
-For Spencer Creek mainstem, a direct metadata query returned 31 tiles for
-IA_Eastern_1_2019 and zero for IA_Eastern_2_2019. Owner screenshots subsequently
-showed the corresponding tile list and successful-empty status. The owner
-identified the difference between Study Area discovery and Stream acquisition
-scope, saved file choices, and accepted the clarified wording. No stale-result or
-collection-switching defect was established. The exact cause of the original
-transient blank display was not independently reproduced.
-
-Unchecked tiles do not appear in the selected-tile table or map overlays. The new
-review reports selected/returned counts and explains selection. Empty successful
-queries now say the collection may cover other parts of the Study Area; this is
-not a claim that the provider has no DEMs anywhere.
-
-## Evidence and verification
-
-- Latest refinement: 25 focused backend + 30 focused app assertions passed.
-  Two app warnings concern dependencies built under R 4.6.1 (runtime R 4.6.0).
-- Prior full app suite: 591 passes, zero failures, two build-version warnings,
-  before the final presentation-only refinement. Do not call it a full test of
-  the final revision. Full fluvgeo suite and R CMD check were not rerun.
-- Latest pkgdown rebuild succeeded, with expected missing-public-URL diagnostic.
-  Generated map: 55 nodes, 69 static edges, 11 reviewed bridges; freshness and
-  bridge checks passed. Final runtime HTTP check returned 200.
-- Owner accepted the UI. This is not comprehensive browser automation evidence.
+- `dev/features/stream-dem-files.md`: current behavior and verification evidence.
+- `dev/features/dem-download-proposal.md`: owner-approved scope and limits.
+- `vignettes/dev-06-stream-dem-files.Rmd` and `dev/architecture/agent-routes.md`:
+  paired human and agent call-flow navigation.
+- Sibling `fluvgeo/dev/schemas/stream-dem-downloads.md`: exact receipt/API contract.
+- `dev/decisions/adr-0007-iterative-terrain-acquisition.md`: scientific boundaries.
 
 ## Runtime and data preservation
 
-Preview was running at http://127.0.0.1:8780/ at pause. Verify current process/port
-before restarting; PIDs are intentionally not a restart contract. Launch from
-fgstudio with `dev/scripts/run-dev.ps1` in a fresh R process, never a test process.
-Backend is installed only in `fgstudio/dev/local-library`; shared libraries and
-ohwm2/QGIS/ArcGIS production runtimes are unchanged. Docs build uses a separate
-`dev/check-output/doc-library` and ignored `docs/` output.
+Fresh preview verified at http://127.0.0.1:8780/ with HTTP 200 and the download
+controls present. Final evidence: 74 backend assertions; 629 full app assertions
+before the outer-watchdog addition and 62 final focused assertions afterward;
+one 10.3 MB synthetic USGS transfer plus checksum reuse. See the feature record
+for package-check warnings, unavailable optional dependencies and test limits.
 
-Preserve `.local-data` and all its hierarchy/selection revisions. The owner has
-saved DEM choices there. Do not clear studies, manufacture missing metadata or
-automatically download their tiles. Existing file-choice GeoPackages record intent,
-not acquired assets. Unsaved checkbox drafts are discarded when switching pairs.
+Use `dev/scripts/run-dev.ps1` in a fresh R process, with Studio's isolated
+`dev/local-library`. Verify port 8780/process ownership before restarting.
+Preserve all `.local-data` studies and selection revisions. No analyst source
+tiles are downloaded automatically; the owner must select Download saved files.
+The opt-in live qualification script uses a separate synthetic Omaha AOI and
+caps its one source tile at 16 MiB under ignored `dev/check-output`.
 
-## Next safe action and open decisions
+## Next owner review
 
-After the owner resumes, inspect source/status, then propose the smallest download
-contract: explicit start, saved choices, supported source URLs, bounded/cancellable
-worker, temporary/incomplete-file handling, non-destructive publication, provenance
-and clear per-file outcomes. Decide source-asset destination and verification before
-writing a new asset schema; local preview paths are not an approved enterprise model.
-Keep downloads distinct from raster inspection and scientific acceptance.
+Review the working download UI with saved choices. Any refinements remain within
+source acquisition unless separately directed. The subsequent terrain inspection
+step needs its own bounded design: raster readability, actual resolution, source
+CRS/vertical evidence, visual/processing review and acceptance rationale. No
+mosaicking, reprojection, clipping, suitability acceptance or Survey Event creation
+has been implemented or implied by downloading.
 
-Standing constraints:
-
-- High-resolution AOI is Stream, not Study Area. File bounds are not valid-data
-  footprints; NoData masking is intentional, not a missing-data percentage test.
-- DEMs must be 1 m or finer, but resolution alone cannot approve suitability
-  (including hydro-flattening). Unknown resolution is not a confirmed failure.
-- Survey Event can use multiple Survey Collections; never infer unique surveys
-  from catalog titles/dates. FGDB Collection is a different concept.
-- Preserve source CRS/vertical/provenance uncertainty. Do not infer vertical datum,
-  perform transforms, mosaic/clip terrain, or create Events in a download slice.
-- Mid-resolution Study Area terrain, persistent Reach DEMs and Stream/Event linkage
-  need future design. User-facing tools remain deterministic; no agentic AI runtime.
-- Maintain human articles and agent routes together. Keep UI compact; no extra
-  responsive-preview fixtures. Owner remains in control of toolbox/API design.
+High-resolution AOI remains the saved Stream polygon. One future Stream Survey
+Event may draw on several Survey Collections. Reach derivatives, physical Reach
+DEM persistence and Stream/Event linkage remain design questions. Study Area
+mid-resolution terrain and point-cloud processing remain future scopes.

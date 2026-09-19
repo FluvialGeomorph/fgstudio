@@ -8,7 +8,8 @@ vignette: >
 ---
 
 This step connects planned DEM collections to provider file metadata for a saved
-Stream polygon. It does not download rasters or create terrain assets/Events.
+Stream polygon. An explicit saved-selection download then acquires original
+source files with transfer receipts; it does not create analytical terrain/Events.
 Study Area discovery remains broader; high-resolution acquisition is Stream-scoped.
 Possible mid-resolution Study Area terrain is a separate future workflow.
 
@@ -20,7 +21,9 @@ Possible mid-resolution Study Area terrain is a separate future workflow.
 | Inspect bounds | child `aoi()` / `files()` → parent shared Leaflet map | Green Stream AOI, purple checked file bounds |
 | Save choices | `store$save_dem_files` → `fluvgeo::write_stream_dem_selection` | Immutable file-choice snapshot |
 | Reopen | `store$dem_files` → `fluvgeo::read_stream_dem_selection` | Offline read; only current context/source evidence restored |
-| Switch/revise/cancel | worker kill and result invalidation | No file writes or stale AOI reuse |
+| Download saved files | `store$prepare_dem_download` → `fluvgeo::prepare_stream_dem_download`; `launch_stream_dem_download_job` → callr → `fluvgeo::run_stream_dem_download` | Exact selection copy, original files and immutable transfer receipts |
+| Reopen downloads | `store$dem_download` → background `fluvgeo::read_stream_dem_download` | Offline checksum verification; corrupted/missing assets shown as unavailable |
+| Switch/revise/cancel | kill/join worker → `fluvgeo::cancel_stream_dem_download` | Completed receipts retained; only stopped attempt's incomplete files cleaned |
 
 The backend queries OPR or 1 m products only for supported USGS directory links.
 It filters metadata bounding boxes, not actual valid-elevation footprints.
@@ -34,7 +37,7 @@ The child `output$acquisition` presents a collapsible download review from the
 current checked files, with saved-state comparison. Reported byte sizes are not
 measured transfer sizes; missing values produce a known subtotal, not a complete
 estimate. Unknown resolution stays unknown and coarser-than-1-m tiles are flagged.
-This does not execute transfers. Empty results explain that a collection found
+Transfer start is a separate explicit action. Empty results explain that a collection found
 for the Study Area may not have any matching tiles for this Stream.
 
 The child module manages a cancellable worker, 90-second outer timeout and
@@ -45,6 +48,9 @@ update the same control. Save requires the persisted DEM acquisition plan and
 matching source snapshot/raw metadata, Stream geometry and current revision.
 Per-pair hashed filenames plus revision tokens prevent stale overwrite; historical
 snapshots remain. Switching Stream/collection discards unsaved checkbox drafts.
+Refreshing also marks the inventory unsaved even when the returned file IDs are
+unchanged. The optimistic file revision token is retained separately, while the
+download child receives no saved path until the refreshed evidence is saved.
 PARTIAL remains partial even after Select all. The parent owns the one shared map and swaps overlays
 when the DEM files tab is active; study geometry and selection snapshots are unchanged.
 
@@ -54,3 +60,44 @@ Sources: `R/stream_dem_files.R`, `R/mod_survey_collections.R`, sibling
 `test_stream_dem_files.R` in fluvgeo. Opt-in public smoke check:
 `dev/scripts/check-stream-dem-files-live.R`. ADR 0007 records the terrain scope and
 future multi-source Stream Event/Reach derivative design boundaries.
+
+## Original source downloads (9028)
+
+`stream_dem_download_server` is a child of the DEM file module. The parent supplies
+current context, saved path/IDs, draft IDs and a scope reactive. Start requires a
+nonempty saved selection matching the checkbox draft. `store$prepare_dem_download`
+rechecks the latest context and file-choice revision, saved DEM product intent,
+source snapshot/raw metadata and Stream geometry, then prepares a new attempt in
+the study's `source-dem` directory. The immutable copied selection is the worker's
+input. Later checkbox changes cannot change the active attempt's files.
+
+The separate callr worker runs sequential transfers and writes advisory progress
+for the child to poll. Byte counts are measured; percentages appear only with a
+usable transfer length. Known oversized plans fail before start; streaming limits
+also apply to unknown sizes. Failed files have their own receipts, and later files
+can still succeed within the attempt budget. Explicit start again creates another
+attempt, rehashes compatible completed source assets and retries unsuccessful files.
+
+Context/source/saved-selection changes cancel the child job. The controller kills
+the worker after an eight-hour outer deadline as well, covering startup and local
+verification beyond the backend's transfer timers. On cancellation it kills
+and joins the process before asking the backend to clean that attempt's numbered
+incomplete files. Session end uses the same path. A late result is never attached
+to the new scope. Opening a saved attempt launches a verification-only worker;
+this reads local files without downloading. Cancellation/error fallback can show
+RECORDED, explicitly meaning that a receipt exists but its checksum has not been
+rechecked in that view. Full verification distinguishes DOWNLOADED/REUSED from
+UNAVAILABLE. A crashed attempt exposes INTERRUPTED/NOT_STARTED work for retry.
+
+Assets use relative content-identifying paths and non-replacing publication.
+HTTP/catalog length and TIFF signature checks plus SHA-256 identify transferred
+bytes; none establishes raster readability, resolution, vertical datum, coverage
+or suitability. The UI remains a compact download action, status and per-file
+table. Local destination/limits are expandable. Source and receipt publication
+are separate: orphan bytes after a receipt failure do not count as a download.
+
+Additional sources: `R/stream_dem_download.R`, sibling
+`fluvgeo/R/stream_dem_download.R` and its `dev/schemas/stream-dem-downloads.md`.
+Tests: `test-stream-dem-download.R`, `test-stream-dem-files.R` in Studio and
+`test_stream_dem_download.R` in fluvgeo. Transport tests use synthetic bytes and
+a loopback HTTP server, never the analyst's saved tile choices.

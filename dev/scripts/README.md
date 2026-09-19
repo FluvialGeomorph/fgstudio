@@ -1,5 +1,9 @@
 # Development scripts
 
+- `check-dem-download-live.R`: opt-in acquisition of one reported <=16 MiB
+  public USGS tile for a synthetic Omaha AOI, with worker/readback/reuse checks.
+  Evidence is retained under ignored `dev/check-output`; never opens analyst studies.
+
 - `check-stream-dem-files-live.R`: opt-in metadata-only public USGS test using a
   synthetic Stream polygon; no raster downloads or analyst-data writes.
 

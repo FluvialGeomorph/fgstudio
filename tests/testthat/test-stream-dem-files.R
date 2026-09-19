@@ -60,18 +60,33 @@ test_that("saved file plans reopen and guard context, collection and file revisi
   path <- store$save_dem_files(x$key,r,"tile",x$path,NULL)
   old <- store$dem_files(x$key,r$stream$stream_id,collection$candidate_key)
   expect_identical(old$result$selected,"tile");expect_identical(tools::md5sum(x$path),before)
+  expect_error(store$prepare_dem_download(x$key,x$path,path,character()),"nonempty")
   expect_error(store$save_dem_files(x$key,r,character(),x$path,NULL),"newer")
   forged <- r; forged$collection$snapshot_id <- "other"
   expect_error(store$save_dem_files(x$key,forged,"tile",x$path,path),"evidence changed")
+  refreshed <- new.env(parent=emptyenv());refreshed$path <- path
   shiny::testServer(stream_dem_files_server,args=list(current=function() x,discovery=function() d,
-    plan=function() d$acquisition_plan,included=function() collection$candidate_key,store=store),{
+    plan=function() d$acquisition_plan,included=function() collection$candidate_key,store=store,
+    launch=function(...) list(is_alive=function() FALSE,kill=function() TRUE,get_result=function() r)),{
     session$flushReact();session$setInputs(stream=r$stream$stream_id,collection=collection$candidate_key)
     expect_match(status(),"reopened");expect_identical(saved_ids(),"tile")
     session$setInputs(visible="tile")
     expect_match(output$acquisition$html,"1 selected / 1 tiles; Saved",fixed=TRUE)
+    session$setInputs(find=1);poll();session$flushReact()
+    expect_false(saved_inventory())
+    expect_match(output$acquisition$html,"Not saved",fixed=TRUE)
+    expect_true(session$returned$has_pending())
+    session$setInputs(save_files=1)
+    expect_true(saved_inventory())
+    refreshed$path <- saved_path()
   })
+  path <- refreshed$path
+  attempt <- store$prepare_dem_download(x$key,x$path,path,"tile")
+  expect_true(file.exists(file.path(attempt,"selection.gpkg")))
+  expect_identical(store$dem_download(x$key,r$stream$stream_id,collection$candidate_key),attempt)
   next_path <- store$save_dem_files(x$key,r,character(),x$path,path)
   expect_true(file.exists(path));expect_false(identical(path,next_path))
   store$rename(x$key,"New name",x$path)
   expect_error(store$save_dem_files(x$key,r,"tile",x$path,next_path),"newer")
+  expect_error(store$prepare_dem_download(x$key,x$path,path,"tile"),"newer")
 })

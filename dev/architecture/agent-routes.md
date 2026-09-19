@@ -8,6 +8,7 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 
 | Task | Article | App source | First tests | Backend boundary |
 | --- | --- | --- | --- | --- |
+| Source DEM download / receipts / cancellation / retry | 06 | stream_dem_download.R, study_store.R | test-stream-dem-download.R, test-stream-dem-files.R | prepare_stream_dem_download, run_stream_dem_download, read_stream_dem_download, cancel_stream_dem_download |
 | Stream DEM files / saved choices / acquisition AOI | 06 | stream_dem_files.R, mod_survey_collections.R, study_store.R | test-stream-dem-files.R | discover_stream_dem_files, write_stream_dem_selection, read_stream_dem_selection |
 | Survey Collection discovery / shared map / resolution / product plan (ADR 0007) | 05 | mod_survey_collections.R, study_store.R | test-survey-collections.R | discover_survey_collections, survey_collection_products, write_survey_collection_selection, read_survey_collection_selection |
 | Startup, session or revision lifecycle | 01 | app.R, mod_study.R, study_store.R | test-study-module.R, test-study-store.R | start_study_context, read_study_context, revise_study_context |
@@ -40,7 +41,8 @@ Reach parent IDs are reassigned. Verify these guards in source before changing t
 ## Indirection that must not disappear from the mental model
 
 DEM download review: `R/stream_dem_files.R`, `output$acquisition` summarizes
-checked metadata and saved state. No transfer worker exists yet; article 06
+checked metadata and saved state. The child `stream_dem_download_server` starts
+the separate transfer/verification worker; article 06
 explains missing sizes/resolution and Stream-versus-Study-Area search scope.
 
 `reach_split_server` → `store$split_reach` (returned closure) → local `revise`
