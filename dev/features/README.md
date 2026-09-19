@@ -4,6 +4,10 @@ Describe cohesive user-visible or cross-cutting capabilities here when their beh
 
 ## Current features
 
+- [Stream DEM files](stream-dem-files.md): Stream-scoped, metadata-only source file discovery and shared-map review.
+
+- [Survey Collections](survey-collections.md): catalog discovery and saved selection intent, not Survey Events.
+
 - [Developer documentation](developer-documentation.md): paired human articles,
   pkgdown reference and bounded agent navigation with verified tool limitations.
 

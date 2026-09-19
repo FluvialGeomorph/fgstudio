@@ -22,8 +22,9 @@ mod_study_ui <- function(id) {
     bslib::card(
       bslib::card_header("Your Study Area"),
       shiny::uiOutput(ns("summary")),
-      shiny::uiOutput(ns("boundary_editor")),
-      shiny::uiOutput(ns("streams_editor"))
+      shiny::tabsetPanel(id=ns("study_task"),type="pills",
+        shiny::tabPanel("Study geometry",shiny::uiOutput(ns("boundary_editor")),shiny::uiOutput(ns("streams_editor"))),
+        shiny::tabPanel("Survey Collections",mod_survey_collections_ui(ns("survey_collections"))))
     )
   )
 }
@@ -42,6 +43,7 @@ mod_study_server <- function(id, store) {
     editor_key <- NULL
     generation <- 0L
     pending_selection <- NULL
+    collections <- mod_survey_collections_server("survey_collections",current,store)
     feature_names <- study_feature_names(input, output, session, current, store,
       on_focus = function(shape) if (!is.null(editor)) editor$focus_feature(shape),
       has_pending = function() (!is.null(editor) && editor$has_unsaved()) ||
@@ -179,7 +181,7 @@ mod_study_server <- function(id, store) {
     }
     shiny::observeEvent(input$workspace_task, {
       if (!identical(input$workspace_task, "new") || is.null(current())) return()
-      if ((!is.null(editor) && editor$has_unsaved()) ||
+      if (collections$has_pending() || (!is.null(editor) && editor$has_unsaved()) ||
           (!is.null(streams_editor) && any(nzchar(unlist(streams_editor$draft()))))) {
         shiny::updateTabsetPanel(session, "workspace_task", selected = "open")
         shiny::showModal(shiny::modalDialog(title = "Start a new study?",
@@ -253,6 +255,7 @@ mod_study_server <- function(id, store) {
         compact_table(data.frame(Item = c("Purpose", "Boundary", "Streams / Reaches / Surveys", "Next"),
           Status = c(purpose, if (x$boundary) "Saved - editable" else "Not defined",
             sprintf("%d / %d / %d", x$streams, x$reaches, x$events),
+            if (x$reaches > 0L) "Open Survey Collections to discover and select lidar acquisitions" else
             if (x$streams > 0L) "Choose Reaches on the map to define Reaches within a Stream" else
               if (x$boundary) "Choose Streams on the map to define a Stream" else "Select or draw a Study Area boundary")))
       )

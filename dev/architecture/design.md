@@ -46,6 +46,14 @@ This follows Posit's [modules](https://shiny.posit.co/r/articles/improve/modules
 
 ## Storage contract
 
+Survey Collection selection is an independent immutable GeoPackage sidecar series,
+not a context schema change. The new tab calls shared fluvgeo discovery/IO methods;
+only saved candidate/product intent changes. Version 2 adds acquisition_plan;
+version 1 reads with an empty plan, without implicit product defaults.
+See [Survey Collections](../features/survey-collections.md)
+and developer article 05. Acquisition, Survey Events and terrain processing remain
+separate steps. FGDB Collection continues to mean a grouping of Study Areas.
+
 Adapter groups (exact signatures remain in `R/study_store.R`):
 
 | Responsibility | Methods |

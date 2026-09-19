@@ -1,8 +1,14 @@
 # Development scripts
 
+- `check-stream-dem-files-live.R`: opt-in metadata-only public USGS test using a
+  synthetic Stream polygon; no raster downloads or analyst-data writes.
+
 Store maintained automation supporting development workflows here. Scripts should document inputs, outputs, dependencies, and safe execution expectations.
 
 Run from the repository root:
+
+- `check-survey-collections-live.R`: opt-in USGS/NOAA smoke query for a synthetic
+  Omaha-area AOI and temporary GeoPackage round trip; never reads analyst studies.
 
 - `build-docs.ps1`: resolve R/Pandoc, install an isolated documentation snapshot,
   build/check pkgnet navigation data, then render the local pkgdown site with flow

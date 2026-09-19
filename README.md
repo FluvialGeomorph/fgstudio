@@ -6,6 +6,36 @@ parent application or deployment target.
 
 ## Current scope
 
+The **Survey Collections** tab discovers reported lidar acquisitions for a saved
+Study Area, displays metadata/footprints and saves checkbox selection intent.
+Reopening restores selections offline. Planned collections are selectable; saving
+does not download data or create Survey Events. Query results distinguish failures
+from empty/partial responses. This uses USGS 3DEP and USIEI catalog layers, not an
+exhaustive clearinghouse; cross-listed records need later identity review.
+
+In **Plan acquisition**, choose an included Survey Collection, review reported
+product links, check Existing DEM and/or Lidar point cloud, then **Update
+acquisition plan** and **Save selections**. Reopening restores the saved plan.
+Unknown access is unresolved, not unavailable. Links are unverified provider
+reports; no download or terrain processing occurs. DEM acquisition is the first
+planned execution path; point-cloud processing remains a later capability.
+
+Discovery and planning share one coverage map. **Inspected only** isolates the
+focused footprint; **Custom comparison** lets you toggle footprints without
+changing saved inclusion. Zoom buttons return to the Study Area or visible set.
+Product review shows reported DEM pixel size: 1 m or finer is required but does
+not prove suitability. Download/visual review and multi-source Event assembly
+remain next capabilities; acquisition plans can already be revised and resaved.
+
+In **DEM files**, choose a saved Stream and a collection with DEM in your plan,
+then **Find source DEM files**. The shared map shows the Stream AOI in green and
+checked file bounds in purple. The first adapter supports USGS source-directory
+links only; unsupported links are reported explicitly. File size and resolution
+evidence are metadata, not verified raster properties. Review starts in the
+session and is not yet a download step. **Select all** checks all returned tiles;
+**Save file choices** retains them for offline reopening. Save the collection's DEM
+acquisition plan first. Partial queries remain incomplete even when all are selected.
+
 FG Studio now supports local Study Area, Stream and Reach definition, including
 saved-Reach splitting and combining. It is not yet an L1 execution app: Survey
 Event/terrain setup, report generation and Enterprise access remain future UI

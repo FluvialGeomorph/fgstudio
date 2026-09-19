@@ -35,7 +35,43 @@ for evidence, test-version boundaries and the current uncommitted-work caveat.
 
 ## Current task and next decision
 
-The owner selected FG Studio developer documentation as the next increment:
+Paused for a new chat after owner acceptance of the download-review UI on
+2026-09-19. Resume from the [acquisition checkpoint](../checkpoints/current/terrain-acquisition.md).
+
+Implemented through fgstudio 9027 / fluvgeo 9037 (uncommitted working-tree work):
+
+- Study Area-scoped Survey Collection discovery, selection and saved product plans.
+- Stream-scoped DEM file discovery for supported USGS source directories, with
+  shared map, Select all/Clear, scrollable tile controls and details.
+- Immutable saved file choices and compatible offline reopening.
+- Compact Download review: counts, reported sizes, missing/coarse resolution and
+  saved state. Empty results explain Stream versus Study Area scope.
+
+Next proposed implementation: explicit, cancellable download of saved DEM file
+choices with original-source evidence and failure-safe local storage. Transfer
+execution is not implemented. Confirm the bounded storage/verification contract
+with the owner before extending it to terrain processing. No mosaic, reprojection,
+clipping, suitability acceptance or Survey Event creation is implied.
+
+Acquisition AOI is the saved Stream polygon, not the full Study Area. Target
+Stream Survey Event terrain; derive Reach DEMs only if needed. Physical Reach DEM
+persistence and Stream-level survey identity/linkage remain design questions.
+Future Study Area DEMs may serve mid-resolution watershed analyses; do not scaffold
+their storage or broaden high-resolution acquisition now. Point-cloud processing
+and Reach Survey Event assignment remain future steps.
+
+Owner clarification: iterative discovery → acquire → inspect → revise is required,
+not a one-way wizard. DEMs must be 1 m or finer, but still need suitability review.
+A Survey Event may use several distributed Survey Collections. See
+[ADR 0007](../decisions/adr-0007-iterative-terrain-acquisition.md) for requirements
+and the explicit implemented/future boundary.
+
+Owner-selected functional slice: discover and select **Survey Collections** for
+later acquisition/processing, not manual event entry. Distinguish FGDB Collection
+(Study Area container) and Reach Survey Event. See the
+[feature boundary](../features/survey-collections.md).
+
+The preceding FG Studio developer-documentation increment is complete:
 sequential vignettes and pkgdown, evaluated flow/pkgnet outputs, compact agent
 routes and paired maintenance guidance (ADR 0006). This does not authorize new
 scientific tools or an Enterprise deployment. Human and agent development modes
@@ -44,9 +80,8 @@ must remain interchangeable as complexity grows.
 The [first navigation pilot](../governance/navigation-pilot-2026-09-19.md) is
 complete: both source-only and documentation-assisted runs answered the three
 core questions correctly. Keep the routes/articles and their small corrections;
-speed/context savings and the graph's marginal value remain unproven. The next
-decision returns to the owner's choice of functional increment, not broader
-documentation machinery.
+speed/context savings and the graph's marginal value remain unproven. Functional
+development has resumed with the Survey Collection slice above.
 
 Approved design not fully implemented: pre-assembly piece cuts and Stream
 splitting use the shared lineage model in [ADR 0005](../decisions/adr-0005-custom-segment-editing.md).

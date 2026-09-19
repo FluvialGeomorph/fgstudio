@@ -1,0 +1,56 @@
+---
+title: "06. Stream-scoped DEM file discovery"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{06. Stream-scoped DEM file discovery}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This step connects planned DEM collections to provider file metadata for a saved
+Stream polygon. It does not download rasters or create terrain assets/Events.
+Study Area discovery remains broader; high-resolution acquisition is Stream-scoped.
+Possible mid-resolution Study Area terrain is a separate future workflow.
+
+| Action | Call path | State effect |
+|---|---|---|
+| Choose Stream/collection | `stream_dem_files_server` reads current Stream sf and explicit DEM plan | Invalidates previous file results |
+| Find | `launch_stream_dem_job` → callr → `fluvgeo::discover_stream_dem_files` | Session-only metadata result |
+| Resolve | TNM products → exact source-directory match → sf intersection | No guessed collection membership |
+| Inspect bounds | child `aoi()` / `files()` → parent shared Leaflet map | Green Stream AOI, purple checked file bounds |
+| Save choices | `store$save_dem_files` → `fluvgeo::write_stream_dem_selection` | Immutable file-choice snapshot |
+| Reopen | `store$dem_files` → `fluvgeo::read_stream_dem_selection` | Offline read; only current context/source evidence restored |
+| Switch/revise/cancel | worker kill and result invalidation | No file writes or stale AOI reuse |
+
+The backend queries OPR or 1 m products only for supported USGS directory links.
+It filters metadata bounding boxes, not actual valid-elevation footprints.
+COMPLETE is catalog-query completion, not terrain coverage; PARTIAL denotes the
+bounded record cap. FAILED and UNSUPPORTED are not evidence of no available DEMs.
+No browser-supplied URL is fetched: endpoints are fixed and collection evidence
+comes from the server-held discovery. Unknown resolution/size stays unknown.
+Publication date is not survey date. No default scientific suitability follows.
+
+The child `output$acquisition` presents a collapsible download review from the
+current checked files, with saved-state comparison. Reported byte sizes are not
+measured transfer sizes; missing values produce a known subtotal, not a complete
+estimate. Unknown resolution stays unknown and coarser-than-1-m tiles are flagged.
+This does not execute transfers. Empty results explain that a collection found
+for the Study Area may not have any matching tiles for this Stream.
+
+The child module manages a cancellable worker, 90-second outer timeout and
+45-second request timeout. Changing context revision, discovery, planned candidates,
+Stream or collection cancels and clears it, then restores any compatible saved
+file choices. Checkboxes remain draft until Save file choices; Select all and Clear
+update the same control. Save requires the persisted DEM acquisition plan and
+matching source snapshot/raw metadata, Stream geometry and current revision.
+Per-pair hashed filenames plus revision tokens prevent stale overwrite; historical
+snapshots remain. Switching Stream/collection discards unsaved checkbox drafts.
+PARTIAL remains partial even after Select all. The parent owns the one shared map and swaps overlays
+when the DEM files tab is active; study geometry and selection snapshots are unchanged.
+
+Sources: `R/stream_dem_files.R`, `R/mod_survey_collections.R`, sibling
+`fluvgeo/R/discover_stream_dem_files.R`, `fluvgeo/R/stream_dem_selection.R` and
+`R/study_store.R`. Tests: `test-stream-dem-files.R` in Studio,
+`test_stream_dem_files.R` in fluvgeo. Opt-in public smoke check:
+`dev/scripts/check-stream-dem-files-live.R`. ADR 0007 records the terrain scope and
+future multi-source Stream Event/Reach derivative design boundaries.

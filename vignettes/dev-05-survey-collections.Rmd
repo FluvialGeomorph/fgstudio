@@ -1,0 +1,77 @@
+---
+title: "05. Survey Collection discovery and selection intent"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{05. Survey Collection discovery and selection intent}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Survey Collections are candidate lidar acquisitions, not FGDB Collections of
+Study Areas or Reach Survey Events. Selection expresses intent, not verified
+acquisition, download, processing or scientific acceptance.
+
+| Action | Calls | Persistence |
+|---|---|---|
+| Open | `mod_survey_collections_server` → `store$survey_collections` → `fluvgeo::read_survey_collection_selection` | Offline read of latest snapshot |
+| Find | `launch_survey_collection_job` → callr worker → `fluvgeo::discover_survey_collections` | Session result only |
+| Inspect/check | Leaflet footprints and server-held candidate keys | No writes |
+| Save | `store$save_survey_collections` → `fluvgeo::write_survey_collection_selection` | New sidecar; context and Survey Events unchanged |
+
+The backend queries catalog IDs by envelope, fetches bounded GeoJSON batches,
+and intersects footprints using sf. COMPLETE/PARTIAL/FAILED describes each query,
+not collection status or confirmed availability. Literal USIEI date/status text
+and raw provider attributes remain available for later review. Unknowns are not
+filled by inference; cross-catalog identity is not inferred from names or dates.
+
+The worker is cancellable, with a three-minute outer timeout and 30-second HTTP
+timeouts. Changing studies disposes it. Progress is indeterminate. Browser inputs
+supply candidate keys, not provider URLs or arbitrary file paths. Failed queries
+do not clear saved selections. Refresh retains selected records absent from new
+responses, including their earlier retrieval evidence.
+
+Saving checks current context and selection revision paths, identity and boundary.
+Changing the boundary requires a fresh search. The local snapshot is a planning
+artifact, not a final FGDB Survey Collection schema. Event links and acquisition
+deduplication must be established explicitly in later work.
+
+## Acquisition planning
+
+`fluvgeo::survey_collection_products` reads retained raw metadata without network
+requests. USGS source-DEM and point-cloud links remain separate reported access.
+USIEI productsavailable is displayed literally; general access is not proof of
+DEM availability. Unknown means unresolved, not unavailable.
+
+Product controls update a session plan of candidate_key/product pairs. Update
+acquisition plan stages the choices; Save selections publishes them through the
+existing writer with their catalog evidence. DEM and POINT_CLOUD may both be
+chosen, including for planned collections. No default, download, scientific
+acceptance, Event or cross-catalog merge is implied. DEM acquisition comes first;
+point-cloud processing is deferred. Deselecting a collection removes its plan
+from the next snapshot, not history. Version 1 snapshots read with an empty plan;
+version 2 adds acquisition_plan. Revision/boundary guards are unchanged.
+
+## Shared coverage and resolution review
+
+Discover/select and Plan acquisition are tabs alongside one shared Leaflet map.
+`visible_keys()` reads only display mode (inspected, included, custom); it does not
+write selection or product state. Product selection updates the inspected record
+and zooms that same map. Comparison checkboxes hide/show footprints independently.
+
+The shared backend derives `dem_pixel_size_m` from USGS `dem_gsd_meters` only and
+returns a resolution-only screen. The app shows unknowns explicitly. USIEI point
+spacing is not raster resolution. Values at most 1 m still require inspection of
+downloaded terrain and processing metadata; nothing is marked analysis-ready.
+
+ADR 0007 (`dev/decisions/adr-0007-iterative-terrain-acquisition.md`) records the
+iterative acquisition/review workflow and one-or-more source collections per
+Survey Event. Current plans are revisable; downloading, review decisions and
+Event assembly remain future implementations, not actions performed by Save.
+
+## Implementation routes
+
+- UI/worker: `R/mod_survey_collections.R`.
+- Storage/staleness: `R/study_store.R`.
+- App tests: `tests/testthat/test-survey-collections.R`.
+- Shared provider/spatial/IO methods: sibling `fluvgeo/R/survey_collections.R`;
+  backend tests: `fluvgeo/tests/testthat/test_survey_collections.R`.

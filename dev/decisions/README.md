@@ -8,6 +8,8 @@ Use architectural decision records for consequential choices that should remain 
 
 ## Current decisions
 
+- [Iterative terrain acquisition](adr-0007-iterative-terrain-acquisition.md): shared coverage map, resolution versus suitability, and multiple source collections per Survey Event.
+
 - [Dual-mode developer documentation](adr-0006-dual-mode-developer-documentation.md): human maintainability and agent navigation evolve together; pkgdown is the documentation surface.
 
 - [Independent local-first Studio](adr-0001-independent-local-first-studio.md).

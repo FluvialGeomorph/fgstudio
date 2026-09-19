@@ -8,6 +8,8 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 
 | Task | Article | App source | First tests | Backend boundary |
 | --- | --- | --- | --- | --- |
+| Stream DEM files / saved choices / acquisition AOI | 06 | stream_dem_files.R, mod_survey_collections.R, study_store.R | test-stream-dem-files.R | discover_stream_dem_files, write_stream_dem_selection, read_stream_dem_selection |
+| Survey Collection discovery / shared map / resolution / product plan (ADR 0007) | 05 | mod_survey_collections.R, study_store.R | test-survey-collections.R | discover_survey_collections, survey_collection_products, write_survey_collection_selection, read_survey_collection_selection |
 | Startup, session or revision lifecycle | 01 | app.R, mod_study.R, study_store.R | test-study-module.R, test-study-store.R | start_study_context, read_study_context, revise_study_context |
 | Boundary adoption | 01, 02 | mod_boundary.R, polygon_selection.R, study_store.R | test-boundary.R, test-polygon-selection.R | combine_study_area_polygons, check_study_area_containment |
 | Discovery or service feedback | 02 | drainage_explorer.R, network_reference.R, drainage_inventory.R | test-drainage.R, test-network-reference.R | locate_drainage_stream, get_drainage_context |
@@ -36,6 +38,10 @@ Merge dependency checks are context-wide: any non-null `network` or
 Reach parent IDs are reassigned. Verify these guards in source before changing them.
 
 ## Indirection that must not disappear from the mental model
+
+DEM download review: `R/stream_dem_files.R`, `output$acquisition` summarizes
+checked metadata and saved state. No transfer worker exists yet; article 06
+explains missing sizes/resolution and Stream-versus-Study-Area search scope.
 
 `reach_split_server` → `store$split_reach` (returned closure) → local `revise`
 → function argument `writer=fluvgeo::split_study_reach` → `read` → `on_saved`

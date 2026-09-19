@@ -200,7 +200,59 @@ local_study_store <- function(data_dir) {
     revise(key,expected_path,reach_id=reach_id,point=point,new_reach_name=name,keep_side=keep_side,
       writer=fluvgeo::split_study_reach)
   }
+  survey_collections <- function(key) {
+    folder <- dirname(context_path(key))
+    files <- sort(list.files(folder,pattern="^survey-selection-[0-9]{6}\\.gpkg$",full.names=TRUE))
+    path <- if(length(files)) utils::tail(files,1L) else NULL
+    list(path=path,discovery=if(is.null(path)) NULL else fluvgeo::read_survey_collection_selection(path))
+  }
+  save_survey_collections <- function(key,discovery,selected,expected_path,expected_selection) {
+    if(!identical(context_path(key),expected_path) || !identical(survey_collections(key)$path,expected_selection))
+      stop("This study or selection has a newer revision. Refresh the browser and reopen before saving.",call.=FALSE)
+    x <- read(key)
+    if(!identical(x$study_id,discovery$study_area$study_area_id[[1]]) || !isTRUE(x$boundary) ||
+        !lengths(sf::st_equals(x$boundary_sf,sf::st_transform(discovery$study_area,sf::st_crs(x$boundary_sf))))[1])
+      stop("Study Area boundary changed. Search the saved boundary again before saving.",call.=FALSE)
+    n <- if(is.null(expected_selection)) 1L else as.integer(sub("^survey-selection-([0-9]+)\\.gpkg$","\\1",basename(expected_selection)))+1L
+    if(n > 999999L) stop("Selection revision limit reached.")
+    destination <- file.path(dirname(expected_path),sprintf("survey-selection-%06d.gpkg",n))
+    fluvgeo::write_survey_collection_selection(discovery,selected,destination)
+    destination
+  }
+  dem_prefix <- function(stream_id,candidate_key) {
+    paste0("dem-files-",as.character(openssl::sha256(charToRaw(paste(stream_id,candidate_key,sep="\n")))),"-")
+  }
+  dem_files <- function(key,stream_id,candidate_key) {
+    prefix <- dem_prefix(stream_id,candidate_key)
+    files <- sort(list.files(dirname(context_path(key)),pattern=paste0("^",prefix,"[0-9]{6}\\.gpkg$"),full.names=TRUE))
+    path <- if(length(files)) utils::tail(files,1L) else NULL
+    list(path=path,result=if(is.null(path)) NULL else fluvgeo::read_stream_dem_selection(path))
+  }
+  save_dem_files <- function(key,inventory,selected,expected_path,expected_files) {
+    sid <- inventory$stream$stream_id; cid <- inventory$collection$candidate_key
+    if(length(sid)!=1L || length(cid)!=1L) stop("Choose one Stream and collection.")
+    if(!identical(context_path(key),expected_path) || !identical(dem_files(key,sid,cid)$path,expected_files))
+      stop("A newer study or file selection exists. Reopen before saving.",call.=FALSE)
+    x <- read(key); s <- x$stream_inventory
+    if(!inherits(s,"sf")) stop("Save the Stream polygon first.")
+    s <- s[s$stream_id %in% sid,]
+    if(nrow(s)!=1L || !isTRUE(lengths(sf::st_equals(s,sf::st_transform(inventory$stream,sf::st_crs(s))))[1]==1L))
+      stop("Stream changed; search again.",call.=FALSE)
+    d <- survey_collections(key)$discovery
+    if(is.null(d) || !cid %in% d$selected || !any(d$acquisition_plan$candidate_key==cid & d$acquisition_plan$product=="DEM"))
+      stop("Save the collection's DEM acquisition plan first.",call.=FALSE)
+    c <- d$records[d$records$candidate_key==cid,]
+    if(nrow(c)!=1L || !identical(c$snapshot_id,inventory$collection$snapshot_id) ||
+        !identical(c$raw_metadata,inventory$collection$raw_metadata)) stop("Collection evidence changed; search again.",call.=FALSE)
+    n <- if(is.null(expected_files)) 1L else as.integer(sub(".*-([0-9]{6})\\.gpkg$","\\1",expected_files))+1L
+    if(n>999999L) stop("File selection revision limit reached.")
+    path <- file.path(dirname(expected_path),paste0(dem_prefix(sid,cid),sprintf("%06d.gpkg",n)))
+    fluvgeo::write_stream_dem_selection(inventory,selected,path,basename(expected_path))
+    path
+  }
   list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
+    dem_files=dem_files,save_dem_files=save_dem_files,
+    survey_collections=survey_collections,save_survey_collections=save_survey_collections,
     rename = rename, set_purpose = set_purpose, define_streams = define_streams,
     save_selected_boundary = save_selected_boundary, save_stream = save_stream,
     stream_segments = stream_segments, preview_reach = preview_reach, save_reach = save_reach,
