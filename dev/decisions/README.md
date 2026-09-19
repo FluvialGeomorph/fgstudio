@@ -8,6 +8,8 @@ Use architectural decision records for consequential choices that should remain 
 
 ## Current decisions
 
+- [Dual-mode developer documentation](adr-0006-dual-mode-developer-documentation.md): human maintainability and agent navigation evolve together; pkgdown is the documentation surface.
+
 - [Independent local-first Studio](adr-0001-independent-local-first-studio.md).
 - [Geospatial tools and boundary inputs](adr-0002-geospatial-tools-and-boundary-inputs.md).
 - [Reach segments and inherited Stream buffers](adr-0003-reach-segments-and-inherited-buffers.md).

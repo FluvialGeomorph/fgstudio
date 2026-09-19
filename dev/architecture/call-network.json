@@ -1,0 +1,1041 @@
+{
+  "schema_version": 1,
+  "package": "fgstudio",
+  "package_version": "0.0.0.9022",
+  "generator": {
+    "pkgnet": "0.6.1",
+    "flow": "0.2.0"
+  },
+  "scope": "Package-local static dependencies plus reviewed navigation bridges; not a complete runtime or multi-repo graph",
+  "inputs": [
+    {
+      "file": "DESCRIPTION",
+      "sha256": "6f3da4a050fb074dd9f51b223de6a9139ca257aa9ded4810326c7cb70bd5d87c"
+    },
+    {
+      "file": "NAMESPACE",
+      "sha256": "f0e5be95ef8186ace1a646a35c4101d0e1cbacb63d0594875ea7730b92326a06"
+    },
+    {
+      "file": "R/app.R",
+      "sha256": "2993e868b5f719f020526ece75f99cbf19eb674483cf51e7ac03a0bf3aaf43ea"
+    },
+    {
+      "file": "R/compact_table.R",
+      "sha256": "b4a060d5d6ed79f48d398207e8457fa67924c1126b6579eb5bb5cbdbecee8c72"
+    },
+    {
+      "file": "R/drainage_explorer.R",
+      "sha256": "f6d2eed0b40604a175cfc3c540f51c7397ef226c7c018df7881a1de0ee8c9e22"
+    },
+    {
+      "file": "R/drainage_inventory.R",
+      "sha256": "4fe5a1b0a65102fe0698b663e5d5350635ecdaac2af73d6647b929d5f8d58433"
+    },
+    {
+      "file": "R/drainage_layers.R",
+      "sha256": "5efbec4d6e6b3c56fe110adfef5ff8eb2fd50e6171acd08dfb115dac700e1ee3"
+    },
+    {
+      "file": "R/map_search.R",
+      "sha256": "91d8a76757353007b2241d3e2822b149b64ed233ca0d1ecb96c0fbfb55cda4a4"
+    },
+    {
+      "file": "R/mod_boundary.R",
+      "sha256": "e22353b3c7f01a53279a1d21163d12eeaf84cebab73c05c2d4bb605c78407120"
+    },
+    {
+      "file": "R/mod_streams.R",
+      "sha256": "b14a38ea2adb3bf3d6cc53ac4d637cace7525b401de0241611a87aeb07514bde"
+    },
+    {
+      "file": "R/mod_study.R",
+      "sha256": "acb39b9aff3c0feafb770ff8152fc3d5fb99f708ba69ca6d8bd11f3198c5c28c"
+    },
+    {
+      "file": "R/network_reference.R",
+      "sha256": "0d3313de38ac13d388e423a458a07c42f8f6e95003d2070a396482118aae13c7"
+    },
+    {
+      "file": "R/place_search.R",
+      "sha256": "cbece8e1a236a8d888126ca42ce20e2db9af07395b2f23eb00c83018f8486efd"
+    },
+    {
+      "file": "R/polygon_selection.R",
+      "sha256": "6afc6a9950e844ea374ec1546442c0bb8500f712c0d3545e0034d052cbec4b6e"
+    },
+    {
+      "file": "R/reach_merge.R",
+      "sha256": "52562986a39dfe716ba1e84d8091fafb8caec58125bc63774ce7e150d132e5c4"
+    },
+    {
+      "file": "R/reach_selection.R",
+      "sha256": "79e284cdcc25df32fee953e720a0251a21a7b5ff1da7ba61c37e6814f47e7282"
+    },
+    {
+      "file": "R/reach_split.R",
+      "sha256": "374697a3e6f377d186b18cbcc1744854f662965f8ab5dc09375b947a06b6ec64"
+    },
+    {
+      "file": "R/saved_feature_display.R",
+      "sha256": "443ff68aaed32bdd94369bf87eedfa6f386e08b115d39399e0119639997a2acf"
+    },
+    {
+      "file": "R/selection_focus.R",
+      "sha256": "672fd4a38ce800b337618de8bcace59a6f38d6909b32a4a54923ac1d093824cf"
+    },
+    {
+      "file": "R/stream_selection.R",
+      "sha256": "dc5a770a600381717ab4d2d3c548c88619fff98643d03ad4089c25ac17efe7e7"
+    },
+    {
+      "file": "R/study_feature_names.R",
+      "sha256": "ad6b24929f961dae377e20ae65537a6ef574b1cc5ca95a2424851d75e2313f51"
+    },
+    {
+      "file": "R/study_store.R",
+      "sha256": "f47a7a1b9f21dbd43fffc379dfc8303b8495b607d8b9ee654f2bc98eeae4df85"
+    },
+    {
+      "file": "dev/architecture/reviewed-call-bridges.json",
+      "sha256": "ba29f10638b5dd0519a3156539903e1a2f0cdc5592bb4990d380dfa56a94d9d0"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "fgstudio::add_network_reference",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/network_reference.R",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::add_place_search",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/map_search.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::boundary_draw_toolbar",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_boundary.R",
+          "line": 347
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::boundary_initial_mode",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_boundary.R",
+          "line": 334
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::boundary_initial_target",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_boundary.R",
+          "line": 327
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::channel_candidates",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_selection.R",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::compact_table",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/compact_table.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::context_layer_groups",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/drainage_layers.R",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::drainage_explorer",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/drainage_explorer.R",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::drainage_explorer_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/drainage_explorer.R",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::drainage_feature_inventory",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/drainage_inventory.R",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::drainage_layers",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/drainage_layers.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::drainage_request",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/network_reference.R",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::drainage_result_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/drainage_inventory.R",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::drawn_boundary",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_boundary.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::fgstudio_app",
+      "exported": true,
+      "locations": [
+        {
+          "file": "R/app.R",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::focus_checked_features",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/selection_focus.R",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::focus_saved_feature",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/saved_feature_display.R",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_drainage_job",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/drainage_explorer.R",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::local_study_store",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/study_store.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::mod_boundary_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_boundary.R",
+          "line": 71
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::mod_boundary_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_boundary.R",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::mod_streams_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_streams.R",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::mod_streams_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_streams.R",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::mod_study_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_study.R",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::mod_study_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_study.R",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::photon_places",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/place_search.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::polygon_candidates",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/polygon_selection.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::polygon_selection",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/polygon_selection.R",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::polygon_selection_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/polygon_selection.R",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::reach_merge_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/reach_merge.R",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::reach_merge_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/reach_merge.R",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::reach_selection_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/reach_selection.R",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::reach_selection_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/reach_selection.R",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::reach_split_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/reach_split.R",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::reach_split_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/reach_split.R",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::run_app",
+      "exported": true,
+      "locations": [
+        {
+          "file": "R/app.R",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::saved_feature_choices",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/saved_feature_display.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::saved_feature_layers",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/saved_feature_display.R",
+          "line": 43
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::saved_feature_popup",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/saved_feature_display.R",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::saved_feature_shape",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/saved_feature_display.R",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::saved_hierarchy_inventory",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/saved_feature_display.R",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::search_places",
+      "exported": false,
+      "locations": null
+    },
+    {
+      "id": "fgstudio::service_activity_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/drainage_explorer.R",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::stream_names_input",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_streams.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::stream_selection_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_selection.R",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::stream_selection_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_selection.R",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::study_feature_names",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/study_feature_names.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::valid_map_bounds",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/mod_boundary.R",
+          "line": 340
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "fgstudio::boundary_initial_target",
+      "to": "fgstudio::boundary_initial_mode",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::channel_candidates",
+      "to": "fgstudio::drainage_feature_inventory",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::drainage_explorer",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::drainage_explorer",
+      "to": "fgstudio::drainage_result_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::drainage_explorer",
+      "to": "fgstudio::service_activity_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::drainage_explorer_ui",
+      "to": "fgstudio::polygon_selection_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::drainage_explorer_ui",
+      "to": "fgstudio::stream_selection_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::drainage_result_ui",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::drainage_result_ui",
+      "to": "fgstudio::drainage_feature_inventory",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::fgstudio_app",
+      "to": "fgstudio::local_study_store",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::fgstudio_app",
+      "to": "fgstudio::mod_study_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::fgstudio_app",
+      "to": "fgstudio::mod_study_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::launch_drainage_job",
+      "to": "fgstudio::drainage_request",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::add_network_reference",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::add_place_search",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::boundary_draw_toolbar",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::boundary_initial_mode",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::context_layer_groups",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::drainage_explorer",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::drainage_layers",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::drawn_boundary",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::focus_saved_feature",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::polygon_selection",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::reach_merge_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::reach_selection_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::reach_split_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::saved_feature_layers",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::saved_feature_shape",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::stream_selection_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::valid_map_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_ui",
+      "to": "fgstudio::boundary_initial_mode",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_ui",
+      "to": "fgstudio::boundary_initial_target",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_ui",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_ui",
+      "to": "fgstudio::drainage_explorer_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_ui",
+      "to": "fgstudio::reach_selection_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_streams_server",
+      "to": "fgstudio::saved_hierarchy_inventory",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_streams_server",
+      "to": "fgstudio::stream_names_input",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_streams_ui",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::mod_boundary_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::mod_boundary_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::mod_streams_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::mod_streams_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::study_feature_names",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::polygon_candidates",
+      "to": "fgstudio::drainage_feature_inventory",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::polygon_selection",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::polygon_selection",
+      "to": "fgstudio::focus_checked_features",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::polygon_selection",
+      "to": "fgstudio::polygon_candidates",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::reach_merge_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::reach_selection_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::reach_selection_ui",
+      "to": "fgstudio::reach_merge_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::reach_selection_ui",
+      "to": "fgstudio::reach_split_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::reach_split_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::run_app",
+      "to": "fgstudio::fgstudio_app",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::saved_feature_layers",
+      "to": "fgstudio::saved_feature_popup",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::search_places",
+      "to": "fgstudio::photon_places",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::stream_selection_server",
+      "to": "fgstudio::channel_candidates",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::stream_selection_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::stream_selection_server",
+      "to": "fgstudio::focus_checked_features",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::stream_selection_ui",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::study_feature_names",
+      "to": "fgstudio::saved_feature_choices",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::study_feature_names",
+      "to": "fgstudio::saved_feature_shape",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::reach_split_server",
+      "to": "fgstudio::local_study_store/split_reach",
+      "kind": "adapter-call",
+      "file": "R/reach_split.R",
+      "anchor": "saved <- store$split_reach",
+      "line": 62,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::local_study_store/split_reach",
+      "to": "fluvgeo::split_study_reach",
+      "kind": "injected-writer",
+      "file": "R/study_store.R",
+      "anchor": "writer=fluvgeo::split_study_reach)",
+      "line": 201,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::local_study_store/save_reach",
+      "to": "fluvgeo::add_study_reach_corridor",
+      "kind": "injected-writer",
+      "file": "R/study_store.R",
+      "anchor": "writer = fluvgeo::add_study_reach_corridor)",
+      "line": 171,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::local_study_store/merge_reaches",
+      "to": "fluvgeo::merge_study_reaches",
+      "kind": "injected-writer",
+      "file": "R/study_store.R",
+      "anchor": "writer = fluvgeo::merge_study_reaches)",
+      "line": 180,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::local_study_store/save_stream",
+      "to": "fluvgeo::add_study_stream_corridor",
+      "kind": "injected-writer",
+      "file": "R/study_store.R",
+      "anchor": "writer = fluvgeo::add_study_stream_corridor)",
+      "line": 158,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_drainage_job",
+      "to": "fgstudio::drainage_request",
+      "kind": "background-worker",
+      "file": "R/drainage_explorer.R",
+      "anchor": "callr::r_bg(drainage_request",
+      "line": 35,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::reach_split_server",
+      "to": "fgstudio::mod_study_server/on_saved",
+      "kind": "callback",
+      "file": "R/reach_split.R",
+      "anchor": "on_saved(saved)",
+      "line": 63,
+      "evidence": "reviewed-source-bridge"
+    }
+  ],
+  "evaluation": {
+    "static_nodes": 49,
+    "static_edges": 63,
+    "reviewed_bridges": 7,
+    "storage_closure_detected": false,
+    "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]
+  }
+}

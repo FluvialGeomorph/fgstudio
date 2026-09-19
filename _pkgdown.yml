@@ -1,0 +1,24 @@
+title: FluvialGeomorph Studio
+destination: docs
+template:
+  bootstrap: 5
+development:
+  mode: unreleased
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+reference:
+  - title: Local application entry points
+    desc: Internal modules and callback paths are explained in the developer articles.
+    contents:
+      - fgstudio_app
+      - run_app
+articles:
+  - title: Developer guide — read in order
+    navbar: Developer guide
+    contents:
+      - dev-01-application-lifecycle
+      - dev-02-discovery-and-streams
+      - dev-03-reach-editing
+      - dev-04-code-navigation

@@ -35,8 +35,18 @@ for evidence, test-version boundaries and the current uncommitted-work caveat.
 
 ## Current task and next decision
 
-This increment is a documentation reconciliation, not a new tool deployment.
-No additional functional slice has been selected by this review.
+The owner selected FG Studio developer documentation as the next increment:
+sequential vignettes and pkgdown, evaluated flow/pkgnet outputs, compact agent
+routes and paired maintenance guidance (ADR 0006). This does not authorize new
+scientific tools or an Enterprise deployment. Human and agent development modes
+must remain interchangeable as complexity grows.
+
+The [first navigation pilot](../governance/navigation-pilot-2026-09-19.md) is
+complete: both source-only and documentation-assisted runs answered the three
+core questions correctly. Keep the routes/articles and their small corrections;
+speed/context savings and the graph's marginal value remain unproven. The next
+decision returns to the owner's choice of functional increment, not broader
+documentation machinery.
 
 Approved design not fully implemented: pre-assembly piece cuts and Stream
 splitting use the shared lineage model in [ADR 0005](../decisions/adr-0005-custom-segment-editing.md).

@@ -1,0 +1,83 @@
+---
+title: "02. Discovery and Stream construction"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{02. Discovery and Stream construction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Discovery proposes reference features. Selection and explicit save adopt them as
+project geometry. Keeping those responsibilities separate prevents a service
+response from silently becoming an FG record.
+
+## Three distinct map services
+
+| Facility | Route | What it changes |
+|---|---|---|
+| Place search | `mod_boundary_server` → `search_places` → Photon | Map position only |
+| Blue reference channels | `add_network_reference` → browser tile requests | Display guidance only |
+| Snap/Explore | `drainage_explorer` → injected `launch` → `launch_drainage_job` → `drainage_request` | Session-held reference candidates |
+
+The first and third routes use different services and failures. Reference tiles
+are not the authoritative geometry used for a Stream corridor. Coordinates/search
+text sent to public services must be public; saved study names are not query inputs.
+
+## Asynchronous call boundary
+
+`launch_drainage_job` starts `drainage_request` in `callr::r_bg`, carrying the R
+library paths. The worker function is defined in `R/network_reference.R`.
+For `locate` it calls `fluvgeo::locate_drainage_stream`; for exploration it calls
+`fluvgeo::get_drainage_context`. The explorer polls the worker, renders available
+results and retains failure information. Cancel, timeout and editor disposal
+terminate/clear pending activity. This is not a blocking in-process call chain.
+
+No storage adapter is supplied to `drainage_explorer`: it cannot publish studies.
+It exposes reactive clicked/located/result state to selection helpers. Named
+inventories distinguish failed, empty and unresolved outcomes. A blank tile or
+failed request is not evidence that a stream does not exist.
+
+## Adopt a Study Area boundary
+
+`polygon_selection` validates checkbox IDs against retained polygon candidates.
+Preview calls `fluvgeo::combine_study_area_polygons`. Save calls
+`store$save_selected_boundary`, which recomputes, checks child containment, writes
+and verifies source evidence, then calls the context revision writer. Holes and
+disconnected parts are retained. Selection is not automatic scientific acceptance.
+
+## Construct a Stream
+
+| Stage | Calling code | Result/side effect |
+|---|---|---|
+| Candidate pool and order | `channel_candidates`, `stream_selection_server` | Server-held sf and whole-network downstream-to-upstream browsing order |
+| Checkbox/map selection | `stream_selection_server` | Selected source keys; no disk write |
+| Preview | `fluvgeo::preview_stream_corridor`, then containment check | Retained lines, clipped area and diagnostics; no context publication |
+| Save | `store$save_stream` → local `revise`, injecting `fluvgeo::add_study_stream_corridor` | Backend recomputes and publishes evidence/context |
+| Refresh | `on_saved` → current-revision observer | New editor; discovery/buffer settings retained, selection/name cleared |
+
+Geometry order is **clip source lines to Study Area → buffer retained lines →
+clip area to Study Area**. Processing uses mature sf/GEOS methods in the backend's
+regional metric CRS, not Leaflet's display projection. Buffer distance is per side;
+`ft` means international feet (0.3048 m). This is an analysis extent, not a
+floodplain delineation. Original and clipped line evidence remain distinct.
+
+Only the optional names-only form calls `store$define_streams` and
+`fluvgeo::define_study_streams`. It does not construct channel geometry. Several
+names-only Streams cannot currently receive their areas one at a time through
+this editor.
+
+## Investigation routes
+
+- No service feedback: `R/drainage_explorer.R`, `R/network_reference.R`;
+  `test-drainage.R`, `test-network-reference.R`.
+- Wrong candidate order: `R/drainage_inventory.R`, `R/stream_selection.R`;
+  `test-drainage-inventory.R`. Ordering is not stationing or a mainstem choice.
+- Corridor/save behavior: `R/stream_selection.R`, `R/study_store.R`, then
+  `fluvgeo/R/study_stream_corridor.R`; `test-stream-selection.R`, `test-stream-repeat.R`.
+  Backend geometry regressions are in sibling
+  `fluvgeo/tests/testthat/test_study_stream_corridor.R` (crossing, coincident and
+  slanted boundaries, holes, CRS equivalence and saved evidence).
+- Polygon adoption: `R/polygon_selection.R`; `test-polygon-selection.R`.
+
+These are code-navigation routes, not proof that every runtime path was exercised.
+Next: **03. Reach creation, combination and splitting**.

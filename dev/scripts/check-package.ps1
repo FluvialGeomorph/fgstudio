@@ -1,6 +1,6 @@
 # Run from fgstudio. Direct R invocation avoids this workstation's processx pipe issue.
 $taskR = Join-Path (Get-ItemProperty 'HKCU:\SOFTWARE\R-core\R').InstallPath 'bin\R.exe'
-$taskNames = @('LC_ALL', 'LANG', 'LANGUAGE', 'R_LIBS_USER', '_R_CHECK_CRAN_INCOMING_REMOTE_', '_R_CHECK_CRAN_INCOMING_')
+$taskNames = @('LC_ALL', 'LANG', 'LANGUAGE', 'R_LIBS_USER', 'RSTUDIO_PANDOC', '_R_CHECK_CRAN_INCOMING_REMOTE_', '_R_CHECK_CRAN_INCOMING_')
 $taskPrevious = @{}
 foreach ($taskName in $taskNames) { $taskPrevious[$taskName] = [Environment]::GetEnvironmentVariable($taskName, 'Process') }
 try {
@@ -10,7 +10,8 @@ try {
   $env:R_LIBS_USER = (Resolve-Path 'dev/local-library').Path
   $env:_R_CHECK_CRAN_INCOMING_REMOTE_ = 'false'
   $env:_R_CHECK_CRAN_INCOMING_ = 'false'
-  & $taskR CMD build . --no-build-vignettes
+  $env:RSTUDIO_PANDOC = Join-Path $env:LOCALAPPDATA 'Programs\Positron\resources\app\quarto\bin\tools'
+  & $taskR CMD build .
   if ($LASTEXITCODE -ne 0) { throw 'R package build failed.' }
   New-Item -ItemType Directory -Path 'dev/check-output' -Force | Out-Null
   $taskVersion = ((Select-String -Path DESCRIPTION -Pattern '^Version:').Line -replace '^Version:\s*', '').Trim()

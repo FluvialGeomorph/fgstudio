@@ -14,6 +14,10 @@ This directory contains durable, repository-owned context for human and agentic 
 
 Chat transcripts and generated output are not canonical project context.
 
+Developer entry points: [human articles](../vignettes/dev-01-application-lifecycle.Rmd),
+[agent routes](architecture/agent-routes.md), and the
+[paired documentation workflow](workflows/developer-documentation.md).
+
 Start with [the current project plan](goals/project-plan.md). The
 [2026-09-18 documentation review](governance/documentation-review-2026-09-18.md)
 records the local hierarchy milestone, corrected drift and evidence limits.

@@ -4,6 +4,12 @@ Store maintained automation supporting development workflows here. Scripts shoul
 
 Run from the repository root:
 
+- `build-docs.ps1`: resolve R/Pandoc, install an isolated documentation snapshot,
+  build/check pkgnet navigation data, then render the local pkgdown site with flow
+  widgets. No app data changes or hosted deployment.
+- `query-code-map.R`: verify source freshness or print a symbol's direct indexed
+  relationships; `check-code-map.R` also checks indirect bridges and stale rejection.
+
 - `bootstrap.R`: initial usethis scaffold; already completed, not a routine launcher.
 - `prepare-dev.R`: build the sibling backend into an isolated library, document,
   test and validate context. Re-running updates that development backend snapshot.

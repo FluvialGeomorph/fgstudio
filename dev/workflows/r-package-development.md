@@ -16,6 +16,10 @@
 4. Run focused `testthat` tests, regenerate documentation when needed, then run package-level checks.
 5. Review generated-file changes separately from hand-authored source changes.
 
+When changing capabilities or call paths, follow `developer-documentation.md`:
+update the human article and agent route together and rebuild the documentation
+site/index. Package checks now build the vignettes rather than skipping them.
+
 Keep test execution and the analyst preview in different R processes. Start the
 preview with `dev/scripts/run-dev.ps1`, not by sourcing the app after a test suite.
 Inside Shiny `testServer` evaluation, use `with_mocked_bindings()` for explicit

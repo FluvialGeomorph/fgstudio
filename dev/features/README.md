@@ -4,6 +4,9 @@ Describe cohesive user-visible or cross-cutting capabilities here when their beh
 
 ## Current features
 
+- [Developer documentation](developer-documentation.md): paired human articles,
+  pkgdown reference and bounded agent navigation with verified tool limitations.
+
 - [Reach selection](reach-selection.md): checked Stream segments form one Reach, with inherited buffer settings.
 
 - [Drainage exploration](drainage-exploration.md): snap to a nearby mapped stream and compare reference areas/channels before deciding project geometry.

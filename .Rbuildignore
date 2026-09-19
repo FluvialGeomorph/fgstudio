@@ -3,3 +3,5 @@
 ^app\.R$
 ^\.local-data$
 ^LICENSE$
+^docs$
+^_pkgdown\.yml$

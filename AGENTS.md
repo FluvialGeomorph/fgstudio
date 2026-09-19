@@ -15,6 +15,8 @@
 
 - Goals, scope, or success criteria: `dev/goals/`
 - Current owner-approved slice and next review: `dev/goals/project-plan.md`
+- Function-call navigation: `dev/architecture/agent-routes.md`; human explanations: `vignettes/dev-01-application-lifecycle.Rmd` through the numbered series.
+- Developer-documentation changes: `dev/workflows/developer-documentation.md` and `dev/decisions/adr-0006-dual-mode-developer-documentation.md`.
 - Shiny/session/storage boundaries: `dev/architecture/design.md`
 - Architecture, dependencies, or ownership boundaries: `dev/architecture/`
 - Consequential and durable choices: `dev/decisions/`
@@ -30,6 +32,11 @@ Full session transcripts are not normal context sources. Use maintained durable 
 ## Completion governance
 
 Before declaring meaningful work complete, determine whether it changed goals, architecture, a durable decision, a schema or interface, a repeatable workflow, feature behavior, or resumable state. Update the applicable durable artifact. Create a checkpoint only when useful unfinished state remains.
+
+Maintain human developer articles and agent routes together when call paths or
+capabilities change. Generated graphs are navigation aids, not authority; inspect
+source and verify freshness before relying on them. Human-only maintenance must
+remain practical without recovering intent from chat history.
 
 ## Verification and information governance
 

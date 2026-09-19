@@ -1,0 +1,88 @@
+---
+title: "03. Reach creation, combination and splitting"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{03. Reach creation, combination and splitting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+All three Reach actions use local retained Stream evidence, not another USGS
+request. `mod_boundary_server` wires separate action helpers to the same map,
+storage adapter, activity guard and save callback. Separate draft state prevents
+an Add preview from authorizing a Split or Combine save.
+
+## Shared source and publication paths
+
+Parent Stream selection calls `store$stream_segments`, which checks the revision
+and calls `fluvgeo::read_study_stream_segments`. The reader supplies retained
+lines, buffer metadata, assignments and selection IDs. The Add helper exposes
+this source to the Combine and Split helpers.
+
+| Action | UI helper | Preview through adapter | Injected publication writer |
+|---|---|---|---|
+| Add new | `reach_selection_server` | `preview_reach` → `fluvgeo::preview_study_reach_corridor` | `fluvgeo::add_study_reach_corridor` |
+| Combine existing | `reach_merge_server` | `preview_reach_merge` → `fluvgeo::preview_study_reach_merge` | `fluvgeo::merge_study_reaches` |
+| Split existing | `reach_split_server` | `preview_reach_split` → `fluvgeo::preview_study_reach_split` | `fluvgeo::split_study_reach` |
+
+Save routes pass through the adapter's local `revise` closure; the writer argument
+is a function, not a string evaluated as code. Writers recompute from current
+evidence rather than trusting a browser-submitted preview polygon. Successful
+publication is reread and passed to `on_saved`, rebuilding the revision editor.
+
+## Concrete trace: Split existing
+
+1. `reach_split_server` registers `map_click` and `map_shape_click` observers.
+2. An enabled observer validates longitude/latitude and constructs a WGS84 point.
+3. Local `make_preview` calls `store$preview_reach_split` under progress feedback.
+4. The adapter checks staleness, then calls `fluvgeo::preview_study_reach_split`.
+5. The backend snaps in the inherited metric CRS, partitions the supported line,
+   constructs inherited buffers, and returns lengths, areas and identity choice.
+6. Save calls `store$split_reach`; its `revise(..., writer=fluvgeo::split_study_reach)`
+   call publishes the new revision and piece evidence. `on_saved` updates the UI.
+
+The click itself previews; it never saves. Changing the retained side invalidates
+the preview. The downstream portion keeps the old identity by default, but the
+analyst may choose upstream. The other portion requires a new name and ID.
+
+## Different actions have different child-record rules
+
+| Action | Identity/assignment rule | Important limit |
+|---|---|---|
+| Add | New Reach; selected unassigned pieces belong to it | Duplicate assignment is refused |
+| Combine | Analyst chooses one surviving Reach; retired parents' Survey Events are reassigned | Linked network/terrain records require reconciliation and block |
+| Split | Retain one Reach identity and create another | Target Survey Events and linked network/terrain records block; no guessed reassignment |
+
+The merge guard is context-wide: any non-null `network` or `folder_manifest`
+blocks merging, not just a reference proven to belong to a selected Reach.
+Survey Events alone do not block a merge. In sibling fluvgeo,
+`R/study_reach_merge.R` owns these guards and
+`tests/testthat/test_study_reach_corridor.R` covers event reassignment, retained
+history, linked-network rejection and geometry/evidence disagreement.
+
+Reach buffers inherit the Stream's width, units, method and processing frame and
+clip to the Stream extent. Adjacent extents may overlap. Split currently requires
+a connected, unbranched supported line. Pre-assembly cuts and Stream splitting
+are approved design directions, not implemented actions.
+
+## Source identity is not editable-piece identity
+
+Before piece editing, selection IDs correspond to whole source COMIDs. After the
+first split, `selection_id` refers to local piece UUIDs; `source_id` still records
+the original COMID and can repeat. Never deduplicate pieces by COMID. Source
+intervals are tied to the exact retained line and are not FG stations.
+
+The backend's `dev/schemas/reach-pieces.md` owns the exact contract. Piece-enabled
+contexts require fluvgeo 2026.09.17.9032 or newer for these edits. Earlier context
+and evidence files are not rewritten when opening or splitting. Renaming changes
+current context names, not historical labels in source evidence.
+
+## Tests and ownership
+
+Start with `test-reach-selection.R`, `test-reach-split.R` and
+`test-feature-names.R` under `tests/testthat`. These cover UI/adapter behavior with
+temporary studies. Backend geometry belongs in fluvgeo tests, not duplicated in
+the Shiny layer; start at `fluvgeo/tests/testthat/test_study_reach_split.R` for
+split behavior. Read-only local preview scripts supplement synthetic tests but
+do not publish changes to analyst studies. No absence of graph edges or successful
+preview establishes scientific network acceptance.

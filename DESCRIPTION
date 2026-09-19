@@ -20,9 +20,16 @@ Encoding: UTF-8
 Depends: R (>= 4.1.0)
 Roxygen: list(markdown = TRUE)
 Suggests: 
+    flow,
+    jsonlite,
+    knitr,
+    pkgdown,
+    pkgnet,
     pkgload,
+    rmarkdown,
     testthat (>= 3.0.0),
     withr
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Imports: 
     bslib (>= 0.9.0),

@@ -286,6 +286,18 @@ Move or back up the entire study folder, not only its latest context file.
 
 ## Development
 
+### Developer documentation
+
+The pkgdown site contains public API reference and a numbered developer series:
+application lifecycle, discovery/Streams, Reach editing, and code navigation.
+Build locally with `./dev/scripts/build-docs.ps1`, then open `docs/index.html`.
+The diagrams use flow; the agent index uses pkgnet plus explicitly reviewed
+indirect connections. This does not publish a website or modify saved studies.
+
+Human and agent development must remain interchangeable. Changes to call paths
+must update the relevant article and agent route together; see
+the repository workflow at `dev/workflows/developer-documentation.md`.
+
 Read `AGENTS.md` and `dev/goals/project-plan.md`. Scientific methods and hierarchy
 validation belong to fluvgeo. This app owns modular UI, session state and storage
 orchestration. Review each working increment with the owner before selecting the

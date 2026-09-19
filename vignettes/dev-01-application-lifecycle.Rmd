@@ -1,0 +1,83 @@
+---
+title: "01. Application lifecycle and durable study state"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{01. Application lifecycle and durable study state}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This developer series explains **why calls occur**, not just which names appear
+in source. Read articles in numeric order. Internal functions are implementation
+seams, not a supported public R API. The app remains a single-analyst local preview;
+it does not yet run L1 analysis or connect to Enterprise.
+
+## Entry and ownership
+
+| Call or registration | Responsibility | Source |
+|---|---|---|
+| `run_app()` → `fgstudio_app()` | Bind the Shiny app to loopback | `R/app.R` |
+| `fgstudio_app()` → `local_study_store()` | Construct a server-owned storage adapter | `R/study_store.R` |
+| `fgstudio_app()` → `mod_study_ui()` | Build the workspace form | `R/mod_study.R` |
+| Shiny session callback → `mod_study_server()` | Create session-local reactive state | `R/mod_study.R` |
+| Current-revision observer → `mod_boundary_server()` and `mod_streams_server()` | Create isolated editors for the opened revision | `R/mod_study.R` |
+
+An arrow describes a call or explicitly identified callback. Shiny observers are
+registered during setup and run later in response to invalidation; this is not
+a single synchronous sequence. Merely constructing the app can create its data
+directory, so this article does not launch it during package builds.
+
+```{r public-interface}
+sort(getNamespaceExports("fgstudio"))
+```
+
+The public entry points are `fgstudio_app` and `run_app`. The storage object is a
+list of closures created by `local_study_store`; a call such as `store$create()`
+cannot be understood by looking only for a top-level function named `create`.
+
+## Create, reopen, revise
+
+| Action | App/adapter route | Backend and result |
+|---|---|---|
+| Create Study Area | create observer → `store$create` | `fluvgeo::start_study_context`; reread persisted context |
+| Open study | open observer → `store$read` | `fluvgeo::read_study_context`; highest numbered local revision |
+| Edit Study Area name/Purpose | modal save → `store$rename` / `store$set_purpose` → local `revise` | `fluvgeo::revise_study_context`; new immutable revision |
+| Save drawn boundary | `mod_boundary_server` → `store$save_boundary` | Containment check, then context revision |
+| Rename Stream/Reach | `study_feature_names` → `store$rename_feature` → local `revise` | `fluvgeo::rename_study_feature`; identity and geometry retained |
+
+`revise` accepts a **function-valued writer**. Its default is
+`fluvgeo::revise_study_context`, but Stream and Reach operations inject other
+writers. It checks the expected source path, chooses a new destination, invokes
+`writer(source, destination, ...)`, then rereads the result. Treating every call
+to `revise` as the default backend function would misrepresent this architecture.
+
+The opaque folder key is not the Study Area UUID. Both stay server-controlled.
+Files named `study.gpkg` and `revision-000001.gpkg` are context snapshots; companion
+GeoPackages carry source evidence. Back up the entire study folder. Publication
+is not a multi-file transaction, and an error can leave unreferenced evidence.
+
+## Editor lifetime and unsaved work
+
+Successful saves call `on_saved`, update `current`, destroy old observers and
+construct a new revision-specific editor. Inactive editors cannot save. Same-study
+revisions can retain selected draft inputs, but previews must be recomputed.
+Explicit reopen clears transient work even if the revision has not changed.
+Workspace New protects unfinished work with a discard confirmation; it does not
+delete saved studies.
+
+Boundary saves reject exclusion of existing child areas; they do not automatically
+move children. Name/Purpose saves do not authorize scientific or geometry changes.
+Stream/Reach rename lists display names for selection but submit stable IDs.
+
+## Where to investigate a failure
+
+| Symptom | First source | Focused tests |
+|---|---|---|
+| Wrong study/revision after save | `R/mod_study.R`, `R/study_store.R` | `test-study-module.R`, `test-study-store.R` |
+| Unsaved work lost on task change | `R/mod_boundary.R` | `test-task-navigation.R` |
+| Name save or sorting wrong | `R/study_feature_names.R`, `R/saved_feature_display.R` | `test-feature-names.R`, `test-saved-feature-display.R` |
+| Boundary publication rejected | `store$check_boundary` and fluvgeo containment | `test-boundary.R` |
+
+Test files live under `tests/testthat`. Never start the analyst preview in an R
+process that ran mocked tests. Use `dev/scripts/run-dev.ps1` for a fresh process.
+Next: **02. Discovery and Stream construction**.

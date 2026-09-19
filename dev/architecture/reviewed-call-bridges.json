@@ -1,0 +1,12 @@
+{
+  "scope": "FG Studio navigation supplements; reviewed source relationships, not runtime traces",
+  "edges": [
+    {"from":"fgstudio::reach_split_server","to":"fgstudio::local_study_store/split_reach","kind":"adapter-call","file":"R/reach_split.R","anchor":"saved <- store$split_reach"},
+    {"from":"fgstudio::local_study_store/split_reach","to":"fluvgeo::split_study_reach","kind":"injected-writer","file":"R/study_store.R","anchor":"writer=fluvgeo::split_study_reach)"},
+    {"from":"fgstudio::local_study_store/save_reach","to":"fluvgeo::add_study_reach_corridor","kind":"injected-writer","file":"R/study_store.R","anchor":"writer = fluvgeo::add_study_reach_corridor)"},
+    {"from":"fgstudio::local_study_store/merge_reaches","to":"fluvgeo::merge_study_reaches","kind":"injected-writer","file":"R/study_store.R","anchor":"writer = fluvgeo::merge_study_reaches)"},
+    {"from":"fgstudio::local_study_store/save_stream","to":"fluvgeo::add_study_stream_corridor","kind":"injected-writer","file":"R/study_store.R","anchor":"writer = fluvgeo::add_study_stream_corridor)"},
+    {"from":"fgstudio::launch_drainage_job","to":"fgstudio::drainage_request","kind":"background-worker","file":"R/drainage_explorer.R","anchor":"callr::r_bg(drainage_request"},
+    {"from":"fgstudio::reach_split_server","to":"fgstudio::mod_study_server/on_saved","kind":"callback","file":"R/reach_split.R","anchor":"on_saved(saved)"}
+  ]
+}
