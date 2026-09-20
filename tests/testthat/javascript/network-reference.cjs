@@ -7,7 +7,7 @@ const context = vm.createContext({L:{layerGroup:group},
   Shiny:{setInputValue:(...x)=>reports.push(x)}, LeafletWidget:{methods:{}},
   protomaps:{LineSymbolizer:function(x){Object.assign(this,x)},
     leafletLayer:options=>({options,handlers:{},on(name,fn){this.handlers[name]=fn}})}});
-const render = vm.runInContext('(' + fs.readFileSync('inst/www/network-reference.js','utf8') + ')',context);
+const render = vm.runInContext('(' + JSON.parse(fs.readFileSync(process.argv[2],'utf8')).hook + ')',context);
 function map(zoom) {
   const m = {zoom,shown:true,events:{},pane:{style:{}},
     createPane(){return this.pane},hasLayer(){return this.shown},getZoom(){return this.zoom},

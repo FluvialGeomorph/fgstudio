@@ -1,34 +1,67 @@
 # R package development
 
-## Applicable evidence
+## Trigger and evidence
 
-- Package metadata and dependencies: `DESCRIPTION`
-- Exported interface: `NAMESPACE`, roxygen source, and generated `man/`
-- Implementation: `R/`
-- Behavioral verification: `tests/testthat/`
-- User guidance: `README.Rmd`, vignettes, and pkgdown configuration
+Read this workflow before changing R package code, dependencies, tests,
+documentation, build/check tooling or development automation. Inspect the relevant
+`DESCRIPTION`, `NAMESPACE`, `R/`, `tests/testthat/`, roxygen/`man/`,
+`README.md` or `README.Rmd`, vignettes and pkgdown configuration.
 
-## Procedure
+## Choose the standard facility first
 
-1. Inspect `DESCRIPTION`, `NAMESPACE`, relevant R functions, tests, and documentation.
-2. Keep exported behavior, roxygen comments, generated help, examples, and tests aligned.
-3. Prefer deterministic functions with structured return values for automation.
-4. Run focused `testthat` tests, regenerate documentation when needed, then run package-level checks.
-5. Review generated-file changes separately from hand-authored source changes.
+| Task | Usual entry point |
+| --- | --- |
+| Load development code | `devtools::load_all()` or `pkgload::load_all()` |
+| Test behavior | `devtools::test()` or `testthat::test_local()` |
+| Generate function documentation | `devtools::document()` or `roxygen2::roxygenise()` |
+| Build/check the package | `devtools::check()` or standard `R CMD build` / `R CMD check` |
+| Build the documentation site | `pkgdown::build_site()` |
 
-When changing capabilities or call paths, follow `developer-documentation.md`:
-update the human article and agent route together and rebuild the documentation
-site/index. Package checks now build the vignettes rather than skipping them.
+Before adding or retaining a wrapper, inspect the existing tool's supported
+options. Use metadata and configuration when they meet the need. Custom code must
+address a demonstrated gap; record the standard facility considered, the gap and
+when the workaround can be removed in a short code comment or existing workflow.
+A script's existence or successful execution is not justification for keeping it.
+Keep installation and workstation setup explicit and independently usable.
 
-Keep test execution and the analyst preview in different R processes. Start the
-preview with `dev/scripts/run-dev.ps1`, not by sourcing the app after a test suite.
-Inside Shiny `testServer` evaluation, use `with_mocked_bindings()` for explicit
-mock scope; do not assume `local_mocked_bindings()` will clean up on leaving that
-evaluation environment. Run `check-runtime-isolation.R` to verify restoration.
+## Placement and verification
 
-For map-search JavaScript changes, also run `node dev/scripts/check-map-search.cjs`
-from the repository root. This is a pure contract test, not browser acceptance.
+- Keep installed behavior in `R/`; regression assertions and controlled fixtures
+  in the standard package test workflow. Use temporary outputs and scoped cleanup.
+- Evaluate explicit opt-in conditions for live integration tests. Do not use real
+  analyst data as automatic fixtures. Retain separate diagnostics only where
+  their inputs or execution requirements warrant it.
+- `dev/` may hold necessary developer tools; it must not become a parallel test
+  suite or a replacement package-management interface. Do not add frameworks or
+  dependencies solely to reorganize existing scripts.
+- Keep implementation, exports, help, examples and tests aligned. Run focused
+  tests first, then broader checks proportionate to the change; do not rebuild
+  every artifact for dev-only prose edits.
 
-For the NHDPlusV2 tile adapter also run `node dev/scripts/check-network-reference.cjs`.
-It covers zoom/mode gating, per-map state and pointer/event isolation without a
-remote dependency. Public-service verification remains an opt-in smoke test.
+## Completion
+
+Review the diff for duplicate responsibilities, implicit side effects and
+superseded wrappers. Update the existing workflow to describe the current
+procedure, removing conflicting instructions. Verify that the AGENTS route and
+this workflow suffice to choose the normal commands without reading a dated
+report. Report relevant verification and remaining exceptions in the response;
+do not create a routine completion narrative. Review generated changes separately.
+
+## FG Studio execution constraints
+
+- Scientific methods and their tests belong to fluvgeo. Use the existing isolated
+  `dev/local-library` for app development; never replace the shared backend as a
+  side effect of checking. In a fresh R session from this repository, select it
+  with `.libPaths(c(normalizePath("dev/local-library", mustWork = TRUE), .libPaths()))`.
+- Resolve R and Pandoc using the workspace workstation instructions. Keep the
+  analyst preview in a separate R process. Within Shiny `testServer`, scope backend
+  doubles with `with_mocked_bindings()` and verify restoration.
+- JavaScript contracts run through `test-javascript.R`; use Node.js 18+ on PATH
+  and `FGSTUDIO_REQUIRE_NODE=true` for complete maintainer checks. Without Node,
+  ordinary package tests explicitly skip those contracts. The app needs no Node.
+- The current scripts inventory is `dev/scripts/README.md`. Existing wrappers are
+  legacy execution aids under review, not a requirement to create more wrappers.
+  A Windows processx pipe issue motivated direct R CMD invocation; recheck that
+  limitation before retaining its workaround. Keep live/local diagnostics opt-in.
+- Follow `developer-documentation.md` when capabilities or call paths change.
+  Code-map experiments are optional for routine package development.

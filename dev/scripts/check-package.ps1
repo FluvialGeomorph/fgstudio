@@ -1,9 +1,11 @@
 # Run from fgstudio. Direct R invocation avoids this workstation's processx pipe issue.
 $taskR = Join-Path (Get-ItemProperty 'HKCU:\SOFTWARE\R-core\R').InstallPath 'bin\R.exe'
-$taskNames = @('LC_ALL', 'LANG', 'LANGUAGE', 'R_LIBS_USER', 'RSTUDIO_PANDOC', '_R_CHECK_CRAN_INCOMING_REMOTE_', '_R_CHECK_CRAN_INCOMING_')
+$taskNames = @('LC_ALL', 'LANG', 'LANGUAGE', 'R_LIBS_USER', 'RSTUDIO_PANDOC', '_R_CHECK_CRAN_INCOMING_REMOTE_', '_R_CHECK_CRAN_INCOMING_', 'FGSTUDIO_REQUIRE_NODE')
 $taskPrevious = @{}
 foreach ($taskName in $taskNames) { $taskPrevious[$taskName] = [Environment]::GetEnvironmentVariable($taskName, 'Process') }
 try {
+  if (-not (Get-Command node -ErrorAction SilentlyContinue)) { throw 'Install Node.js and add it to PATH before running maintainer checks.' }
+  $env:FGSTUDIO_REQUIRE_NODE = 'true'
   $env:LC_ALL = 'C'
   $env:LANG = 'C'
   $env:LANGUAGE = 'en'

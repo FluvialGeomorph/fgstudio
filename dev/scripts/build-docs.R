@@ -16,6 +16,14 @@ if (status != 0L) stop("Documentation snapshot installation failed.")
 .libPaths(c(doclib, .libPaths()))
 source("dev/scripts/build-code-map.R")
 source("dev/scripts/check-code-map.R")
+# Keep one landing-page source. GitHub needs vignette source links; the built
+# site needs article HTML links. pkgdown/index.md is disposable generated input.
+dir.create("pkgdown", showWarnings = FALSE)
+home <- readLines("README.md", warn = FALSE, encoding = "UTF-8")
+home <- gsub("\\]\\(vignettes/([^)]*)\\.Rmd\\)", "](articles/\\1.html)", home)
+writeLines(c("<!-- Generated from README.md by dev/scripts/build-docs.R; do not edit. -->",home),
+  "pkgdown/index.md",useBytes=TRUE)
 pkgdown::build_site(".", devel = FALSE, new_process = FALSE, install = FALSE,
   preview = FALSE, quiet = FALSE)
+source("dev/scripts/check-docs.R")
 cat("Local site: ", normalizePath("docs/index.html", winslash = "/"), "\n", sep = "")

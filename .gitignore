@@ -7,3 +7,4 @@ dev/check-output/
 .RData
 .Renviron
 docs/
+pkgdown/index.md

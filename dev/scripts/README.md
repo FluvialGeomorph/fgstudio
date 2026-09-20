@@ -1,46 +1,76 @@
-# Development scripts
+# Development scripts and verification boundaries
 
-- `check-dem-download-live.R`: opt-in acquisition of one reported <=16 MiB
-  public USGS tile for a synthetic Omaha AOI, with worker/readback/reuse checks.
-  Evidence is retained under ignored `dev/check-output`; never opens analyst studies.
+`dev/` is excluded by `.Rbuildignore`. These scripts are maintained developer
+tools and optional qualification, not an alternative to `tests/testthat/`.
+Script-only assertions do **not** run in `R CMD check` unless a maintained runner
+explicitly invokes them. JavaScript contracts now run through
+`tests/testthat/test-javascript.R` using fixtures under that test tree.
 
-- `check-stream-dem-files-live.R`: opt-in metadata-only public USGS test using a
-  synthetic Stream polygon; no raster downloads or analyst-data writes.
+## Maintained tooling
 
-Store maintained automation supporting development workflows here. Scripts should document inputs, outputs, dependencies, and safe execution expectations.
+| Scripts | Purpose and execution boundary |
+| --- | --- |
+| `run-dev.ps1`, `run-dev.R` | Start the loopback preview in a fresh R process, using `.local-data`; never source in a process that ran mocked tests |
+| `prepare-dev.R` | Install the sibling backend into the isolated development library, regenerate app documentation, run package tests and validate repository context; deliberately changes the development snapshot |
+| `check-package.ps1` | Windows R/Pandoc/locale orchestration around standard package build and check |
+| `check-tests.R` | Run the ordinary package suite and then check two backend functions for leaked mocks; adds a suite-level process check, not a replacement regression suite |
+| `build-docs.ps1`, `build-docs.R`, `build-code-map.R` | Build isolated documentation, site navigation and source map; no study changes or publication |
+| `code-map-utils.R`, `query-code-map.R`, `check-code-map.R` | Developer-only graph helpers, lookup/freshness and bridge checks; checked by the documentation build |
+| `check-docs.R` | Local HTML link/anchor and article-export validation; called after the site build, no network |
 
-Run from the repository root:
+## Optional live-service qualification
 
-- `check-survey-collections-live.R`: opt-in USGS/NOAA smoke query for a synthetic
-  Omaha-area AOI and temporary GeoPackage round trip; never reads analyst studies.
+Run explicitly from the repository root with the isolated library. These use
+public services and synthetic study areas; they do not open analyst studies.
+Failures may reflect service availability and must not be presented as equivalent
+to deterministic fixture-test failures. The behavior they exercise also needs
+appropriate stable tests in the owning package.
 
-- `build-docs.ps1`: resolve R/Pandoc, install an isolated documentation snapshot,
-  build/check pkgnet navigation data, then render the local pkgdown site with flow
-  widgets. No app data changes or hosted deployment.
-- `query-code-map.R`: verify source freshness or print a symbol's direct indexed
-  relationships; `check-code-map.R` also checks indirect bridges and stale rejection.
+- `check-drainage-services-live.R`, `check-stream-services-live.R` and
+  `check-polygon-selection-live.R`: public drainage/geometry requests and bounded
+  preparation checks.
+- `check-survey-collections-live.R`: catalog queries and temporary persistence.
+- `check-stream-dem-files-live.R`: metadata-only source DEM discovery.
+- `check-dem-download-live.R`: one reported <=16 MiB public tile, with worker,
+  readback and reuse checks. Outputs remain in ignored `dev/check-output`.
 
-- `bootstrap.R`: initial usethis scaffold; already completed, not a routine launcher.
-- `prepare-dev.R`: build the sibling backend into an isolated library, document,
-  test and validate context. Re-running updates that development backend snapshot.
-- `run-dev.ps1`: launch a fresh R process for the preview on loopback port 8780
-  with `.local-data` storage, using `run-dev.R`. Never source the R launcher in a
-  process previously used for tests.
-- `check-runtime-isolation.R`: full offline suite plus verification that the real
-  backend containment function is restored afterward. Run separately from the app.
-- `check-reach-local.R`: read-only Reach previews for retained local Streams;
-  optional first argument selects a local study-store folder (default `.local-data`).
-  Checks file hashes before/after and never saves a Reach or queries USGS.
-- `check-saved-boundary-corridor.R`: explicit saved-study key, public COMID,
-  distance/unit and optional cached public sf RDS. Reads active data, reports
-  original/retained channel length and tests backend plus Shiny preview/save/reopen
-  only in separate output copies. Verifies the active study stays unchanged.
-  Without a cache, makes one public NLDI feature request.
-- `check-package.ps1`: Windows package build/check, with process-local locale
-  corrections restored on exit. No remote deployment or global R installation.
-- `check-stream-selection.R`: offline full app suite with the isolated backend;
-  uses temporary test studies, never edits active `.local-data` records.
-- `check-stream-services.R`: opt-in public USGS Madison geometry and Stream-save
-  check in a fresh dev/check-output folder; never opens active studies.
-- `check-reach-split-local.R`: read-only split previews against retained Reaches,
-  with before/after file hashes; it does not publish splits or alter user records.
+## Local-data diagnostics
+
+These depend on existing files and are not suitable as automatic package tests.
+Inspect their input/output contracts before running them; `.local-data` is not a
+package fixture store.
+
+- `check-reach-local.R`: read-only previews against a selected store (default
+  `.local-data`), with before/after file hashes.
+- `check-reach-split-local.R`: read-only previews against `.local-data`, with hashes.
+- `check-saved-boundary-corridor.R`: explicit study key, public COMID, distance/unit
+  and optional cached public sf RDS. Reads a real boundary; save/reopen checks use
+  separate output copies. Makes a public request when no cache is supplied.
+- `check-dem-inspection-local.R`: explicitly supplied existing download attempt;
+  real worker and UI checks, optional preview PNGs in `dev/check-output`.
+
+## Existing execution aids
+
+Use the standard commands in [R package development](../workflows/r-package-development.md)
+first. The following legacy wrappers remain available from the repository root
+with the existing isolated backend library and Node.js 18 or newer on PATH;
+their responsibilities still need review against standard facilities:
+
+- `Rscript --vanilla dev/scripts/check-tests.R`: app package tests, JavaScript
+  contracts and backend mock-restoration checks; no installation or network.
+- `dev/scripts/check-package.ps1`: source build and R CMD check, including
+  installed-package JavaScript contracts and vignettes.
+
+Both runners require Node. Plain testthat/R CMD check explicitly skip the three
+JavaScript contracts when Node is absent; automation should set
+`FGSTUDIO_REQUIRE_NODE=true` to prohibit that skip. The app itself needs no Node.
+See [package development](../workflows/r-package-development.md) for focused checks.
+
+The duplicate `check-stream-selection.R`, workstation-specific `check-purpose.R`
+and completed initial `bootstrap.R` were retired on 2026-09-20. Their history
+remains in Git. `check-runtime-isolation.R` was renamed to `check-tests.R`;
+`prepare-dev.R` now calls it after its explicitly requested backend installation.
+No ordinary check installs the backend or runs the backend's legacy suite.
+
+Ignored `dev/check-output` holds transient logs/artifacts, not the sole maintained
+definition of required checks. Stable regressions belong in package tests.

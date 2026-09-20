@@ -1,8 +1,8 @@
 ---
-title: "02. Discovery and Stream construction"
+title: "03. Discovery and Stream construction"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{02. Discovery and Stream construction}
+  %\VignetteIndexEntry{03. Discovery and Stream construction}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -80,4 +80,4 @@ this editor.
 - Polygon adoption: `R/polygon_selection.R`; `test-polygon-selection.R`.
 
 These are code-navigation routes, not proof that every runtime path was exercised.
-Next: **03. Reach creation, combination and splitting**.
+Next: **04. Reach creation, combination and splitting**.

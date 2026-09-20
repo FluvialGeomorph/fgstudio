@@ -1,5 +1,11 @@
 # Application architecture
 
+For the app's role in the wider project and its analyst audience, start with
+`vignettes/fgstudio.Rmd`. `vignettes/guide-study-workflow.Rmd` owns operating
+instructions; the numbered developer series and agent route table own task-to-
+implementation explanations. Article 01 documents the context-routing experiment,
+including the limits of current efficiency evidence. See the documentation-audiences feature.
+
 ## Accepted direction
 
 Owner requirement, 2026-09-15: inside/outside and coincidence analysis must be
@@ -307,7 +313,7 @@ Enterprise integrity remain separate future contracts.
 ## Single task navigation (9012)
 
 9015 runtime isolation: never launch the analyst app in a test R process.
-`run-dev.ps1` starts fresh R; `check-runtime-isolation.R` verifies test doubles
+`run-dev.ps1` starts fresh R; `check-tests.R` verifies test doubles
 are restored. A local mock inside Shiny's test evaluation leaked past the suite
 and made the subsequently launched app reject every containment check. Explicit
 `with_mocked_bindings` scope plus separate launch processes prevent recurrence.

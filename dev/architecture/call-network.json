@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "8cf2c6095906788366a99146a617bbee8ae1811e7fc91918579844bca1cbf0b7"
+      "sha256": "4fbea8c302e06e15b5d7aea905c9bd3a554bb1c3dbed4750cae16c3bd3310058"
     },
     {
       "file": "NAMESPACE",

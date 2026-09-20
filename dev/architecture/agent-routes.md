@@ -1,5 +1,10 @@
 # Agent entry routes (FG Studio scope)
 
+For project purpose or audience, read `vignettes/fgstudio.Rmd`; for analyst
+operations, `vignettes/guide-study-workflow.Rmd`. These orient the task without
+replacing the implementation routes below. Article 01 explains the context-routing
+pilot and its limits; the dated governance record retains experimental evidence.
+
 Start with the matching row and the named source/test. Read its article when
 intent, callbacks or persistence need explanation; it is not a mandatory full
 read for every lookup. Do not load every feature history or the entire generated
@@ -8,19 +13,20 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 
 | Task | Article | App source | First tests | Backend boundary |
 | --- | --- | --- | --- | --- |
-| CRS save feedback / restored definitions / reload to saved study | 01, 08, 09 | mod_study.R, study_analysis_crs.R, study_vertical_reference.R | test-study-reload.R, test-study-module.R, test-study-analysis-crs.R, test-study-vertical-reference.R | read_study_context; existing immutable CRS writers |
-| Vertical target / epoch / model specification; CRS dropdown clipping | 09 | study_vertical_reference.R, study_analysis_crs.R, mod_study.R, study_store.R | test-study-vertical-reference.R; check-crs-dropdown.cjs | study_vertical_crs_candidates, validate_study_vertical_reference, set_study_vertical_reference; study_context schema 7 |
+| JavaScript runtime contracts / verification entry points | 01 | map_search.R, study_analysis_crs.R, inst/www/network-reference.js | test-javascript.R; javascript/ fixtures; dev/scripts/check-tests.R | Existing isolated backend; no implicit installation |
+| CRS save feedback / restored definitions / reload to saved study | 02, 08, 09 | mod_study.R, study_analysis_crs.R, study_vertical_reference.R | test-study-reload.R, test-study-module.R, test-study-analysis-crs.R, test-study-vertical-reference.R | read_study_context; existing immutable CRS writers |
+| Vertical target / epoch / model specification; CRS dropdown clipping | 09 | study_vertical_reference.R, study_analysis_crs.R, mod_study.R, study_store.R | test-study-vertical-reference.R; test-javascript.R | study_vertical_crs_candidates, validate_study_vertical_reference, set_study_vertical_reference; study_context schema 7 |
 | Study Area CRS picker / local catalog / validation / saved WKT / hidden-input pending guards | 08 | study_analysis_crs.R, mod_study.R, study_store.R, mod_survey_collections.R, stream_dem_files.R | test-study-analysis-crs.R, test-survey-collections.R, test-stream-dem-files.R | study_crs_candidates, validate_study_analysis_crs, set_study_analysis_crs |
 | Source DEM download / receipts / cancellation / retry | 06 | stream_dem_download.R, study_store.R | test-stream-dem-download.R, test-stream-dem-files.R | prepare_stream_dem_download, run_stream_dem_download, read_stream_dem_download, cancel_stream_dem_download |
 | Stream DEM files / saved choices / acquisition AOI | 06 | stream_dem_files.R, mod_survey_collections.R, study_store.R | test-stream-dem-files.R | discover_stream_dem_files, write_stream_dem_selection, read_stream_dem_selection |
 | Survey Collection discovery / shared map / resolution / product plan (ADR 0007) | 05 | mod_survey_collections.R, study_store.R | test-survey-collections.R | discover_survey_collections, survey_collection_products, write_survey_collection_selection, read_survey_collection_selection |
-| Startup, session or revision lifecycle | 01 | app.R, mod_study.R, study_store.R | test-study-module.R, test-study-store.R | start_study_context, read_study_context, revise_study_context |
-| Boundary adoption | 01, 02 | mod_boundary.R, polygon_selection.R, study_store.R | test-boundary.R, test-polygon-selection.R | combine_study_area_polygons, check_study_area_containment |
-| Discovery or service feedback | 02 | drainage_explorer.R, network_reference.R, drainage_inventory.R | test-drainage.R, test-network-reference.R | locate_drainage_stream, get_drainage_context |
-| Stream selection/order/buffer | 02 | stream_selection.R, study_store.R | test-stream-selection.R, test-stream-repeat.R | preview_stream_corridor, add_study_stream_corridor, order_drainage_flowlines |
-| Reach Add/Combine | 03 | reach_selection.R, reach_merge.R, study_store.R | test-reach-selection.R | read_study_stream_segments, add_study_reach_corridor, merge_study_reaches |
-| Reach Split | 03 | reach_split.R, study_store.R | test-reach-split.R | preview_study_reach_split, split_study_reach |
-| Names, identification, selection zoom | 01, 04 | study_feature_names.R, saved_feature_display.R, mod_boundary.R | test-feature-names.R, test-saved-feature-display.R | rename_study_feature |
+| Startup, session or revision lifecycle | 02 | app.R, mod_study.R, study_store.R | test-study-module.R, test-study-store.R | start_study_context, read_study_context, revise_study_context |
+| Boundary adoption | 02, 03 | mod_boundary.R, polygon_selection.R, study_store.R | test-boundary.R, test-polygon-selection.R | combine_study_area_polygons, check_study_area_containment |
+| Discovery or service feedback | 03 | drainage_explorer.R, network_reference.R, drainage_inventory.R | test-drainage.R, test-network-reference.R | locate_drainage_stream, get_drainage_context |
+| Stream selection/order/buffer | 03 | stream_selection.R, study_store.R | test-stream-selection.R, test-stream-repeat.R | preview_stream_corridor, add_study_stream_corridor, order_drainage_flowlines |
+| Reach Add/Combine | 04 | reach_selection.R, reach_merge.R, study_store.R | test-reach-selection.R | read_study_stream_segments, add_study_reach_corridor, merge_study_reaches |
+| Reach Split | 04 | reach_split.R, study_store.R | test-reach-split.R | preview_study_reach_split, split_study_reach |
+| Names, identification, selection zoom | 01, 02 | study_feature_names.R, saved_feature_display.R, mod_boundary.R | test-feature-names.R, test-saved-feature-display.R | rename_study_feature |
 
 Articles live in `vignettes/`, app sources in `R/`, tests in `tests/testthat/`.
 Backend symbols are in sibling **fluvgeo**, not this package. Read its AGENTS.md
@@ -65,7 +71,7 @@ explains missing sizes/resolution and Stream-versus-Study-Area search scope.
 
 `reach_split_server` → `store$split_reach` (returned closure) → local `revise`
 → function argument `writer=fluvgeo::split_study_reach` → `read` → `on_saved`
-→ `current` observer → new editor. Article 03 explains the controls and boundaries.
+→ `current` observer → new editor. Article 04 explains the controls and boundaries.
 
 The generated `call-network.json` records pkgnet's package-local static network,
 source hashes and explicitly reviewed bridge edges. It is not a multi-repository

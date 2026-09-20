@@ -2,9 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync('R/map_search.R', 'utf8');
-const snippets = [...source.matchAll(/htmlwidgets::JS\("([\s\S]*?)"\)/g)].map(x => x[1]);
-const hook = source.match(/htmlwidgets::onRender\(map, "([\s\S]*?)"\)/)[1];
+const {snippets, hook} = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const sent = [];
 const context = vm.createContext({
   Shiny: {setInputValue: (...args) => sent.push(args)},

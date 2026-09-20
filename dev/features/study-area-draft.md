@@ -124,7 +124,7 @@ avoid discarding an unsaved drawing during the revision refresh.
 
 Verification: 121 R test assertions passed; R CMD check --no-manual completed
 with Status OK (one Shiny/R build-version warning inside tests). The pure-JavaScript
-check in dev/scripts/check-map-search.cjs passed request/response, stale-result,
+check in tests/testthat/javascript/map-search.cjs passed request/response, stale-result,
 formatter-signature and safe-label checks. This checks the bridge, not rendered
 browser behavior. Browser inspection failed with debugger synchronization timeouts
 in both existing preview tabs; no browser acceptance is claimed. The final preview

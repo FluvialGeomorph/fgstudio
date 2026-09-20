@@ -10,9 +10,12 @@ Authors@R: c(
     person("Thomas", "Darby", role = "rev"),
     person("Davi", "Michl", role = "rev")
   )
-Description: A browser workspace for defining FluvialGeomorph studies.
-    Provides a modular Shiny interface to shared fluvgeo capabilities,
-    beginning with durable local Study Area drafts.
+Description: A developing browser workspace for defining stream studies and
+    preparing terrain for FluvialGeomorph analysis. Provides a modular Shiny
+    interface to shared fluvgeo capabilities for local study hierarchy,
+    source terrain acquisition and inspection, and analysis reference
+    specification. Includes analyst guidance and paired human and agent
+    developer documentation for tracing implementation and evidence.
 License: CC0
 URL: https://github.com/FluvialGeomorph/fgstudio
 BugReports: https://github.com/FluvialGeomorph/fgstudio/issues
@@ -30,6 +33,7 @@ Suggests:
     withr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+SystemRequirements: Node.js (>= 18, optional for JavaScript tests)
 Imports: 
     bslib (>= 0.9.0),
     callr,

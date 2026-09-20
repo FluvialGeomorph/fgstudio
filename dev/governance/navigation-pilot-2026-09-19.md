@@ -66,7 +66,7 @@ be compared. No speedup, percentage saving or causal quality improvement is clai
 
 - Agent routes now name the backend source/test files for corridor, merge and
   split work, rather than stopping at exported backend symbols.
-- Articles 02/03 include those backend test routes; article 03 makes the merge
+- The discovery/Reach articles (now 03/04) include those backend test routes; article 04 makes the merge
   guard's context-wide scope explicit.
 - Routes now recommend source/test first and articles on demand for intent or
   indirection, rather than requiring an article read for every lookup.

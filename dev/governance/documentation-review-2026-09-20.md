@@ -32,7 +32,7 @@ transformation is implied. Existing unrelated changes remain uncommitted.
 | Local persistence, feedback and reload restoration | Survey Event membership and one explicit output cell size per Event |
 | Original DEM acquisition, metadata and bounded tile inspection | Study Area grid anchor, hierarchical masks, joint preflight and Stream/Event mosaics |
 
-README, lifecycle/CRS articles 01/08/09, agent routes, architecture, feature
+README, lifecycle/CRS articles (now 02/08/09), agent routes, architecture, feature
 records, project plan and the current checkpoint now distinguish these boundaries.
 Historical verification sections remain dated. The owner has accepted the compact
 CRS UI; automated browser acceptance of this repair is a separate unverified claim.

@@ -1,8 +1,8 @@
 ---
-title: "03. Reach creation, combination and splitting"
+title: "04. Reach creation, combination and splitting"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{03. Reach creation, combination and splitting}
+  %\VignetteIndexEntry{04. Reach creation, combination and splitting}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

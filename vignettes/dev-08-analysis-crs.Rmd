@@ -68,7 +68,7 @@ state and refreshes the catalog. Pending edits and stale revisions cannot save.
 Success appears beside Save only after that persisted reread. Reopening displays
 the saved EPSG identifier, or canonical WKT when no identifier exists, in the
 authoritative-definition mode rather than leaving an empty picker. The picker
-remains available for choosing a replacement. Article 01 describes per-tab reload
+remains available for choosing a replacement. Article 02 describes per-tab reload
 restoration; neither checking nor merely changing the form writes a revision.
 
 The store's read path revalidates canonical WKT against the current boundary;

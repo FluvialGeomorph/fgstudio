@@ -213,7 +213,7 @@ Live service evidence at a public Madison-area example: COMID 13294318, snap
 distance 0.36 m, HUC12 070900020702, one basin, 129 upstream flowlines and 24
 downstream flowlines at 30 km. A first nearby request returned HTTP 502; retry
 succeeded. This qualifies one service example, not availability everywhere.
-The opt-in `dev/scripts/check-drainage-services.R` repeated all four retrievals
+The opt-in `dev/scripts/check-drainage-services-live.R` repeated all four retrievals
 through the actual app worker and verified process cancellation successfully.
 
 The full fluvgeo legacy suite was not run: it includes unrelated authenticated

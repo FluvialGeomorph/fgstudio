@@ -1,0 +1,188 @@
+---
+title: "01. Code maps and dual-mode development"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{01. Code maps and dual-mode development}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+FG Studio must remain understandable and maintainable by humans **without an AI
+assistant**, while agents must be able to find the same source efficiently.
+The [project overview](fgstudio.html) explains the analyst purpose this work serves.
+Generated diagrams supplement the reviewed call explanations across the developer series;
+they do not replace those explanations or establish completeness.
+
+## Choose a route for the question
+
+Context routing means finding the smallest useful set of current explanations,
+contracts, source and tests for a task. Reading every document is not the goal.
+Human and agent routes should converge on the same evidence, while remaining
+usable independently. An analyst does not need this layer to operate the app.
+
+| Question | Human entry | Repository/agent entry | Verify against |
+| --- | --- | --- | --- |
+| What belongs in this app or the backend? | [Project overview](fgstudio.html), then article 02 | `dev/architecture/design.md`; FG-architecture for cross-repository work | Member repository contracts, current source and tests |
+| Why does a save or reload behave this way? | [Lifecycle](dev-02-application-lifecycle.html), then the relevant feature article | `dev/architecture/agent-routes.md` | Module, adapter, backend writer/reader and regression test |
+| How does a Reach edit cross the backend boundary? | [Reach editing](dev-04-reach-editing.html) | The Reach row in the route table | Callback, injected writer, persisted output and backend tests |
+| What is the state of CRS or DEM development? | Articles [06](dev-06-stream-dem-files.html), [07](dev-07-dem-inspection.html), [08](dev-08-analysis-crs.html), [09](dev-09-vertical-reference.html) | Matching feature and current project plan | Actual UI entry points and tested capability limits |
+| Which function calls this one? | A bounded diagram or source search | Query the fresh code map for the named symbol | Source; reviewed bridges for indirect calls |
+| Did this documentation improve maintenance efficiency? | The pilot and comparison method below | `dev/governance/navigation-pilot-2026-09-19.md` | Correct answers, comparable measurements and explicit limitations |
+
+Paths in this article are relative to the fgstudio checkout. The
+[repository route table](https://github.com/FluvialGeomorph/fgstudio/blob/main/dev/architecture/agent-routes.md)
+provides precise source/test entry points. Use the local copy during development;
+published links may lag local changes. Code and tests establish actual behavior,
+accepted decisions govern design, and schemas define documented contracts.
+
+## What the context-routing experiment has established
+
+The [first pilot](https://github.com/FluvialGeomorph/fgstudio/blob/main/dev/governance/navigation-pilot-2026-09-19.md)
+compared two fresh-context agents on the same three read-only questions: Reach
+split persistence, Stream clipping ownership, and Reach merge blockers. One used
+source-only navigation; the other could use routes, articles and generated aids.
+An independent source review checked the decisive answers.
+
+Both answered the core questions correctly. The documentation-assisted run read
+more test evidence and used the route table plus two articles; it did not use the
+generated graph. Self-reported shell calls were 7 versus 6, and files read were
+12 versus 16. Those counts did not measure equivalent reading depth. Complete
+elapsed times and token consumption were not recorded comparably.
+
+The finding supports retaining concise routes and explanations. It **does not
+establish faster work, lower context consumption, a measured human benefit or
+an independent benefit from the graph**. Human maintainability remains an explicit
+requirement to evaluate, not an outcome proven by an agent-only pilot. Runtime
+tests remain separate evidence of application behavior.
+
+## How to continue evaluating the method
+
+Use real maintenance questions when a navigation problem warrants a comparison;
+do not rerun a benchmark for every wording change. Hold the source snapshot,
+question, expected answer, allowed tools and verification depth constant. Compare
+source navigation with the proposed aids, using fresh context and independent
+review. Include human maintenance tasks when assessing the human requirement.
+
+Record correctness and decisive citations first, then complete elapsed time,
+actual context/tokens where available, files inspected, irrelevant detours and
+documentation-maintenance effort. Mark unavailable measures as unknown. A lower
+call count alone is not a saving. Separate the effects of route tables, prose and
+graphs where possible; record failures and negative results as well as successes.
+
+Retain small aids that repeatedly help a real task. Simplify unclear code before
+building a larger graph around it. Promote methods to shared **reproducibleai**
+guidance only after repeated evidence, through that project's own review. This
+app's experiment does not impose a workspace-wide documentation framework.
+
+## Machine-readable navigation without a second specification
+
+The local site includes article Markdown and `llms.txt`; these are text entry
+points to the same documentation, not agent instructions or separate scientific
+authority. The repository's `dev/architecture/call-network.json` records static
+edges, reviewed indirect bridges and source hashes. Check freshness, then query
+a specific symbol rather than loading the entire graph into every task:
+
+```text
+Rscript --vanilla dev/scripts/query-code-map.R --check
+Rscript --vanilla dev/scripts/query-code-map.R fluvgeo::split_study_reach
+```
+
+Resolve R through the workstation instructions when it is not on PATH. A missing
+edge does not prove a call is absent; source hashes establish freshness, not
+semantic completeness. No AI service is part of the user workflow. Development
+agents are optional collaborators, and human review retains scientific authority.
+
+## Where implementation and verification belong
+
+| Location | Responsibility |
+| --- | --- |
+| `R/` | Installed application functions, internal helpers and runtime input validation; shared scientific methods belong in fluvgeo |
+| `tests/testthat/` | Repeatable package behavior and regression tests, with controlled fixtures and temporary outputs |
+| `dev/scripts/` | Build/run tooling, documentation checks, explicit live-service or workstation-data qualification and cross-repository orchestration |
+| `dev/check-output/` | Ignored local evidence and temporary experiment output; not the authoritative regression suite |
+
+The package uses the standard `tests/testthat.R` entry point. The `dev/` directory
+is excluded by `.Rbuildignore`, so its standalone assertions do not run as part of
+`R CMD check`. That is intentional for checks requiring public services, real
+local studies or documentation-build artifacts. It must not become a way to leave
+ordinary package regressions outside automated verification. Live tests can also
+be organized as explicitly gated integration tests; their location is a project
+choice, not an R prohibition.
+
+JavaScript runtime contracts now run through `test-javascript.R`, with bounded
+Node fixtures under `tests/testthat/javascript/`. R supplies the actual widget
+callbacks or installed asset, so they also work when checking a source package.
+Node.js 18 or newer must be on PATH for the maintained development check runners;
+ordinary package tests report explicit skips if Node is unavailable. Automation
+can enforce complete coverage with `FGSTUDIO_REQUIRE_NODE=true`. These controlled
+DOM/map fixtures complement browser acceptance, which still requires a browser.
+
+Use standard R development commands first, following
+`dev/workflows/r-package-development.md`. Existing scripts such as `check-tests.R`
+still provide extra orchestration and remain under review; their presence does
+not establish that they are necessary. Before adding a wrapper, check the standard
+tool's options and identify the specific gap. Public-service qualification remains
+opt-in. Promote stable regression cases from reproductions into package tests.
+
+See `dev/scripts/README.md` for the current classification and
+`dev/workflows/r-package-development.md` for placement rules. This follows the
+[R Packages testing guidance](https://r-pkgs.org/testing-design.html): production
+functions and test expectations have different execution lifecycles. Tests should
+not run when an analyst loads the application.
+
+## Application dependencies with flow
+
+This bounded diagram is generated from the current package. It describes static
+dependencies, not the chronological execution of every reactive callback.
+
+```{r app-dependencies, echo=TRUE, message=FALSE, warning=FALSE}
+diagram <- flow::flow_view_deps(fgstudio::fgstudio_app, max_depth = 2,
+  show_imports = "packages")
+diagram$widget
+```
+
+## Inside one function
+
+`valid_map_bounds` validates saved map-view coordinates. This small example shows
+how a developer can inspect decision logic without rendering an entire package.
+It does not perform scientific spatial containment; that belongs in fluvgeo.
+
+```{r bounds-logic, echo=TRUE, message=FALSE, warning=FALSE}
+flow::flow_view(fgstudio:::valid_map_bounds)$widget
+```
+
+For larger functions, start with their explanation and source, then request a
+bounded diagram. A giant graph is not a substitute for a comprehensible design.
+We embed flow's native HTML widget: flow 0.2.0's default knitr printer tries to
+create a PNG through webshot, which failed on this workstation. The native widget
+avoids that screenshot dependency without replacing the graph generator.
+
+## Where an automatic graph needs interpretation
+
+| Relationship | How to interpret it |
+|---|---|
+| A regular named function call | Candidate static dependency; inspect its source |
+| `store$split_reach(...)` | A closure returned by `local_study_store`, not a package-level function |
+| `revise(..., writer=fluvgeo::split_study_reach)` | A function supplied as an argument and invoked indirectly |
+| `on_saved(...)` | A callback supplied by the parent module that updates current study state |
+| Shiny observers | Registered now, invoked later; call order is not event order |
+| `callr::r_bg(drainage_request, ...)` | A worker-process boundary, not an ordinary synchronous call |
+
+`pkgnet` provides within-package function-network data suitable for export and
+querying. Its documented limitations include list-held functions, some method
+calls and nonstandard evaluation. In particular, absence of `store$split_reach`
+from a network does not mean the app never calls the backend split function.
+See the [pkgnet reporter contract](https://uptake.github.io/pkgnet/reference/FunctionReporter.html).
+
+## Updating both documentation modes
+
+When adding a capability, extend the appropriate article or add the next numbered
+article. Explain entry events, calls, indirect dispatch, state, persistence,
+failure boundaries and tests. Keep the short agent route in step with it. A human
+should be able to trace UI → adapter → backend → saved output without recovering
+the design from a chat transcript.
+
+Use the repository's `dev/workflows/developer-documentation.md` for rebuilding,
+checking and navigating the machine-readable index. Generated graph evidence must
+identify its source snapshot and limitations; code and tests remain authoritative.
+No automatic call graph is claimed to enumerate all possible runtime behavior.

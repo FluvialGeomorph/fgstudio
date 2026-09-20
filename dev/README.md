@@ -14,7 +14,7 @@ This directory contains durable, repository-owned context for human and agentic 
 
 Chat transcripts and generated output are not canonical project context.
 
-Developer entry points: [human articles](../vignettes/dev-01-application-lifecycle.Rmd),
+Developer entry points: [human articles](../vignettes/dev-01-code-navigation.Rmd),
 [agent routes](architecture/agent-routes.md), and the
 [paired documentation workflow](workflows/developer-documentation.md).
 

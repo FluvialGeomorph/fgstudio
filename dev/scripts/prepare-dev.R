@@ -7,6 +7,6 @@ status <- system2(file.path(R.home("bin"), "R.exe"),
 if (status != 0L) stop("Backend installation failed.")
 .libPaths(c(lib, .libPaths()))
 devtools::document(".")
-devtools::test(".", reporter = "summary", stop_on_failure = TRUE)
+source("dev/scripts/check-tests.R")
 pkgload::load_all("../reproducibleai", quiet = TRUE)
 print(reproducibleai::validate_agentic_context(".", strict = TRUE))

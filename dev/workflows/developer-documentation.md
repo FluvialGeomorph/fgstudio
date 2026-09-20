@@ -5,6 +5,12 @@ changes. Apply ADR 0006 with reproducibleai's narrow-artifact/proportionality ru
 
 ## Maintained inputs
 
+- `README.md`: concise project/audience landing page, rendered as the site home.
+  The build derives ignored `pkgdown/index.md`, translating vignette source links
+  to site article links. Edit README only; use the build helper to keep both current.
+- `vignettes/fgstudio.Rmd`: project role, ecosystem responsibilities and current versus intended outcomes.
+- `vignettes/guide-study-workflow.Rmd`: single maintained home for analyst procedures moved from README.
+
 - `vignettes/dev-01-...` onward: human explanations, source/test routes and bounded flow diagrams.
 - `_pkgdown.yml`: ordered article navigation and public API reference.
 - `dev/architecture/agent-routes.md`: short task-to-source routing table.
@@ -19,11 +25,17 @@ changes. Apply ADR 0006 with reproducibleai's narrow-artifact/proportionality ru
 2. Explain callback/worker/writer boundaries and saved-output effects explicitly.
    If a human cannot trace them, simplify or discuss the design; do not hide it
    behind a larger graph. Avoid manually documenting every base-R dependency.
-3. Run `dev/scripts/build-docs.ps1` from PowerShell. It resolves workstation R and
-   Pandoc, installs fgstudio only into `dev/check-output/doc-library`, generates
-   the code map and builds the pkgdown site at `docs/index.html`.
-4. Inspect articles, reference links and diagrams. Query a representative direct
-   caller and the indirect Reach split boundary. Check graph freshness before use.
+3. Use `pkgdown::build_site()` in a fresh R session with the isolated backend
+   library and workstation R/Pandoc configuration. It provides temporary package
+   installation and process isolation. Review changed articles and links.
+   The legacy `build-docs.ps1`/`.R` pipeline also generates the code map and
+   translates README source links into ignored `pkgdown/index.md`. Those additions
+   remain under review; do not treat the wrapper as the standard pkgdown interface.
+   Until link handling is simplified, verify the generated landing page is current
+   when README changes. Use `check-docs.R` for local link checks when needed.
+4. Inspect articles, reference links and diagrams. Regenerate/check the code map
+   when its tracked inputs change and it is needed for the task; do not require
+   graph analysis for routine prose edits. Check graph freshness before use.
 5. Record actual checks and limits in the feature record; do not claim measured
    context savings without comparing real navigation tasks.
 
@@ -34,7 +46,8 @@ metadata. `docs/` is reproducible, ignored output; no GitHub Pages deployment or
 public site URL is assumed. Commit article/configuration/scripts and the small
 generated navigation data, not caches or large rendered reports.
 
-Use filenames beginning `dev-01-`, `dev-02-`, etc.; numeric-only prefixes fail R's
+Use filenames beginning `dev-01-`, `dev-02-`, etc. for the developer series;
+purpose/analyst articles use descriptive names. Numeric-only prefixes fail R's
 installed-document filename checks. Titles retain the visible sequence numbers.
 pkgdown also supplies `docs/llms.txt` and article Markdown for text-based access;
 reuse these instead of maintaining a second full prose corpus. A missing public
@@ -57,6 +70,13 @@ is FG Studio plus named backend boundaries, not every repository/function in FG.
 Do not use a missing edge as evidence that a dependency is absent.
 
 ## Future improvements
+
+The pkgdown landing page and navigation must serve analysts as well as maintainers.
+Keep purpose, implemented user outcomes and planned integration distinct. Route
+scientific/backend ownership to workspace authorities without duplicating their
+contracts. Current analyst procedures belong in the analyst guide, and internal
+call paths belong in the developer series. Update article 01 when navigation
+experiments produce new evidence; do not advertise unmeasured efficiency gains.
 
 The [first navigation pilot](../governance/navigation-pilot-2026-09-19.md) supports
 keeping concise routes and shared human articles, not a claim of speed/context

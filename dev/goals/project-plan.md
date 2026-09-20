@@ -35,6 +35,16 @@ for evidence, test-version boundaries and the current uncommitted-work caveat.
 
 ## Current task and next decision
 
+The 2026-09-20 documentation orientation pass places FG Studio within the wider
+project and separates analyst guidance from the retained developer/context-routing
+layer. See [documentation audiences](../features/documentation-audiences.md).
+
+Package development follows the current
+[R workflow](../workflows/r-package-development.md). JavaScript contracts use the
+package test entry point; existing custom execution wrappers still need review
+against standard R facilities. Live/local diagnostics remain opt-in.
+This does not change the next functional step or authorize new scientific work.
+
 Latest increment (9036/9044): CRS documentation and save/reload feedback are
 implemented after owner acceptance of the compact UI. Both target definitions
 are persisted in immutable revisions; reload now reopens the tab's saved study.

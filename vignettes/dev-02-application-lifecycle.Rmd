@@ -1,14 +1,18 @@
 ---
-title: "01. Application lifecycle and durable study state"
+title: "02. Application lifecycle and durable study state"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{01. Application lifecycle and durable study state}
+  %\VignetteIndexEntry{02. Application lifecycle and durable study state}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 This developer series explains **why calls occur**, not just which names appear
-in source. Read articles in numeric order. Internal functions are implementation
+in source. For project purpose and analyst outcomes, begin with the
+[project overview](fgstudio.html) and [analyst guide](guide-study-workflow.html).
+For a first developer orientation, read articles in numeric order; for a specific
+task, use the routes in [article 01](dev-01-code-navigation.html).
+Internal functions are implementation
 seams, not a supported public R API. The app remains a single-analyst local preview;
 it does not yet run L1 analysis or connect to Enterprise.
 
@@ -93,4 +97,4 @@ Stream/Reach rename lists display names for selection but submit stable IDs.
 
 Test files live under `tests/testthat`. Never start the analyst preview in an R
 process that ran mocked tests. Use `dev/scripts/run-dev.ps1` for a fresh process.
-Next: **02. Discovery and Stream construction**.
+Next: **03. Discovery and Stream construction**.

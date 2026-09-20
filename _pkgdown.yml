@@ -6,8 +6,36 @@ development:
   mode: unreleased
 navbar:
   structure:
-    left: [intro, reference, articles]
+    left: [intro, analyst, articles, reference]
     right: [search, github]
+  components:
+    intro:
+      text: Project overview
+      href: articles/fgstudio.html
+    analyst:
+      text: Analyst guide
+      href: articles/guide-study-workflow.html
+    articles:
+      text: Developer guide
+      menu:
+        - text: "01. Code maps and context routing"
+          href: articles/dev-01-code-navigation.html
+        - text: "02. Application lifecycle"
+          href: articles/dev-02-application-lifecycle.html
+        - text: "03. Discovery and Streams"
+          href: articles/dev-03-discovery-and-streams.html
+        - text: "04. Reach editing"
+          href: articles/dev-04-reach-editing.html
+        - text: "05. Survey Collections"
+          href: articles/dev-05-survey-collections.html
+        - text: "06. Source DEM files"
+          href: articles/dev-06-stream-dem-files.html
+        - text: "07. DEM inspection"
+          href: articles/dev-07-dem-inspection.html
+        - text: "08. Horizontal analysis CRS"
+          href: articles/dev-08-analysis-crs.html
+        - text: "09. Vertical reference"
+          href: articles/dev-09-vertical-reference.html
 reference:
   - title: Local application entry points
     desc: Internal modules and callback paths are explained in the developer articles.
@@ -15,13 +43,19 @@ reference:
       - fgstudio_app
       - run_app
 articles:
+  - title: Purpose and analyst workflow
+    desc: How FG Studio fits FluvialGeomorph, who it serves, and what the local preview can do today.
+    contents:
+      - fgstudio
+      - guide-study-workflow
   - title: Developer guide — read in order
+    desc: Begin with context routing and development methods, then follow the app workflow from lifecycle through terrain preparation.
     navbar: Developer guide
     contents:
-      - dev-01-application-lifecycle
-      - dev-02-discovery-and-streams
-      - dev-03-reach-editing
-      - dev-04-code-navigation
+      - dev-01-code-navigation
+      - dev-02-application-lifecycle
+      - dev-03-discovery-and-streams
+      - dev-04-reach-editing
       - dev-05-survey-collections
       - dev-06-stream-dem-files
       - dev-07-dem-inspection

@@ -1,0 +1,154 @@
+---
+title: "FG Studio in the FluvialGeomorph project"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{FG Studio in the FluvialGeomorph project}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+FluvialGeomorph supports repeatable analysis of stream geometry from remotely
+sensed terrain, especially lidar. Its shared methods and reports help analysts
+describe channels through maps, longitudinal comparisons, cross-section metrics
+and profiles. **FG Studio is the developing browser workspace that brings the
+early decisions and data preparation for that work into a coherent, reviewable
+study.** Its longer-term destination is a guided route to Level 1 analysis and
+scientific deliverables using the project's shared R backend.
+
+## Why the study comes before the analysis
+
+A terrain file alone does not explain a study. An analyst needs to know which
+question it serves, what area and stream corridor it represents, how Reaches were
+defined, when observations were acquired, and which reference systems and units
+make comparisons meaningful. These choices influence every later calculation.
+
+Historically, preparing those inputs has depended on highly trained GIS analysts
+and knowledge that can be difficult to transfer. FG Studio aims to make the work
+understandable and repeatable through visual feedback, explicit choices and a
+retained study record. Scientific judgment remains essential: discovering a
+dataset, downloading it or selecting a CRS does not establish its fitness for
+an engineering question.
+
+For example, a team assessing a stream corridor can define the Study Area and
+Reaches, inspect available lidar acquisitions, retain original DEM tiles and
+record intended reference systems today. The next terrain steps will organize
+those acquisitions into Survey Events and produce consistently aligned terrain.
+The intended continuation is shared analysis and reports that another analyst
+or customer can review without reconstructing the originating GIS session.
+
+## Who this serves
+
+| Reader | Value of FG Studio | Where to continue |
+| --- | --- | --- |
+| Analyst defining a new study | Maps and guided inputs make scope, terrain sources and reference choices explicit; saved revisions support iterative work | [Working with a Study Area](guide-study-workflow.html) |
+| Technical lead or reviewer | The developing record ties intended scope to source evidence and makes unresolved choices visible | The capability boundaries below and the reporting requirements under Further reading |
+| R, Shiny or GIS developer | A browser client exercises reusable contracts that can also serve desktop workflows | [Application lifecycle](dev-02-application-lifecycle.html) and the numbered developer series |
+| Human or agent investigating a change | Task routes, source/test references and bounded diagrams provide different entry points to the same implementation | [Code maps and dual-mode development](dev-01-code-navigation.html) |
+
+## Where it fits in the workspace
+
+The project consists of independently maintained repositories. They have different
+responsibilities; an implemented backend function is not automatically an exposed
+FG Studio feature.
+
+| Component | Role and relationship to FG Studio |
+| --- | --- |
+| **fgstudio** | Shiny interaction, reactive state, review of choices and orchestration of local saved studies |
+| **fluvgeo** | Shared R scientific calculations, spatial contracts and validation, plots and reporting; FG Studio delegates reusable methods here |
+| **fg-qgis-toolbox** | Developing desktop access to shared R capabilities; interaction is designed alongside Shiny, with its own qualification and rollout |
+| **FluvialGeomorph-toolbox** | Established ArcGIS/Python orchestration; ongoing production workflows are retained during the open-source transition |
+| **ohwm2** | An existing Shiny client and interaction reference; FG Studio has its own repository and workflow |
+| **FGDB** | Governed study identities, relationships, validation and enterprise-loading contracts; future integration is distinct from today's local saves |
+| **RegionalCurve / fluvgeodata** | Regional hydraulic geometry capabilities and backend test/example fixtures, respectively |
+| **FG-User-Manual / FG-Tech-Manual** | Project-wide user procedures and technical methods; prototype app guidance does not replace established production instructions |
+| **FG-architecture** | Cross-repository context, ownership and accepted architectural decisions; member repositories retain implementation authority |
+
+The accepted design starts with Shiny's new-project experience and develops shared
+capabilities toward a verified connection with existing FluvialGeomorph tools.
+QGIS offers desktop control over those capabilities. Client screens need not map
+one-to-one to backend functions. This approach supports an open-source, R-native
+workflow while preserving the existing production toolchain.
+
+Within that workflow, vector work uses **sf** and raster work uses **terra** in
+the shared backend. CRS handling follows their geospatial libraries rather than
+an independent app projection engine. The planned NSRS transition makes explicit
+reference frames, coordinate epochs, vertical references and exact units especially
+important. Present metadata support is preparation for qualified operations,
+not a claim of complete NATRF2022/NAPGD2022/SPCS2022 processing support.
+
+## The workflow and its current boundary
+
+The intended progression is **study question → study definition → terrain
+development → analysis → reviewable results**. Analysts may revisit earlier
+choices as scope and evidence develop; this is not a rigid wizard.
+
+| Stage | Useful result | Current FG Studio support |
+| --- | --- | --- |
+| Define the study | Named Study Area with purpose, boundary, Streams and Reaches | Implemented, with local immutable revisions and supported hierarchy editing |
+| Find and inspect observations | Retained acquisition choices, original DEMs and evidence about their contents | Survey Collection discovery, DEM selection/download and bounded inspection implemented |
+| Specify analysis references | Explicit horizontal and vertical targets and units | Implemented as checked, saved specifications; no elevation conversion on save |
+| Develop analysis terrain | One consistent Stream DEM per Survey Event, aligned grids and hierarchical masks | Planned; Event membership, explicit cell size, source reconciliation and processing remain to be implemented |
+| Analyze and report | Reach-level geometry evidence and a reviewable explanation of the study and its terrain | Shared backend capabilities and reporting designs inform the destination; app execution/report delivery remain future work |
+| Govern and share accepted content | Qualified enterprise records and relationships | Eventual FGDB integration; no Enterprise connection in this app |
+
+The current app is a local preview for a trusted single analyst. It is useful for
+the implemented preparation tasks, but is not yet a complete Level 1 execution
+environment or a shared hosted service. The [analyst guide](guide-study-workflow.html)
+describes current buttons, persistence and operational limits.
+
+## A durable record across clients and time
+
+Study Area, Stream and Reach definitions provide the spatial context for Survey
+Events and their products. An app **Survey Collection** is source-acquisition
+evidence; it is not an FGDB **Collection**, which groups Study Areas, nor is
+selecting it the creation of a Survey Event. Event identity and membership need
+their own explicit handling.
+
+The accepted local delivery direction uses GeoPackages for vectors/tables,
+external GeoTIFFs for analytical terrain, and links and metadata within a related
+folder. FG Studio already retains context revisions, source selections and
+download evidence locally. That does not yet constitute a fully qualified
+analysis-delivery bundle or an enterprise-accepted dataset. Back up the entire
+study folder; the newest context alone is not all the evidence.
+
+The wider project also supports a separate entry problem: reconstructing legacy
+studies from surviving archives. New-project design and legacy reconstruction
+should describe the same scientific relationships, but have different evidence
+and uncertainty. FG Studio currently emphasizes new-study definition; it is not
+an archive migration tool. The broader reporting intent distinguishes Study Area,
+Terrain Development and staging views without making four separate documents
+mandatory for every user.
+
+## Why this site also documents development
+
+The app is both a user workflow under development and a practical setting for
+testing human/agent context routing. These purposes share an implementation, but
+have distinct evidence: application tests check behavior; navigation experiments
+ask whether a maintainer can find and explain that behavior accurately and with
+less effort.
+
+The analyst guide describes tasks and outcomes. Developer articles trace events,
+state, adapters, shared backend calls, failures and tests. Agent routes provide a
+short entry to the same sources; generated maps help answer bounded dependency
+questions. The [methods article](dev-01-code-navigation.html) records the first
+pilot's limits and the evidence needed before claiming efficiency gains.
+Neither an AI account nor an agent is required to use or maintain the application.
+
+## Further reading and authority
+
+This orientation synthesizes the maintained workspace context reviewed on
+2026-09-20. Current app behavior comes from fgstudio's implementation and tests;
+the following documents explain the wider purpose and accepted direction.
+Their member repositories own changes to those contracts.
+
+- [Shiny-led new-project design](https://github.com/FluvialGeomorph/FG-architecture/blob/main/dev/decisions/adr-0008-shiny-led-new-project-design.md): browser/desktop roles and staged convergence.
+- [Shared reporting intent](https://github.com/FluvialGeomorph/fluvgeo/blob/main/dev/goals/reporting-intent.md): the scientific record, accessibility and new-study versus legacy-study distinction.
+- [Backend ecosystem](https://github.com/FluvialGeomorph/fluvgeo/blob/main/dev/architecture/backend-ecosystem.md): scientific ownership, client responsibilities and compatibility.
+- [FGDB initiative](https://github.com/FluvialGeomorph/FGDB/blob/main/dev/goals/initiative-brief.md): governed relationships and enterprise goals.
+- [QGIS toolbox](https://github.com/FluvialGeomorph/fg-qgis-toolbox): the parallel desktop development path.
+- [User Manual](https://github.com/FluvialGeomorph/FG-User-Manual) and [Technical Manual](https://github.com/FluvialGeomorph/FG-Tech-Manual): project procedures and methods.
+- [Deterministic user tooling](https://github.com/FluvialGeomorph/FG-architecture/blob/main/dev/decisions/adr-0006-deterministic-user-tooling.md): separation of AI-assisted development from runtime requirements.
+
+Repository links refer to published copies and may lag local development changes.
+In a workspace checkout, read the same repository-relative paths for current
+evidence; this site does not publish or synchronize sibling repositories.

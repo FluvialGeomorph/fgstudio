@@ -45,7 +45,7 @@ Validation errors and save confirmation render beside Check/Save. Confirmation
 is bound to the saved revision path, so the current-context observer cannot erase
 it and a different study cannot inherit it. Reopening fills every stored field;
 resolved definitions use their authority identifier where available, otherwise
-WKT. Article 01 explains reload restoration from the tab's local study key.
+WKT. Article 02 explains reload restoration from the tab's local study key.
 Checking alone is not a save, and unsaved form state is not recovered after reload.
 
 `crs_selectize_options()` is shared by both CRS menus. The dropdown is appended to
@@ -57,7 +57,7 @@ menu to avoid a detached overlay. Destroying a control removes its scroll listen
 Source routes: R/study_vertical_reference.R, R/study_analysis_crs.R, R/mod_study.R,
 R/study_store.R; backend R/study_vertical_reference.R and R/study_context.R.
 Tests: test-study-vertical-reference.R; backend test_study_vertical_reference.R;
-dropdown callback fixture: dev/scripts/check-crs-dropdown.cjs. The exact persisted
+dropdown callback fixture: tests/testthat/javascript/crs-dropdown.cjs. The exact persisted
 contract is sibling fluvgeo/dev/schemas/study-vertical-reference.md.
 
 Source-reference reconciliation and transformation qualification are still needed

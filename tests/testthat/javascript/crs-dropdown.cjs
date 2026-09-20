@@ -1,10 +1,10 @@
 // Execute the shipped Selectize callbacks with a bounded DOM/control fixture.
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
-const source = fs.readFileSync('R/study_analysis_crs.R','utf8');
+const source = JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
 const callbacks = {};
 for (const name of ['onInitialize','onDropdownOpen','onLoad']) {
-  const text = source.match(new RegExp(name+'=I\\("([\\s\\S]*?)"\\)'))[1];
+  const text = source[name];
   callbacks[name] = Function('return ('+text+')')();
 }
 let listener, resizeListener, removed=false, resizeRemoved=false, destroyed=false, closed=false;

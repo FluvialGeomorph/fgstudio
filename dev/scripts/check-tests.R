@@ -1,4 +1,7 @@
 # Run independently of the analyst app. Fail if tests leak a mocked backend.
+# Require all JavaScript contracts in the maintainer workflow. No network or installs.
+if (!nzchar(Sys.which("node"))) stop("Install Node.js and add it to PATH before running maintainer checks.")
+Sys.setenv(FGSTUDIO_REQUIRE_NODE = "true")
 .libPaths(c(normalizePath("dev/local-library"),.libPaths()))
 pkgload::load_all(".",quiet=TRUE)
 before <- fluvgeo::check_study_area_containment
