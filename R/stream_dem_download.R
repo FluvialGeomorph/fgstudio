@@ -11,7 +11,8 @@ stream_dem_download_ui <- function(id) {
     shiny::div(class="d-flex gap-2 mt-1",
       shiny::actionButton(ns("start"),"Download saved files",class="btn-primary btn-sm"),
       shiny::actionButton(ns("cancel"),"Cancel download",class="btn-outline-secondary btn-sm")),
-    shiny::uiOutput(ns("destination")),shiny::uiOutput(ns("status")),shiny::uiOutput(ns("files")))
+    shiny::uiOutput(ns("destination")),shiny::uiOutput(ns("status")),shiny::uiOutput(ns("files")),
+    stream_dem_inspection_ui(ns("inspection")))
 }
 
 stream_dem_download_server <- function(id,current,selection,scope,store,launch=launch_stream_dem_download_job,clock=Sys.time) {
@@ -127,6 +128,13 @@ stream_dem_download_server <- function(id,current,selection,scope,store,launch=l
           MB=round(s$files$bytes/1e6,1),Details=s$files$message)),
         if(any(s$files$outcome=="RECORDED")) shiny::p(class="small","RECORDED: receipt exists; checksum has not been rechecked in this view."))
     })
+    inspection_context <- shiny::reactive({
+      s <- state()
+      if(busy() || is.null(s) || is.null(attempt)) return(NULL)
+      files <- s$files[s$files$outcome %in% c("DOWNLOADED","REUSED","RECORDED"),c("file_id","title"),drop=FALSE]
+      list(attempt=attempt,scope=scope(),files=files)
+    })
+    stream_dem_inspection_server("inspection",inspection_context)
     session$onSessionEnded(function() try(stop_job(),silent=TRUE))
     list(busy=busy,poll=poll,state=state)
   })

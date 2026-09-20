@@ -1,6 +1,6 @@
 Package: fgstudio
 Title: FluvialGeomorph Studio
-Version: 0.0.0.9028
+Version: 0.0.0.9036
 Authors@R: c(
     person("Michael", "Dougherty", , "Michael.P.Dougherty@usace.army.mil", role = "aut",
            comment = c(ORCID = "0000-0002-1465-5927")),
@@ -33,7 +33,7 @@ Config/testthat/edition: 3
 Imports: 
     bslib (>= 0.9.0),
     callr,
-    fluvgeo (>= 2026.09.19.9038),
+    fluvgeo (>= 2026.09.20.9044),
     fs,
     httr2,
     htmltools,

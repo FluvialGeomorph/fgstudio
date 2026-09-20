@@ -13,17 +13,39 @@ collection_test_discovery <- function(x) {
     returned=1L,message="Synthetic fixture"))
 }
 
+test_that("opening saved collections permits EPSG 6344 save before visiting their panel", {
+  store <- local_study_store(withr::local_tempdir())
+  x <- collection_test_study(store)
+  store$save_survey_collections(x$key,collection_test_discovery(x),"USIEI:1",x$path,NULL)
+  before <- tools::md5sum(x$path)
+  shiny::testServer(mod_study_server,args=list(store=store),{
+    session$flushReact()
+    session$setInputs(saved=x$key,open=1)
+    expect_false(collections$has_pending())
+    session$setInputs(`analysis_crs-mode`="advanced",`analysis_crs-definition`="6344",`analysis_crs-validate`=1)
+    session$setInputs(`analysis_crs-save`=1)
+    expect_equal(current()$analysis_crs$epsg,6344)
+    expect_match(notice()$text,"Analysis CRS saved",fixed=TRUE)
+    expect_identical(store$survey_collections(x$key)$discovery$selected,"USIEI:1")
+  })
+  expect_identical(tools::md5sum(x$path),before)
+})
+
 test_that("product intent saves, reopens and follows collection deselection", {
   store <- local_study_store(withr::local_tempdir()); x <- collection_test_study(store)
   store$save_survey_collections(x$key,collection_test_discovery(x),"USIEI:1",x$path,NULL)
   shiny::testServer(mod_survey_collections_server,args=list(current=function() x,store=store),{
     session$flushReact()
+    expect_identical(chosen(),"USIEI:1")
+    expect_false(session$returned$has_pending())
     session$setInputs(chosen="USIEI:1",plan_collection="USIEI:1",plan_products=c("DEM","POINT_CLOUD"),apply_plan=1)
     expect_equal(nrow(plan()),2L)
     session$setInputs(save=1)
     expect_equal(nrow(store$survey_collections(x$key)$discovery$acquisition_plan),2L)
     expect_identical(store$read(x$key)$events,0L)
-    session$setInputs(chosen=character(),save=2)
+    session$setInputs(chosen=character())
+    expect_true(session$returned$has_pending())
+    session$setInputs(save=2)
     expect_equal(nrow(store$survey_collections(x$key)$discovery$acquisition_plan),0L)
   })
 })

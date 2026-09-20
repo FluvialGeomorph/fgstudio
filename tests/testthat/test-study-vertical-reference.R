@@ -1,0 +1,62 @@
+vertical_test_study <- function(store) {
+  x <- store$create("Vertical test")
+  b <- sf::st_sf(geometry=sf::st_as_sfc(sf::st_bbox(c(xmin=-94,ymin=41,xmax=-93.9,ymax=41.1),crs=4326)))
+  store$save_boundary(x$key,b,x$path)
+}
+
+test_that("vertical target survives later context changes without changing horizontal CRS", {
+  store <- local_study_store(withr::local_tempdir()); x <- vertical_test_study(store)
+  x <- store$set_analysis_crs(x$key,"6344","Test","Test",x$path)
+  before <- tools::md5sum(x$path)
+  spec <- fluvgeo::validate_study_vertical_reference("vertical_crs","5703","orthometric","international_foot")
+  saved <- store$set_vertical_reference(x$key,spec,x$path)
+  expect_identical(saved$vertical_reference,spec)
+  expect_equal(saved$analysis_crs$epsg,6344)
+  expect_identical(tools::md5sum(x$path),before)
+  expect_identical(saved$boundary_sf,x$boundary_sf)
+  expect_error(store$set_vertical_reference(x$key,spec,x$path),"newer revision")
+  renamed <- store$rename(x$key,"New name",saved$path)
+  expect_identical(renamed$vertical_reference,spec)
+})
+
+test_that("vertical editor validates exact current inputs and preserves real pending guards", {
+  store <- local_study_store(withr::local_tempdir()); x <- shiny::reactiveVal(vertical_test_study(store))
+  pending <- shiny::reactiveVal(FALSE)
+  shiny::testServer(study_vertical_reference_server,args=list(current=x,store=store,
+    on_saved=function(saved) x(saved),has_pending=pending),{
+    session$flushReact()
+    expect_true("5703" %in% shown()$code)
+    session$setInputs(kind="vertical_crs",candidate="6344",height_type="orthometric",elevation_unit="metre",check=1)
+    expect_null(checked())
+    expect_match(output$message$html,"Choose|definition|reference|CRS")
+    session$setInputs(candidate="5703",check=2)
+    expect_equal(checked()$spec$crs_authority,"EPSG:5703")
+    session$setInputs(elevation_unit="international_foot",save=1)
+    expect_match(notice(),"Check the current")
+    session$setInputs(check=3);pending(TRUE);session$setInputs(save=2)
+    expect_match(notice(),"pending")
+    pending(FALSE);session$setInputs(save=3)
+    expect_equal(x()$vertical_reference$unit_to_metre,0.3048)
+    expect_match(output$status$html,"Saved target",fixed=TRUE)
+    expect_match(output$message$html,"Vertical specification saved to local storage",fixed=TRUE)
+    expect_null(checked())
+    session$setInputs(kind="declared",definition="NAPGD2022",epoch_status="known",coordinate_epoch=2020,
+      epoch_evidence="",check=4)
+    expect_null(checked());expect_match(notice(),"source evidence")
+    expect_match(output$message$html,"source evidence",fixed=TRUE)
+    session$setInputs(epoch_evidence="Project target epoch",check=5,save=4)
+    expect_equal(x()$vertical_reference$reference_name,"NAPGD2022")
+    expect_equal(x()$vertical_reference$support_status,"INCOMPLETE_OR_UNQUALIFIED")
+    expect_equal(x()$vertical_reference$coordinate_epoch,2020)
+  })
+})
+
+test_that("both CRS menus escape clipping containers and keep vertical details optional", {
+  opts <- crs_selectize_options()
+  expect_equal(opts$dropdownParent,"body")
+  expect_match(as.character(opts$onDropdownOpen),"window.innerHeight",fixed=TRUE)
+  html <- as.character(mod_study_ui("fixture"))
+  expect_match(html,"Vertical reference",fixed=TRUE)
+  expect_match(html,"Coordinate epoch and intended model (optional)",fixed=TRUE)
+  expect_match(html,"Save vertical specification",fixed=TRUE)
+})

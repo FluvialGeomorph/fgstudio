@@ -41,6 +41,7 @@ cannot be understood by looking only for a top-level function named `create`.
 |---|---|---|
 | Create Study Area | create observer → `store$create` | `fluvgeo::start_study_context`; reread persisted context |
 | Open study | open observer → `store$read` | `fluvgeo::read_study_context`; highest numbered local revision |
+| Reload saved study | one-time URL observer → `restore_study` → `store$read` | Same validated read path; no new revision |
 | Edit Study Area name/Purpose | modal save → `store$rename` / `store$set_purpose` → local `revise` | `fluvgeo::revise_study_context`; new immutable revision |
 | Save drawn boundary | `mod_boundary_server` → `store$save_boundary` | Containment check, then context revision |
 | Rename Stream/Reach | `study_feature_names` → `store$rename_feature` → local `revise` | `fluvgeo::rename_study_feature`; identity and geometry retained |
@@ -51,7 +52,7 @@ writers. It checks the expected source path, chooses a new destination, invokes
 `writer(source, destination, ...)`, then rereads the result. Treating every call
 to `revise` as the default backend function would misrepresent this architecture.
 
-The opaque folder key is not the Study Area UUID. Both stay server-controlled.
+The opaque folder key is not the Study Area UUID. Both are server-generated.
 Files named `study.gpkg` and `revision-000001.gpkg` are context snapshots; companion
 GeoPackages carry source evidence. Back up the entire study folder. Publication
 is not a multi-file transaction, and an error can leave unreferenced evidence.
@@ -64,6 +65,18 @@ revisions can retain selected draft inputs, but previews must be recomputed.
 Explicit reopen clears transient work even if the revision has not changed.
 Workspace New protects unfinished work with a discard confirmation; it does not
 delete saved studies.
+
+Create/Open place the opaque key in the current tab's `study` query parameter
+using Shiny's replace-history update. A new session reads it once, after initial
+inputs, through the normal validated store; no global last-opened study is shared
+between sessions. Other query parameters are retained. Invalid or missing-on-disk
+keys produce the normal open error, not a guessed fallback. Workspace New clears
+the key. This is a local resume link, not portable data or access control.
+
+Reload restores only the latest persisted revision, not navigation tabs, drafts,
+validation results or previews. Both CRS forms show saved definitions and status;
+their local messages distinguish failed validation from a completed save. Test
+`test-study-reload.R` uses a fresh storage adapter and session against saved files.
 
 Boundary saves reject exclusion of existing child areas; they do not automatically
 move children. Name/Purpose saves do not authorize scientific or geometry changes.

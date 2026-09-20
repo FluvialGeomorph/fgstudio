@@ -54,7 +54,9 @@ mod_survey_collections_server <- function(id,current,store,launch=launch_survey_
       job <<- NULL; busy(FALSE)
       shiny::removeNotification(session$ns("activity"),session=session)
     }
-    chosen <- shiny::reactive({ if(is.null(input$chosen)) character() else input$chosen })
+    # Hidden renderUI controls are not initialized when a saved study opens.
+    # NULL means unavailable; character(0) is an explicit empty selection.
+    chosen <- shiny::reactive({ if(is.null(input$chosen)) saved_keys() else input$chosen })
     dem_files <- stream_dem_files_server("dem_files",current,result,plan,chosen,store=store)
     shiny::observeEvent(key(), {
       if(!is.null(key()) && identical(key(),active_key)) return()

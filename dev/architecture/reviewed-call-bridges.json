@@ -1,6 +1,9 @@
 {
   "scope": "FG Studio navigation supplements; reviewed source relationships, not runtime traces",
   "edges": [
+    {"from":"fgstudio::local_study_store/set_vertical_reference","to":"fluvgeo::set_study_vertical_reference","kind":"injected-writer","file":"R/study_store.R","anchor":"writer = fluvgeo::set_study_vertical_reference)"},
+    {"from":"fgstudio::launch_stream_dem_inspection_job","to":"fluvgeo::preview_stream_dem_download","kind":"background-worker","file":"R/stream_dem_inspection.R","anchor":"if(preview) fluvgeo::preview_stream_dem_download(attempt,file_id,window=window)"},
+    {"from":"fgstudio::launch_stream_dem_inspection_job","to":"fluvgeo::inspect_stream_dem_download","kind":"background-worker","file":"R/stream_dem_inspection.R","anchor":"else fluvgeo::inspect_stream_dem_download(attempt,file_id)"},
     {"from":"fgstudio::local_study_store/prepare_dem_download","to":"fluvgeo::prepare_stream_dem_download","kind":"adapter-call","file":"R/study_store.R","anchor":"fluvgeo::prepare_stream_dem_download(expected_files,dem_destination(key))"},
     {"from":"fgstudio::launch_stream_dem_download_job","to":"fluvgeo::run_stream_dem_download","kind":"background-worker","file":"R/stream_dem_download.R","anchor":"else fluvgeo::run_stream_dem_download(attempt)"},
     {"from":"fgstudio::launch_stream_dem_download_job","to":"fluvgeo::read_stream_dem_download","kind":"background-worker","file":"R/stream_dem_download.R","anchor":"if(verify_only) fluvgeo::read_stream_dem_download(attempt)"},
@@ -14,6 +17,8 @@
     {"from":"fgstudio::local_study_store/merge_reaches","to":"fluvgeo::merge_study_reaches","kind":"injected-writer","file":"R/study_store.R","anchor":"writer = fluvgeo::merge_study_reaches)"},
     {"from":"fgstudio::local_study_store/save_stream","to":"fluvgeo::add_study_stream_corridor","kind":"injected-writer","file":"R/study_store.R","anchor":"writer = fluvgeo::add_study_stream_corridor)"},
     {"from":"fgstudio::launch_drainage_job","to":"fgstudio::drainage_request","kind":"background-worker","file":"R/drainage_explorer.R","anchor":"callr::r_bg(drainage_request"},
-    {"from":"fgstudio::reach_split_server","to":"fgstudio::mod_study_server/on_saved","kind":"callback","file":"R/reach_split.R","anchor":"on_saved(saved)"}
+    {"from":"fgstudio::reach_split_server","to":"fgstudio::mod_study_server/on_saved","kind":"callback","file":"R/reach_split.R","anchor":"on_saved(saved)"},
+    {"from":"fgstudio::study_analysis_crs_server","to":"fgstudio::local_study_store/set_analysis_crs","kind":"adapter-call","file":"R/study_analysis_crs.R","anchor":"saved <- store$set_analysis_crs"},
+    {"from":"fgstudio::local_study_store/set_analysis_crs","to":"fluvgeo::set_study_analysis_crs","kind":"injected-writer","file":"R/study_store.R","anchor":"writer = fluvgeo::set_study_analysis_crs)"}
   ]
 }

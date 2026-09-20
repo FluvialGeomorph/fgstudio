@@ -8,6 +8,10 @@ Use architectural decision records for consequential choices that should remain 
 
 ## Current decisions
 
+- [NSRS modernization and explicit elevation operations](adr-0009-nsrs-modernization-and-explicit-vertical-operations.md): modernization readiness, epochs, exact units and analyst-controlled vertical changes.
+
+- [Study Area analysis CRS and terrain masks](adr-0008-study-analysis-crs-and-terrain-masks.md): CRS selection implemented; Event output cell size, snapping and hierarchical masks specified for subsequent implementation.
+
 - [Iterative terrain acquisition](adr-0007-iterative-terrain-acquisition.md): shared coverage map, resolution versus suitability, and multiple source collections per Survey Event.
 
 - [Dual-mode developer documentation](adr-0006-dual-mode-developer-documentation.md): human maintainability and agent navigation evolve together; pkgdown is the documentation surface.

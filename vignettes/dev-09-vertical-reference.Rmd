@@ -1,0 +1,65 @@
+---
+title: "09. Vertical reference specification"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{09. Vertical reference specification}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Analysis setup separates Horizontal CRS and Vertical reference into compact tabs.
+The vertical form records the intended Study Area target, not a claim that source
+DEMs already conform. Saving never rewrites their declarations or elevation values.
+
+`study_vertical_reference_server()` obtains candidates through
+`fluvgeo::study_vertical_crs_candidates()`: nondeprecated upward EPSG height CRSs
+from sf's local PROJ database, screened against the Study Area geographic bounds.
+Full-bounds coverage is the default; partial overlap is opt-in. Neither proves
+actual geographic applicability or transformation accuracy. A reference link lets
+the analyst inspect the catalog definition. No default vertical CRS is chosen.
+
+Separate input paths cover standalone vertical CRS, ellipsoidal height with a
+3D geographic CRS, declared/future names, local references and unknowns. Height
+type and target elevation unit remain explicit. A target unit differing from a
+CRS's native axis unit is specification metadata, not an executed conversion.
+Coordinate-epoch and intended-model fields are optional disclosures. Known epochs
+need a decimal year and scientific source reference; frame epoch and acquisition
+date are never substituted. There are no personal Recorded by or generic Why fields.
+
+Check specification calls `fluvgeo::validate_study_vertical_reference()` and binds
+the validated row to exact effective inputs and context revision. Unknown/local/
+declared choices are retained with an unqualified status; dynamic definitions are
+metadata-only and require a future epoch workflow. Editing a checked field or
+changing context invalidates saving. The shared pending-edit guard still blocks
+real unsaved geometry or acquisition changes.
+
+Save calls `store$set_vertical_reference()` -> `revise()` -> injected
+`fluvgeo::set_study_vertical_reference()`. The backend writes schema 7 with a
+structured single-row vertical_reference table plus descriptive vertical/unit
+analysis_reference rows atomically. Existing processing records require migration
+before a target change. The saved callback rereads the new revision, including
+the structured table. Renaming, purpose edits and horizontal CRS changes retain
+it. Older contexts remain readable; older backend versions reject schema 7.
+
+Validation errors and save confirmation render beside Check/Save. Confirmation
+is bound to the saved revision path, so the current-context observer cannot erase
+it and a different study cannot inherit it. Reopening fills every stored field;
+resolved definitions use their authority identifier where available, otherwise
+WKT. Article 01 explains reload restoration from the tab's local study key.
+Checking alone is not a save, and unsaved form state is not recovered after reload.
+
+`crs_selectize_options()` is shared by both CRS menus. The dropdown is appended to
+the document body, outside clipping card containers. Its list height uses viewport
+space and it opens upward when needed. Asynchronous option loads recalculate that
+placement. Internal scrolling stays active; scrolling a containing page closes the
+menu to avoid a detached overlay. Destroying a control removes its scroll listener.
+
+Source routes: R/study_vertical_reference.R, R/study_analysis_crs.R, R/mod_study.R,
+R/study_store.R; backend R/study_vertical_reference.R and R/study_context.R.
+Tests: test-study-vertical-reference.R; backend test_study_vertical_reference.R;
+dropdown callback fixture: dev/scripts/check-crs-dropdown.cjs. The exact persisted
+contract is sibling fluvgeo/dev/schemas/study-vertical-reference.md.
+
+Source-reference reconciliation and transformation qualification are still needed
+before mosaicking mixed inputs. Metadata assignment, unit conversion, datum/epoch
+transformation and raster resampling remain separate explicit operations.

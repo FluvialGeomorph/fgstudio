@@ -16,7 +16,37 @@ ArcGIS toolbox intact. Backend capabilities belong to fluvgeo and should also
 serve QGIS. Begin with local storage; ultimately support approved FGDB read/write
 access on USACE ArcGIS Enterprise. Enterprise transport/authentication are unknown.
 
-## Current implementation (9022)
+## Acquisition and inspection (9031)
+
+The 9036 lifecycle refinement restores the current tab's saved study from an
+opaque URL query key through the validated store read path. There is no shared
+last-opened study. New clears that key; reload discards unsaved work. CRS feedback
+is local to each editor and save confirmation is revision-bound. Articles 01,
+08 and 09 and test-study-reload.R cover persistence versus transient UI state.
+
+Vertical target specification (9035/9044) is a separate Analysis setup tab.
+The app records one checked target through set_study_vertical_reference; backend
+context schema 7 owns definition/unit/epoch/model validation and immutable storage.
+Source reference reconciliation and coordinate operations remain separate future
+work. Article 09 and the paired route trace the writer boundary and shared CRS
+dropdown overlay behavior.
+
+Analysis setup (9034) provides a compact local PROJ/EPSG picker and required Study Area projected CRS definition through
+fluvgeo validation and immutable analysis_reference recording. Article 08 traces
+the editor/store/writer boundary. Survey Event output cell size and grid/mask
+execution follow vertical reference/epoch specification; see ADR 0008 and the
+mosaic and vertical-reference designs. Selection evidence is generated automatically.
+
+Saved Stream-scoped source choices and original DEM downloads are implemented.
+`R/stream_dem_files.R` and `R/stream_dem_download.R` orchestrate selection,
+receipt-backed acquisition and verification through the local study store.
+`R/stream_dem_inspection.R` provides cancellable metadata and source-grid detail
+inspection through fluvgeo workers. Developer articles 06/07 and agent routes
+describe these call paths. Tile previewing is owner-accepted; mosaic design is
+next (`dev/features/dem-mosaic-design.md`). No mosaic or accepted terrain product
+is currently implemented by this workflow.
+
+## Reach editing foundation (9022)
 
 `reach_selection_server`, `reach_merge_server` and `reach_split_server` implement
 Add new / Combine existing / Split existing in the shared map's Reaches task.
@@ -78,7 +108,8 @@ counted in the UI rather than silently presented as valid studies.
 
 The module holds current selection per session. The local catalog is intentionally
 shared by sessions on this single-analyst workstation. Authentication, tenancy,
-concurrent editing, uploads, downloads and backend replacement are not implemented.
+concurrent editing, arbitrary uploads and backend replacement are not implemented.
+Receipt-backed source DEM downloads are supported by the separate acquisition flow.
 Do not expose this app on a shared host yet. A storage seam reduces coupling; it
 does not establish that Enterprise integration is an interchangeable connection.
 

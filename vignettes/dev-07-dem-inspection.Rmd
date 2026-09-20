@@ -1,0 +1,69 @@
+---
+title: "07. Downloaded DEM metadata inspection"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{07. Downloaded DEM metadata inspection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The download module exposes recorded source files to a child metadata inspector.
+The analyst explicitly chooses one file; no inspection runs when the panel opens.
+
+Version 9031 adds rectangular detail selection. Drag a brush on the current image
+and choose **Inspect selected area**. `dem_brush_window` maps displayed coordinates
+to integer source pixel offsets, reverses the plot's upward y-axis into top-row
+order, and expands fractional boundaries outward. Nested views retain their
+absolute source offsets. Brushes entirely outside the image are rejected.
+
+Each result gets a new brush ID (`view_id`), so old browser selections cannot
+retarget a later result. The detail action captures its window before clearing
+the current result, then uses the same context-bound cancellable worker. The
+backend validates that the complete window lies inside the source. **Preview
+elevations** requests NULL window and resets to the full tile. Results explicitly
+distinguish sampled versus native data and report 1-based source row/column ranges.
+Native data means no source-cell downsampling; the screen can still scale the
+image. The colour scale is recalculated per view. Neither action saves terrain.
+
+In version 9030, **Preview elevations** uses the same cancellable worker lifecycle
+to call `fluvgeo::preview_stream_dem_download`. It returns a plain numeric matrix,
+not a live raster pointer across processes. `draw_dem_preview` plots the source
+pixel grid with a colour scale; grey marks sampled missing/non-finite cells.
+The maximum display is 512 rows/columns. GDAL nearest-neighbour sampling uses
+base-resolution pixels, applies band scale/offset and samples the embedded mask.
+External sidecars/overviews are ignored. Temporary display rasters are confined
+to the worker's temporary directory and removed on normal return; original assets
+and receipts are unchanged. No reprojection or hillshade is performed.
+
+This whole-tile overview can miss small features and NoData holes. It is not a
+valid-data footprint, ground-resolution test, north-up map or suitability decision.
+The source's column/row orientation is retained, including rotated grids. Constant
+and all-missing samples remain displayable. The inspector clears previews on the
+same context/file changes as metadata. Numerical generation and drawing are tested
+with asymmetric grids, scaled data, missing values and constant/all-missing grids.
+
+| Boundary | Behavior |
+|---|---|
+| `stream_dem_download_server` to `inspection_context` | Current attempt, scope and eligible receipt file IDs; null during transfers or verification |
+| `stream_dem_inspection_server` to `launch_stream_dem_inspection_job` | Explicit file selection, separate callr process, isolated library paths |
+| Worker to `fluvgeo::inspect_stream_dem_download` | Validate immutable selection/receipt association and contained asset; verify checksum |
+| Backend to `inspect_terrain_vertical_reference` | Hash before/after read; ordinary and embedded compound CRS observations plus grid metadata |
+| Result to UI | Escaped text tables and WKT; session-only observations, no writes or acceptance |
+
+The controller captures context and file ID. A changed context clears the result
+and stops/joins the worker; polling rejects results for a changed file even if
+termination is delayed. Cancel and session close stop the worker. A 30-minute
+watchdog covers startup and local hashing as well as GDAL reads. Errors remain
+visible instead of being converted to unknown metadata.
+
+Grid spacing is the length of each affine column/row vector in source CRS units.
+It does not automatically evaluate the 1 m ground-resolution criterion. Missing
+vertical declarations remain unknown; exposed declarations do not establish the
+reference actually used to produce elevations. Metadata reads do not qualify all
+pixels, valid coverage, hydro-flattening or scientific suitability. Visual review
+at native resolution and durable acceptance remain subsequent work.
+
+Source: `R/stream_dem_inspection.R`, `R/stream_dem_download.R`; tests:
+`tests/testthat/test-stream-dem-inspection.R`. Backend contract:
+`fluvgeo/dev/schemas/stream-dem-inspection.md`; backend tests:
+`test_stream_dem_download.R` and `test_inspect_terrain_vertical_reference.R`.

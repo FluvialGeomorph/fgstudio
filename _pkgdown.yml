@@ -24,3 +24,6 @@ articles:
       - dev-04-code-navigation
       - dev-05-survey-collections
       - dev-06-stream-dem-files
+      - dev-07-dem-inspection
+      - dev-08-analysis-crs
+      - dev-09-vertical-reference

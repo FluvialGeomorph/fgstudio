@@ -6,6 +6,26 @@ parent application or deployment target.
 
 ## Current scope
 
+In **Analysis setup**, search projected EPSG systems applicable to the saved Study
+Area. Filter horizontal units, inspect datum/frame and coverage, and open the
+SpatialReference.org explorer or selected definition. Check the CRS, then save it;
+validation and catalog evidence are recorded automatically. Advanced EPSG/WKT entry remains
+available. Selecting a horizontal CRS does not change elevations; epoch-dependent
+frames require a future qualified coordinate-epoch workflow for processing.
+
+In **Analysis setup > Vertical reference**, choose a vertical height CRS, a 3D
+geographic CRS for ellipsoidal heights, or an explicit declared/local/unknown
+reference. Set the target elevation unit independently. Optional epoch/model
+fields preserve those details without guessing from survey dates. Check and save
+the specification; this creates metadata only and does not change source DEMs.
+Incomplete and epoch-dependent targets remain explicitly unqualified for processing.
+Survey Event settings, source-reference reconciliation and mosaicking follow.
+
+Both CRS editors show validation errors and save confirmation beside their buttons.
+A saved definition reappears as its EPSG identifier (or authoritative WKT) when
+the study is reopened. **Check** validates the current form; **Save** writes a new
+local revision. Checking alone does not persist edits.
+
 The **Survey Collections** tab discovers reported lidar acquisitions for a saved
 Study Area, displays metadata/footprints and saves checkbox selection intent.
 Reopening restores selections offline. Planned collections are selectable; saving
@@ -24,8 +44,9 @@ Discovery and planning share one coverage map. **Inspected only** isolates the
 focused footprint; **Custom comparison** lets you toggle footprints without
 changing saved inclusion. Zoom buttons return to the Study Area or visible set.
 Product review shows reported DEM pixel size: 1 m or finer is required but does
-not prove suitability. Visual terrain review and multi-source Event assembly
-remain next capabilities; acquisition plans can be revised and resaved.
+not prove suitability. Downloaded tiles support metadata inspection and bounded
+terrain previews; multi-source Event assembly remains pending. Acquisition plans
+can be revised and resaved.
 
 In **DEM files**, choose a saved Stream and a collection with DEM in your plan,
 then **Find source DEM files**. The shared map shows the Stream AOI in green and
@@ -56,9 +77,13 @@ work. Backend capabilities elsewhere in fluvgeo are not automatically exposed he
 2. Select **Create Study Area**. The app saves a real fluvgeo context GeoPackage
    and reads it back before displaying the saved draft.
 3. Review the compact status table and its **Next** action.
-4. Refresh the browser, select the saved study and choose **Open study**. The
-   identity and purpose persist. Choose **Workspace - New** to start another;
-   saved studies remain intact. Unsaved edits require confirmation before leaving.
+4. Reload reopens the latest saved revision of this tab's study, including both
+   CRS specifications. The URL contains only its opaque local study key; it works
+   on this workstation's data store. A fresh URL without a key starts empty; use
+   **Workspace - Open** to choose a saved study.
+5. Choose **Workspace - New** to start another; saved studies remain intact and
+   the previous key is removed from the URL. That action confirms discarding
+   pending edits. Browser reload itself discards unsaved edits, checks and previews.
 
 ## Rename saved Streams or Reaches
 

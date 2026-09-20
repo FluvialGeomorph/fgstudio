@@ -160,6 +160,7 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
     session$onSessionEnded(cancel)
     list(aoi=aoi,files=visible_files,result=result,poll=poll,status=status,
       has_pending=function() !is.null(shiny::isolate(result())) &&
-        (!shiny::isolate(saved_inventory()) || !setequal(shiny::isolate(input$visible),shiny::isolate(saved_ids()))))
+        (!shiny::isolate(saved_inventory()) ||
+          (!is.null(shiny::isolate(input$visible)) && !setequal(shiny::isolate(input$visible),shiny::isolate(saved_ids())))))
   })
 }

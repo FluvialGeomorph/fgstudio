@@ -1,0 +1,75 @@
+crs_test_study <- function(store) {
+  x <- store$create("Analysis test")
+  boundary <- sf::st_sf(geometry=sf::st_as_sfc(sf::st_bbox(c(xmin=-94,ymin=41,xmax=-93.9,ymax=41.1),crs=4326)))
+  store$save_boundary(x$key,boundary,x$path)
+}
+
+test_that("analysis CRS survives reopening and rejects stale writers", {
+  store <- local_study_store(withr::local_tempdir())
+  x <- crs_test_study(store)
+  expect_null(x$analysis_crs)
+  saved <- store$set_analysis_crs(x$key,"26915","Appropriate local UTM zone","Test analyst",x$path)
+  expect_equal(saved$analysis_crs$epsg,26915)
+  expect_identical(store$read(x$key)$analysis_crs,saved$analysis_crs)
+  expect_identical(saved$boundary_sf,x$boundary_sf)
+  expect_true(file.exists(x$path))
+  expect_error(store$set_analysis_crs(x$key,"26916","Test","Test",x$path),"newer revision")
+})
+
+test_that("CRS editor requires current validation and no pending edits without manual attribution", {
+  store <- local_study_store(withr::local_tempdir())
+  x <- shiny::reactiveVal(crs_test_study(store))
+  pending <- shiny::reactiveVal(FALSE)
+  shiny::testServer(study_analysis_crs_server,args=list(current=x,store=store,
+    on_saved=function(saved) x(saved),has_pending=pending),{
+    session$flushReact()
+    session$setInputs(mode="advanced",definition="4326",validate=1)
+    expect_null(checked());expect_match(notice(),"projected")
+    session$setInputs(definition="26915",validate=2)
+    expect_equal(checked()$choice$epsg,26915)
+    session$setInputs(definition="26916",save=2)
+    expect_match(notice(),"Check the current")
+    session$setInputs(definition="26915",validate=3)
+    pending(TRUE);session$setInputs(save=3)
+    expect_match(notice(),"pending")
+    pending(FALSE);session$setInputs(save=4)
+    expect_equal(x()$analysis_crs$epsg,26915)
+    expect_null(checked())
+    expect_match(output$status$html,"Saved:")
+    expect_match(output$message$html,"Analysis CRS saved to local storage",fixed=TRUE)
+  })
+})
+
+test_that("CRS form keeps secondary information optional and removes manual record fields", {
+  html <- as.character(study_analysis_crs_ui("crs"))
+  expect_false(grepl('id="crs-analyst"',html,fixed=TRUE))
+  expect_false(grepl('id="crs-evidence"',html,fixed=TRUE))
+  expect_match(html,"Background, sources and modernization",fixed=TRUE)
+  expect_match(html,"d-flex flex-wrap gap-4",fixed=TRUE)
+})
+
+test_that("guided picker filters locally, links references and rejects forged selections", {
+  store <- local_study_store(withr::local_tempdir())
+  x <- shiny::reactiveVal(crs_test_study(store))
+  shiny::testServer(study_analysis_crs_server,args=list(current=x,store=store,
+    on_saved=function(saved) x(saved),has_pending=function() FALSE),{
+    session$flushReact()
+    expect_true("26915" %in% shown()$code)
+    expect_false("3857" %in% shown()$code)
+    expect_true(all(shown()$coverage=="Full bounds"))
+    session$setInputs(mode="picker",candidate="4326",validate=1)
+    expect_null(checked());expect_match(notice(),"Choose a CRS")
+    session$setInputs(candidate="26915",validate=2)
+    expect_equal(checked()$choice$epsg,26915)
+    expect_match(output$candidate_details$html,"North American Datum 1983",fixed=TRUE)
+    expect_match(output$candidate_details$html,"ref/epsg/26915",fixed=TRUE)
+    expect_match(output$resources$html,"latlng=41.100000",fixed=TRUE)
+    expect_match(output$resources$html,"ngs.noaa.gov",fixed=TRUE)
+    session$setInputs(unit="US survey foot",save=1)
+    expect_match(notice(),"Check the current")
+    expect_false("26915" %in% shown()$code)
+    session$setInputs(unit="all",candidate="26915",validate=3,analyst="Test",evidence="Local UTM selected")
+    session$setInputs(save=2)
+    expect_equal(x()$analysis_crs$epsg,26915)
+  })
+})

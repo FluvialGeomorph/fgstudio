@@ -31,7 +31,14 @@ local_study_store <- function(data_dir) {
       original <- fluvgeo::read_study_context(file.path(dirname(path), "study.gpkg"))
       purpose <- original$analyst_notes
     }
-    list(key = key, path = path,
+    list(key = key, path = path, vertical_reference = context$vertical_reference,
+      analysis_crs = {
+        ref <- context$analysis_reference
+        row <- if (is.null(ref)) integer() else which(ref$component == "horizontal" & ref$basis == "PROJECT_RECORD")
+        if (length(row) == 1L && startsWith(ref$value[row], "PROJCRS["))
+          tryCatch(fluvgeo::validate_study_analysis_crs(ref$value[row],
+            if (inherits(context$study_area, "sf")) context$study_area else NULL), error = function(e) NULL) else NULL
+      },
       study_id = context$study_area$study_area_id[[1]],
       name = context$study_area$study_area_name[[1]],
       notes = context$analyst_notes,
@@ -151,6 +158,13 @@ local_study_store <- function(data_dir) {
   define_streams <- function(key, names, rationale, expected_path) {
     revise(key, expected_path, streams = data.frame(stream_name = names),
       add_note = rationale, writer = fluvgeo::define_study_streams)
+  }
+  set_analysis_crs <- function(key, crs, evidence, analyst, expected_path) {
+    revise(key, expected_path, crs = crs, evidence = evidence, analyst = analyst,
+      writer = fluvgeo::set_study_analysis_crs)
+  }
+  set_vertical_reference <- function(key, specification, expected_path) {
+    revise(key, expected_path, specification = specification, writer = fluvgeo::set_study_vertical_reference)
   }
   save_stream <- function(key, lines, name, distance, unit, rationale, expected_path, stream_id = NULL) {
     revise(key, expected_path, lines = lines, stream_name = name, distance = distance,
@@ -273,8 +287,15 @@ local_study_store <- function(data_dir) {
     fluvgeo::prepare_stream_dem_download(expected_files,dem_destination(key))
   }
   dem_download <- function(key,stream_id,candidate_key) {
-    latest <- dem_files(key,stream_id,candidate_key)$path
+    saved_files <- dem_files(key,stream_id,candidate_key)
+    latest <- saved_files$path
     if(is.null(latest)) return(NULL)
+    # Metadata-only study revisions do not invalidate original downloads. Still
+    # require the current Stream geometry and saved Collection evidence to match.
+    compatible <- tryCatch({
+      check_dem_files(key,saved_files$result,context_path(key),latest); TRUE
+    }, error=function(e) FALSE)
+    if(!compatible) return(NULL)
     root <- dem_destination(key)
     attempts <- file.path(root,"attempts")
     if(!dir.exists(attempts)) return(NULL)
@@ -287,7 +308,7 @@ local_study_store <- function(data_dir) {
         stop("Download attempt is outside this study.")
       manifest <- tryCatch(suppressWarnings(jsonlite::read_json(file.path(path,"request.json"),simplifyVector=TRUE)),error=function(e) NULL)
       if(!is.null(manifest) && identical(manifest$selection_file,basename(latest)) &&
-          identical(manifest$context_revision,basename(context_path(key))) &&
+          identical(manifest$context_revision,saved_files$result$context_revision) &&
           identical(manifest$stream_id,stream_id) && identical(manifest$candidate_key,candidate_key)) return(path)
     }
     NULL
@@ -296,7 +317,8 @@ local_study_store <- function(data_dir) {
     dem_destination=dem_destination,prepare_dem_download=prepare_dem_download,dem_download=dem_download,
     dem_files=dem_files,save_dem_files=save_dem_files,
     survey_collections=survey_collections,save_survey_collections=save_survey_collections,
-    rename = rename, set_purpose = set_purpose, define_streams = define_streams,
+    rename = rename, set_purpose = set_purpose, set_analysis_crs = set_analysis_crs,
+    set_vertical_reference = set_vertical_reference, define_streams = define_streams,
     save_selected_boundary = save_selected_boundary, save_stream = save_stream,
     stream_segments = stream_segments, preview_reach = preview_reach, save_reach = save_reach,
     preview_reach_merge = preview_reach_merge, merge_reaches = merge_reaches,

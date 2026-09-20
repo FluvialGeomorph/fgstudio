@@ -24,7 +24,10 @@ mod_study_ui <- function(id) {
       shiny::uiOutput(ns("summary")),
       shiny::tabsetPanel(id=ns("study_task"),type="pills",
         shiny::tabPanel("Study geometry",shiny::uiOutput(ns("boundary_editor")),shiny::uiOutput(ns("streams_editor"))),
-        shiny::tabPanel("Survey Collections",mod_survey_collections_ui(ns("survey_collections"))))
+        shiny::tabPanel("Survey Collections",mod_survey_collections_ui(ns("survey_collections"))),
+        shiny::tabPanel("Analysis setup",shiny::tabsetPanel(type="pills",
+          shiny::tabPanel("Horizontal CRS",study_analysis_crs_ui(ns("analysis_crs"))),
+          shiny::tabPanel("Vertical reference",study_vertical_reference_ui(ns("vertical_reference"))))))
     )
   )
 }
@@ -44,6 +47,20 @@ mod_study_server <- function(id, store) {
     generation <- 0L
     pending_selection <- NULL
     collections <- mod_survey_collections_server("survey_collections",current,store)
+    analysis_pending <- function() collections$has_pending() ||
+        (!is.null(editor) && editor$has_unsaved()) ||
+        (!is.null(streams_editor) && any(nzchar(unlist(streams_editor$draft()))))
+    study_vertical_reference_server("vertical_reference",current,store,has_pending=analysis_pending,
+      on_saved=function(x) {
+        current(x); refresh(x$key)
+        notice(list(kind="success",text="Vertical specification saved. Elevations and source references are unchanged."))
+      })
+    study_analysis_crs_server("analysis_crs", current, store,
+      has_pending = analysis_pending,
+      on_saved = function(x) {
+        current(x); refresh(x$key)
+        notice(list(kind = "success", text = "Analysis CRS saved. Earlier revisions were retained."))
+      })
     feature_names <- study_feature_names(input, output, session, current, store,
       on_focus = function(shape) if (!is.null(editor)) editor$focus_feature(shape),
       has_pending = function() (!is.null(editor) && editor$has_unsaved()) ||
@@ -101,6 +118,13 @@ mod_study_server <- function(id, store) {
       shiny::updateSelectInput(session, "saved", choices = listing$choices, selected = selected)
     }
     shiny::observeEvent(TRUE, refresh(), once = TRUE)
+    remember_study <- function(key=NULL) {
+      query <- shiny::parseQueryString(session$clientData$url_search)
+      query$study <- key
+      fields <- if (length(query)) paste0(utils::URLencode(names(query),reserved=TRUE),"=",
+        vapply(query,utils::URLencode,character(1),reserved=TRUE)) else character()
+      shiny::updateQueryString(paste0("?",paste(fields,collapse="&")),mode="replace",session=session)
+    }
     attempt <- function(action) {
       tryCatch({
         study <- action()
@@ -110,6 +134,7 @@ mod_study_server <- function(id, store) {
         notice(list(kind = "success", text = "Study Area saved and reopened from local storage."))
         refresh(study$key)
         shiny::updateTabsetPanel(session, "workspace_task", selected = "open")
+        remember_study(study$key)
       }, error = function(e) {
         # Avoid exposing paths or database internals in user-facing errors.
         notice(list(kind = "danger", text = paste(
@@ -118,6 +143,16 @@ mod_study_server <- function(id, store) {
         message("fgstudio study operation failed [", class(e)[[1]], "]")
       })
     }
+    restore_study <- function(search) {
+      key <- shiny::parseQueryString(search)$study
+      if (is.null(key)) return(invisible(NULL))
+      attempt(function() store$read(key))
+    }
+    # The per-tab URL identifies saved data, never unsaved form state or a path.
+    # Restore once after initial inputs; later query updates must not reopen it.
+    shiny::observeEvent(session$clientData$url_search, {
+      restore_study(session$clientData$url_search)
+    },once=TRUE,priority=-1)
     shiny::observeEvent(input$create, {
       if (!is.null(current())) {
         notice(list(kind = "info", text = "Choose Workspace - New to start a different study."))
@@ -175,6 +210,7 @@ mod_study_server <- function(id, store) {
     start_new <- function() {
       pending_selection <<- NULL
       current(NULL)
+      remember_study()
       notice(NULL)
       shiny::updateTextInput(session, "name", value = "")
       shiny::updateTextAreaInput(session, "notes", value = "")
@@ -252,9 +288,10 @@ mod_study_server <- function(id, store) {
           shiny::actionLink(session$ns("edit_purpose"), "Edit purpose"),
           if (x$streams > 0L) shiny::actionLink(session$ns("rename_stream"), "Rename Stream"),
           if (x$reaches > 0L) shiny::actionLink(session$ns("rename_reach"), "Rename Reach")),
-        compact_table(data.frame(Item = c("Purpose", "Boundary", "Streams / Reaches / Surveys", "Next"),
+        compact_table(data.frame(Item = c("Purpose", "Boundary", "Streams / Reaches / Surveys", "Analysis CRS", "Next"),
           Status = c(purpose, if (x$boundary) "Saved - editable" else "Not defined",
             sprintf("%d / %d / %d", x$streams, x$reaches, x$events),
+            if (is.null(x$analysis_crs)) "Required before mosaicking - open Analysis setup" else x$analysis_crs$name,
             if (x$reaches > 0L) "Open Survey Collections to discover and select lidar acquisitions" else
             if (x$streams > 0L) "Choose Reaches on the map to define Reaches within a Stream" else
               if (x$boundary) "Choose Streams on the map to define a Stream" else "Select or draw a Study Area boundary")))

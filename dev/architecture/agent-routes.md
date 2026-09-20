@@ -8,6 +8,9 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 
 | Task | Article | App source | First tests | Backend boundary |
 | --- | --- | --- | --- | --- |
+| CRS save feedback / restored definitions / reload to saved study | 01, 08, 09 | mod_study.R, study_analysis_crs.R, study_vertical_reference.R | test-study-reload.R, test-study-module.R, test-study-analysis-crs.R, test-study-vertical-reference.R | read_study_context; existing immutable CRS writers |
+| Vertical target / epoch / model specification; CRS dropdown clipping | 09 | study_vertical_reference.R, study_analysis_crs.R, mod_study.R, study_store.R | test-study-vertical-reference.R; check-crs-dropdown.cjs | study_vertical_crs_candidates, validate_study_vertical_reference, set_study_vertical_reference; study_context schema 7 |
+| Study Area CRS picker / local catalog / validation / saved WKT / hidden-input pending guards | 08 | study_analysis_crs.R, mod_study.R, study_store.R, mod_survey_collections.R, stream_dem_files.R | test-study-analysis-crs.R, test-survey-collections.R, test-stream-dem-files.R | study_crs_candidates, validate_study_analysis_crs, set_study_analysis_crs |
 | Source DEM download / receipts / cancellation / retry | 06 | stream_dem_download.R, study_store.R | test-stream-dem-download.R, test-stream-dem-files.R | prepare_stream_dem_download, run_stream_dem_download, read_stream_dem_download, cancel_stream_dem_download |
 | Stream DEM files / saved choices / acquisition AOI | 06 | stream_dem_files.R, mod_survey_collections.R, study_store.R | test-stream-dem-files.R | discover_stream_dem_files, write_stream_dem_selection, read_stream_dem_selection |
 | Survey Collection discovery / shared map / resolution / product plan (ADR 0007) | 05 | mod_survey_collections.R, study_store.R | test-survey-collections.R | discover_survey_collections, survey_collection_products, write_survey_collection_selection, read_survey_collection_selection |
@@ -39,6 +42,21 @@ Merge dependency checks are context-wide: any non-null `network` or
 Reach parent IDs are reassigned. Verify these guards in source before changing them.
 
 ## Indirection that must not disappear from the mental model
+
+Downloaded DEM inspection: `R/stream_dem_inspection.R` consumes the download
+module's `inspection_context`; its callr worker invokes
+`fluvgeo::inspect_stream_dem_download`. Article 07 explains receipt binding,
+ordinary/embedded metadata, cancellation and session-only results. Tests:
+`tests/testthat/test-stream-dem-inspection.R`.
+
+Visual overview: the same worker's explicit preview branch calls
+`fluvgeo::preview_stream_dem_download`; `draw_dem_preview` renders its bounded
+numeric matrix in source pixel order. Article 07 describes sampling and limits.
+
+Detail selection: `dem_brush_window` translates the current view's unique brush
+to an absolute source pixel window. The worker passes it to the same backend API;
+result `window`/`native` distinguish exact-cell data from sampled windows. Tests in
+`test-stream-dem-inspection.R` cover nested offsets and stale-brush rejection.
 
 DEM download review: `R/stream_dem_files.R`, `output$acquisition` summarizes
 checked metadata and saved state. The child `stream_dem_download_server` starts

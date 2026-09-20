@@ -1,0 +1,92 @@
+---
+title: "08. Study Area analysis CRS"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{08. Study Area analysis CRS}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Analysis setup records the analyst's projected horizontal coordinate system before
+terrain mosaicking. Map display stays in its display CRS. Source geometry and
+elevation values are not rewritten when a choice is saved.
+
+In 9033 the default is a searchable EPSG picker. On each opened context,
+`study_analysis_crs_server()` calls `fluvgeo::study_crs_candidates()` using the
+saved boundary. The backend reads sf's installed PROJ SQLite database through
+GDAL; no RSQLite dependency or remote catalog request is needed. It checks layout
+compatibility and joins projected definitions to datum, axis units, scope and area
+of use. Full geographic-bound coverage is distinguished from partial overlap;
+the latter is opt-in. Dateline/global extents wider than 180 degrees route to
+explicit review rather than an inferred zone.
+
+The default list contains engineering/topographic scopes and UTM systems, ordered
+by coverage and area specificity, with no automatic choice. Other mapping purposes
+are opt-in. EPSG:3857 is excluded from recommendations. Unit filtering and name/code
+search do not change source data. Selection displays reference details and a link
+to SpatialReference.org; a separate Explorer link encodes the Study Area bounds
+only when the analyst follows it. An NGS modernization link is always available.
+
+Candidate metadata is discovery evidence, not transformation certification. The
+UI shows PROJ/GDAL and EPSG catalog versions, plus the number of locally listed
+2022-frame candidates in the region. Dynamic/2022 frames remain explorable but
+validation blocks saving pending a qualified coordinate-epoch workflow. Advanced
+definitions use the same backend guard. No datum, grid or software substitution
+occurs. The advanced text input is optional rather than the normal selection path.
+
+The server verifies candidate membership in the currently filtered list, and binds
+checked definitions to mode and context revision. Filtering a checked candidate
+out or changing the input/mode invalidates saving. Saved picker evidence adds the
+EPSG identifier, catalog version/date, PROJ version, coverage and reference URL to
+the automatically generated record. Current persistence is WKT plus action evidence; it
+does not introduce a horizontal coordinate-epoch registry. The separate vertical
+target table described in article 09 does record intended epoch/model metadata.
+
+`mod_study_server()` supplies current study state, pending-edit checks and an
+`on_saved` callback to `study_analysis_crs_server()`. Check CRS calls
+`fluvgeo::validate_study_analysis_crs()` and binds its result to the exact input
+and context revision. The backend resolves a projected 2D definition and checks
+the saved boundary can transform without ballpark operations. It cannot establish
+that a projection's distortion is acceptable; that remains an analyst decision.
+
+In 9034 selection/units and filters share horizontal rows; details and background
+use disclosures. Check/save buttons are adjacent. The form has no Recorded by or
+Why fields. The app generates validation/catalog evidence and records a user
+action without claiming an authenticated identity or analyst approval.
+
+Saved acquisition selections remain authoritative while hidden renderUI inputs
+are NULL (not initialized). An explicit empty selection remains a pending edit.
+This prevents reopening a Study Area from falsely blocking its CRS save.
+
+Save requires current validation, then calls
+`store$set_analysis_crs()` -> local `revise()` with injected writer
+`fluvgeo::set_study_analysis_crs()`. The writer uses the existing horizontal
+analysis_reference row for canonical WKT. Other components, geometry and source
+files remain intact. The callback rereads a newly saved context, updates current
+state and refreshes the catalog. Pending edits and stale revisions cannot save.
+
+Success appears beside Save only after that persisted reread. Reopening displays
+the saved EPSG identifier, or canonical WKT when no identifier exists, in the
+authoritative-definition mode rather than leaving an empty picker. The picker
+remains available for choosing a replacement. Article 01 describes per-tab reload
+restoration; neither checking nor merely changing the form writes a revision.
+
+The store's read path revalidates canonical WKT against the current boundary;
+unresolved legacy prose does not count as a configured CRS. Product migration is
+not implemented: existing terrain_processing records block CRS changes.
+
+The DEM attempt lookup permits metadata-only study revisions after checking the
+current Stream geometry and Collection evidence against the retained selection.
+The attempt still binds to its original selection/context, so a CRS save does not
+hide unchanged original downloads or rewrite their provenance.
+
+This increment does not expose Event settings or execute masks/mosaics. Vertical
+reference/epoch specification now precedes those controls; see the maintained
+vertical-reference design. The subsequent Event
+contract requires one user-selected output cell size per Event and one Study Area
+grid anchor. All same-size Event grids share cell boundaries; source resolution
+is recorded separately and does not dictate the chosen output resolution.
+
+Source: `R/study_analysis_crs.R`, `R/mod_study.R`, `R/study_store.R`, and sibling
+fluvgeo `R/study_analysis_crs.R`. Focused tests: `test-study-analysis-crs.R`,
+`test-stream-dem-files.R`, and backend `test_study_analysis_crs.R`.

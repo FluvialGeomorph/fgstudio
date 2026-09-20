@@ -17,7 +17,7 @@ fgstudio_app <- function(data_dir = file.path(getwd(), ".local-data")) {
         "Development preview | Local storage | Not connected to FGDB"),
       mod_study_ui("study"),
       shiny::tags$footer(class = "text-body-secondary mt-3 small",
-        "Drafts remain on this computer after the browser closes. This preview has no shared-user access controls.")
+        "Saved studies remain on this computer. Reload reopens the saved study in this tab; unsaved edits are lost. This preview has no shared-user access controls.")
     )
   )
   shiny::shinyApp(ui, function(input, output, session) {
