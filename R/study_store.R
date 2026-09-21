@@ -50,6 +50,7 @@ local_study_store <- function(data_dir) {
       can_define_streams = all(vapply(context[c("streams", "reaches", "survey_events", "network")], is.null, logical(1))),
       reaches = if (is.null(context$reaches)) 0L else nrow(context$reaches),
       reach_inventory = context$reaches,
+      event_inventory = context$survey_events,
       events = if (is.null(context$survey_events)) 0L else nrow(context$survey_events))
   }
   create <- function(name, notes = "") {
@@ -138,7 +139,7 @@ local_study_store <- function(data_dir) {
     equal <- sf::st_equals(retained, sources)
     if (!all(vapply(seq_len(nrow(sources)), function(i) i %in% equal[[i]], logical(1))))
       stop("Source geometry changed during storage; boundary was not saved.", call. = FALSE)
-    digest <- local({ con <- file(evidence, "rb"); on.exit(close(con)); as.character(openssl::sha256(con)) })
+    digest <- local({ con <- file(evidence, "rb"); on.exit(close(con)); unclass(as.character(openssl::sha256(con))) })
     revise(key, expected_path, study_area_boundary = combined$boundary,
       add_note = paste0("Explicitly selected and reviewed in FG Studio: spherical union of ",
         nrow(sources), " reference polygons, retaining holes and disconnected parts. ",
@@ -233,6 +234,38 @@ local_study_store <- function(data_dir) {
     fluvgeo::write_survey_collection_selection(discovery,selected,destination)
     destination
   }
+  acquisition_groups <- function(key) {
+    files <- sort(list.files(dirname(context_path(key)),pattern="^acquisition-group-[0-9]{6}\\.gpkg$",full.names=TRUE))
+    groups <- list()
+    for(path in files) {
+      g <- fluvgeo::read_survey_acquisition_group(path); g$path <- path
+      groups[[g$settings$group_id]] <- g
+    }
+    list(path=if(length(files)) utils::tail(files,1L) else NULL,groups=groups)
+  }
+  save_acquisition_group <- function(key,members,stream_ids,year,month,cell_size,rationale,
+      event_ids,group_id,expected_path,expected_selection,expected_groups) {
+    saved <- acquisition_groups(key)
+    if(!identical(context_path(key),expected_path) ||
+        !identical(survey_collections(key)$path,expected_selection) || !identical(saved$path,expected_groups))
+      stop("Study, selection or Event settings changed. Reopen before saving.")
+    if(is.null(expected_selection)) stop("Save Survey Collection selections first.")
+    previous <- NULL
+    if(!is.null(group_id)) {
+      previous <- saved$groups[[group_id]]$path
+      if(is.null(previous)) stop("Choose an existing acquisition group.")
+    }
+    # An existing Reach Event has one spacing, never competing local groups.
+    others <- saved$groups[setdiff(names(saved$groups),group_id)]
+    if(any(vapply(others,function(g) any(event_ids %in% g$event_links$survey_event_id),logical(1))))
+      stop("A Reach Event is already linked to another group.")
+    n <- if(is.null(saved$path)) 1L else as.integer(sub(".*-([0-9]{6})\\.gpkg$","\\1",saved$path))+1L
+    if(n>999999L) stop("Group revision limit reached.")
+    destination <- file.path(dirname(expected_path),sprintf("acquisition-group-%06d.gpkg",n))
+    fluvgeo::write_survey_acquisition_group(expected_path,expected_selection,members,stream_ids,
+      year,month,cell_size,rationale,destination,previous,event_ids)
+    acquisition_groups(key)
+  }
   dem_prefix <- function(stream_id,candidate_key) {
     paste0("dem-files-",as.character(openssl::sha256(charToRaw(paste(stream_id,candidate_key,sep="\n")))),"-")
   }
@@ -313,10 +346,69 @@ local_study_store <- function(data_dir) {
     }
     NULL
   }
+  dem_preflight_request <- function(key,group_id,stream_id,expected_path,expected_selection,expected_group) {
+    groups <- acquisition_groups(key)
+    g <- groups$groups[[group_id]]
+    if(is.null(g) || !identical(context_path(key),expected_path) ||
+        !identical(survey_collections(key)$path,expected_selection) || !identical(g$path,expected_group))
+      stop("Study or Event settings changed. Reopen before preflight.")
+    members <- g$members$candidate_key
+    rows <- lapply(members,function(k) {
+      files <- dem_files(key,stream_id,k)$path
+      attempt <- dem_download(key,stream_id,k)
+      data.frame(candidate_key=k,selection_path=if(is.null(files)) NA_character_ else files,
+        attempt=if(is.null(attempt)) NA_character_ else attempt)
+    })
+    list(context=expected_path,selection=expected_selection,group=expected_group,stream_id=stream_id,
+      sources=do.call(rbind,rows))
+  }
+  mask_request <- function(key,group_id,stream_id,expected_path,expected_selection,expected_group) {
+    g <- acquisition_groups(key)$groups[[group_id]]
+    if(is.null(g) || !identical(context_path(key),expected_path) ||
+        !identical(survey_collections(key)$path,expected_selection) || !identical(g$path,expected_group) ||
+        length(stream_id)!=1L || !stream_id %in% g$streams$stream_id)
+      stop("Study or Event settings changed. Reopen before creating masks.")
+    list(context=expected_path,selection=expected_selection,group=expected_group,stream_id=stream_id)
+  }
+  mask_folder <- function(key,kind) {
+    parent <- dirname(context_path(key))
+    path <- file.path(parent,"event-masks",kind)
+    # Check every existing ancestor before creating folders or following links.
+    for(p in c(dirname(path),path)) {
+      if(dir.exists(p) && !startsWith(tolower(as.character(fs::path_real(p))),
+          paste0(tolower(as.character(fs::path_real(parent))),"/"))) stop("Mask storage is outside this study.")
+      if(!dir.exists(p) && !dir.create(p)) stop("Cannot create mask storage.")
+    }
+    path
+  }
+  prepare_masks <- function(key) {
+    file.path(mask_folder(key,"staging"),paste(format(openssl::rand_bytes(16)),collapse=""))
+  }
+  publish_masks <- function(key,group_id,request,directory,manifest) {
+    current <- mask_request(key,group_id,request$stream_id,request$context,request$selection,request$group)
+    if(!identical(current,request)) stop("Mask setup changed.")
+    stage <- mask_folder(key,"staging")
+    id <- basename(directory)
+    if(!grepl("^[0-9a-f]{32}$",id) || !identical(as.character(fs::path_real(dirname(directory))),as.character(fs::path_real(stage))) ||
+        !startsWith(tolower(as.character(fs::path_real(directory))),paste0(tolower(as.character(fs::path_real(stage))),"/")))
+      stop("Invalid mask staging directory.")
+    saved <- jsonlite::read_json(file.path(directory,"verified.json"),simplifyVector=TRUE)
+    hash <- function(path) { con <- file(path,"rb"); on.exit(close(con)); unclass(as.character(openssl::sha256(con))) }
+    hashes <- lapply(request[c("context","selection","group")],hash)
+    if(!identical(saved$schema,"EVENT_MASKS_1") || !identical(saved$inputs,hashes) ||
+        !identical(saved$group_id,group_id) || !identical(saved$stream_id,request$stream_id) ||
+        !identical(manifest$inputs,hashes)) stop("Verified masks do not match current inputs.")
+    path <- file.path(mask_folder(key,"editions"),id)
+    if(file.exists(path) || !file.rename(directory,path)) stop("Could not publish mask edition.")
+    list(path=path,manifest=manifest)
+  }
   list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
     dem_destination=dem_destination,prepare_dem_download=prepare_dem_download,dem_download=dem_download,
     dem_files=dem_files,save_dem_files=save_dem_files,
     survey_collections=survey_collections,save_survey_collections=save_survey_collections,
+    acquisition_groups=acquisition_groups,save_acquisition_group=save_acquisition_group,
+    dem_preflight_request=dem_preflight_request,
+    mask_request=mask_request,prepare_masks=prepare_masks,publish_masks=publish_masks,
     rename = rename, set_purpose = set_purpose, set_analysis_crs = set_analysis_crs,
     set_vertical_reference = set_vertical_reference, define_streams = define_streams,
     save_selected_boundary = save_selected_boundary, save_stream = save_stream,

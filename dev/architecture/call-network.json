@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "fgstudio",
-  "package_version": "0.0.0.9036",
+  "package_version": "0.0.0.9039",
   "generator": {
     "pkgnet": "0.6.1",
     "flow": "0.2.0"
@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "4fbea8c302e06e15b5d7aea905c9bd3a554bb1c3dbed4750cae16c3bd3310058"
+      "sha256": "75d2ae84bd324135d9e5df71e30ba61c6d8eb342a5e4948efe0065f8dcae1677"
     },
     {
       "file": "NAMESPACE",
@@ -37,6 +37,10 @@
       "sha256": "5efbec4d6e6b3c56fe110adfef5ff8eb2fd50e6171acd08dfb115dac700e1ee3"
     },
     {
+      "file": "R/event_masks.R",
+      "sha256": "16486cb4e14b014d395e9a03d36febb4f70b6cd4f72599030885823f2129e109"
+    },
+    {
       "file": "R/map_search.R",
       "sha256": "91d8a76757353007b2241d3e2822b149b64ed233ca0d1ecb96c0fbfb55cda4a4"
     },
@@ -54,7 +58,7 @@
     },
     {
       "file": "R/mod_survey_collections.R",
-      "sha256": "cddc6cfa84f6b08413f62647b604eca1ca1923cf68da3e831b433bbc070f9dcf"
+      "sha256": "b2b2b9d651cd4a68a3bb582ae2b2fc3d51d6322a17c2919bd7d1e02b8ef1cd64"
     },
     {
       "file": "R/network_reference.R",
@@ -101,6 +105,10 @@
       "sha256": "693bb4bb5e2d9cbae89270f60eca0fa3715f1d9d0d53339fbe97ed7312f3dc4c"
     },
     {
+      "file": "R/stream_dem_preflight.R",
+      "sha256": "8c6a17baf34db1b062a666119bc7e48d97e2ea772d7ebcd5be698fae377497dc"
+    },
+    {
       "file": "R/stream_selection.R",
       "sha256": "dc5a770a600381717ab4d2d3c548c88619fff98643d03ad4089c25ac17efe7e7"
     },
@@ -114,15 +122,19 @@
     },
     {
       "file": "R/study_store.R",
-      "sha256": "57830674f862ac9b6956753c6761baedb05931c978fadec085c5457f78bf44df"
+      "sha256": "dfd63b468034efb220e85fa2b2ba0e4d6430f61b808edb03aad4d6200695b1b4"
     },
     {
       "file": "R/study_vertical_reference.R",
       "sha256": "3d3b863298e290b53997a2c36bdbdb21498c9b41568c0fd37b521e92fd235a79"
     },
     {
+      "file": "R/survey_event_settings.R",
+      "sha256": "56f9bef4b88a29af861b3f52eb04e43fe70d9b74ae234ab596c55c11c7c6e516"
+    },
+    {
       "file": "dev/architecture/reviewed-call-bridges.json",
-      "sha256": "d22bd737f911896219aba2ed21c5cb9498c0840a179889804db91001f472fb65"
+      "sha256": "39dfbea8b83ded1a73bcc7c51a606e97b77e943c2788b86e37a14b4a2a3da5ea"
     }
   ],
   "nodes": [
@@ -307,6 +319,26 @@
       ]
     },
     {
+      "id": "fgstudio::event_masks_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/event_masks.R",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::event_masks_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/event_masks.R",
+          "line": 7
+        }
+      ]
+    },
+    {
       "id": "fgstudio::fgstudio_app",
       "exported": true,
       "locations": [
@@ -347,6 +379,16 @@
       ]
     },
     {
+      "id": "fgstudio::launch_event_masks",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/event_masks.R",
+          "line": 1
+        }
+      ]
+    },
+    {
       "id": "fgstudio::launch_stream_dem_download_job",
       "exported": false,
       "locations": [
@@ -372,6 +414,16 @@
       "locations": [
         {
           "file": "R/stream_dem_files.R",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_stream_dem_preflight",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_dem_preflight.R",
           "line": 1
         }
       ]
@@ -462,7 +514,7 @@
       "locations": [
         {
           "file": "R/mod_survey_collections.R",
-          "line": 44
+          "line": 45
         }
       ]
     },
@@ -712,6 +764,26 @@
       ]
     },
     {
+      "id": "fgstudio::stream_dem_preflight_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_dem_preflight.R",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::stream_dem_preflight_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_dem_preflight.R",
+          "line": 7
+        }
+      ]
+    },
+    {
       "id": "fgstudio::stream_names_input",
       "exported": false,
       "locations": [
@@ -792,6 +864,26 @@
       ]
     },
     {
+      "id": "fgstudio::survey_event_settings_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/survey_event_settings.R",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::survey_event_settings_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/survey_event_settings.R",
+          "line": 1
+        }
+      ]
+    },
+    {
       "id": "fgstudio::valid_map_bounds",
       "exported": false,
       "locations": [
@@ -854,6 +946,12 @@
     {
       "from": "fgstudio::drainage_result_ui",
       "to": "fgstudio::drainage_feature_inventory",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::event_masks_server",
+      "to": "fgstudio::compact_table",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1122,8 +1220,20 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::mod_survey_collections_server",
+      "to": "fgstudio::survey_event_settings_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::mod_survey_collections_ui",
       "to": "fgstudio::stream_dem_files_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_survey_collections_ui",
+      "to": "fgstudio::survey_event_settings_ui",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1254,6 +1364,12 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::stream_dem_preflight_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::stream_selection_server",
       "to": "fgstudio::channel_candidates",
       "kind": "static-dependency",
@@ -1314,12 +1430,63 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::survey_event_settings_server",
+      "to": "fgstudio::event_masks_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::survey_event_settings_server",
+      "to": "fgstudio::stream_dem_preflight_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::survey_event_settings_ui",
+      "to": "fgstudio::event_masks_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::survey_event_settings_ui",
+      "to": "fgstudio::stream_dem_preflight_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::launch_event_masks",
+      "to": "fluvgeo::write_event_masks",
+      "kind": "background-worker",
+      "file": "R/event_masks.R",
+      "anchor": "callr::r_bg(function(request,directory) do.call(fluvgeo::write_event_masks,c(request,list(directory=directory))),",
+      "line": 2,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_stream_dem_preflight",
+      "to": "fluvgeo::preflight_stream_dem",
+      "kind": "background-worker",
+      "file": "R/stream_dem_preflight.R",
+      "anchor": "callr::r_bg(function(request) do.call(fluvgeo::preflight_stream_dem,request),",
+      "line": 2,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::local_study_store/save_acquisition_group",
+      "to": "fluvgeo::write_survey_acquisition_group",
+      "kind": "adapter-call",
+      "file": "R/study_store.R",
+      "anchor": "fluvgeo::write_survey_acquisition_group(expected_path,expected_selection,members,stream_ids,",
+      "line": 265,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
       "from": "fgstudio::local_study_store/set_vertical_reference",
       "to": "fluvgeo::set_study_vertical_reference",
       "kind": "injected-writer",
       "file": "R/study_store.R",
       "anchor": "writer = fluvgeo::set_study_vertical_reference)",
-      "line": 167,
+      "line": 168,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1346,7 +1513,7 @@
       "kind": "adapter-call",
       "file": "R/study_store.R",
       "anchor": "fluvgeo::prepare_stream_dem_download(expected_files,dem_destination(key))",
-      "line": 287,
+      "line": 320,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1373,7 +1540,7 @@
       "kind": "adapter-call",
       "file": "R/study_store.R",
       "anchor": "fluvgeo::write_stream_dem_selection(inventory,selected,path,basename(expected_path))",
-      "line": 269,
+      "line": 302,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1400,7 +1567,7 @@
       "kind": "adapter-call",
       "file": "R/study_store.R",
       "anchor": "fluvgeo::write_survey_collection_selection(discovery,selected,destination)",
-      "line": 233,
+      "line": 234,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1418,7 +1585,7 @@
       "kind": "injected-writer",
       "file": "R/study_store.R",
       "anchor": "writer=fluvgeo::split_study_reach)",
-      "line": 215,
+      "line": 216,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1427,7 +1594,7 @@
       "kind": "injected-writer",
       "file": "R/study_store.R",
       "anchor": "writer = fluvgeo::add_study_reach_corridor)",
-      "line": 185,
+      "line": 186,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1436,7 +1603,7 @@
       "kind": "injected-writer",
       "file": "R/study_store.R",
       "anchor": "writer = fluvgeo::merge_study_reaches)",
-      "line": 194,
+      "line": 195,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1445,7 +1612,7 @@
       "kind": "injected-writer",
       "file": "R/study_store.R",
       "anchor": "writer = fluvgeo::add_study_stream_corridor)",
-      "line": 172,
+      "line": 173,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1481,14 +1648,14 @@
       "kind": "injected-writer",
       "file": "R/study_store.R",
       "anchor": "writer = fluvgeo::set_study_analysis_crs)",
-      "line": 164,
+      "line": 165,
       "evidence": "reviewed-source-bridge"
     }
   ],
   "evaluation": {
-    "static_nodes": 68,
-    "static_edges": 85,
-    "reviewed_bridges": 19,
+    "static_nodes": 76,
+    "static_edges": 93,
+    "reviewed_bridges": 22,
     "storage_closure_detected": false,
     "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]
   }

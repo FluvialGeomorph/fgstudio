@@ -36,6 +36,12 @@ navbar:
           href: articles/dev-08-analysis-crs.html
         - text: "09. Vertical reference"
           href: articles/dev-09-vertical-reference.html
+        - text: "10. Survey Event settings"
+          href: articles/dev-10-event-settings.html
+        - text: "11. Stream DEM preflight"
+          href: articles/dev-11-dem-preflight.html
+        - text: "12. Hierarchical analysis masks"
+          href: articles/dev-12-event-masks.html
 reference:
   - title: Local application entry points
     desc: Internal modules and callback paths are explained in the developer articles.
@@ -61,3 +67,6 @@ articles:
       - dev-07-dem-inspection
       - dev-08-analysis-crs
       - dev-09-vertical-reference
+      - dev-10-event-settings
+      - dev-11-dem-preflight
+      - dev-12-event-masks

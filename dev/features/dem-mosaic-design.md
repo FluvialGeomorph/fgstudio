@@ -1,10 +1,12 @@
 # Stream DEM mosaics and analysis masks
 
-Status: owner requirements clarified, 2026-09-19; CRS selection implemented in
-9032/9042. Event settings, masks and mosaic execution remain pending.
+Status: Event group settings implemented in 9037/9045, read-only grid/source
+preflight in 9038/9046 and hierarchical masks in 9039/9047. Mosaic execution remains pending.
+Owner grid requirements clarified 2026-09-19.
 Supersedes the earlier compatible-source-grid-only proposal. Tile preview/detail
 is accepted and complete. See `study-analysis-crs.md` for implemented CRS behavior.
-No masks or mosaics have been executed.
+Masks are verified with temporary synthetic fixtures. No analyst masks or DEM
+mosaics have been executed by development checks.
 
 ## Required workflow
 
@@ -38,7 +40,7 @@ file modification or raster creation month. Current retained evidence in
 `collectiondate`, provider IDs and raw metadata. Tile-local acquisition evidence
 can refine a collection interval only when its meaning and tile link are known.
 
-Proposed implementation policy:
+Implemented settings policy (9037/9045):
 
 - A valid acquisition interval wholly within one calendar month proposes that
   month's group. Retain original endpoints; a month label is not an exact date.
@@ -70,7 +72,57 @@ and accepted derivation), `dev/decisions/adr-0005-governed-foundation-scope.md`,
 `dev/decisions/adr-0012-reach-derivation-and-hierarchical-aggregation.md`.
 No FGDB schema migration is performed here.
 
+The Event setup panel persists one immutable GeoPackage per group revision,
+retaining UUID identity, reviewed selected-collection and Stream membership,
+source/date evidence, required year, optional month, rationale and positive output
+cell size in the saved planar CRS's units. Existing Reach Events can be linked by
+ID after parentage/date validation; this increment creates no Reach Events.
+Revisions retain previous snapshots. The local store rejects stale study,
+selection or group state and duplicate Reach Event links across groups.
+The anchor is fixed at (0, 0); changed CRS/selection evidence requires review.
+See article 10 and sibling fluvgeo's `dev/schemas/survey-acquisition-groups.md`.
+USIEI free-text formats beyond explicit ISO day/date intervals remain unresolved.
+
+Verification (9037/9045): installed app tests passed 789 assertions with zero
+failures/skips. `R CMD build` and `R CMD check --no-manual` completed; the sole
+check warning is the existing non-ASCII text in `mod_survey_collections.R`.
+The direct backend contract run passed 186 assertions with one `gt`-dependent
+report skip; 22 assertions exercise the new grouping contract. It covers proposals,
+immutable read/write, integer/fractional spacing and Reach parentage/date conflicts.
+No live services or `.local-data`
+studies were used. Browser layout and source-set compatibility are not qualified
+by these tests. An expanded backend context test run encountered eight report
+errors and two skips because optional `gt` is unavailable in this runtime; those
+report paths are outside this increment. The full legacy backend suite was not
+run because it contains report scripts writing outside temporary fixture directories.
+The local pkgdown site and paired navigation map were rebuilt: freshness/bridge
+checks passed, with 293 local links across 14 pages and 12 article exports verified.
+The site remains local; the existing missing-public-URL diagnostic is expected.
+
 ## CRS, resolution and shared grid
+
+Implemented preflight: choose one saved Event group and Stream, then explicitly
+check current saved sources in a cancellable worker. It computes snapped Study
+Area/Stream/available Reach envelopes and uncompressed one-byte mask/eight-byte
+Float64 estimates without allocating raster cells. It validates group revisions,
+membership, hierarchy, CRS and receipt-bound selected files, and reports source
+spacing in native units and metres, alignment, and blocking/review issues.
+Changed context or collection revisions require reviewing/resaving group settings.
+Missing acquisitions remain explicit BLOCKED rows. Results are timestamped session
+snapshots, not persisted approval. Article 11 and the backend preflight schema
+define the exact checks. Angular/rotated/anisotropic grids and metadata conflicts
+remain review items. Nominal projected spacing is not ground-resolution proof;
+coverage, pixel readability and source vertical/epoch reconciliation are unresolved.
+
+Verification (9038/9046): 60 focused backend assertions passed, including 38 new
+preflight assertions. The full installed app suite passed 803 assertions with no
+failures/skips. Source build and `R CMD check --no-manual` completed with the same
+pre-existing non-ASCII warning. Tests use synthetic source files and temporary
+receipt stores; analyst studies, live services and the running preview were not
+used. Full legacy backend reporting remains outside this bounded check for the
+runtime/fixture limitations noted above.
+The local site and navigation map were rebuilt; map freshness/bridge checks and
+324 local links across 15 pages and 13 article exports passed. No site was published.
 
 Keep original files and source CRS declarations unchanged. Transform analysis
 copies. Changing the selected CRS after products exist requires a new grid/product
@@ -106,7 +158,8 @@ split an acquisition into multiple Events to work around source resolutions.
   inside the polygon and NoData outside, including holes.
 - Stream/Reach masks occupy exact subwindows of the parent grid and intersect
   parent masks, so children cannot introduce valid cells outside a parent.
-- Proposed boundary rule: cell-center polygon inclusion, recorded and tested.
+- Implemented boundary rule: strict cell-center polygon interior, recorded and tested.
+  Centers exactly on exterior or hole boundaries are NoData.
   Boundary cells can straddle a polygon geometrically; the mask defines raster
   membership. Do not silently enable all-touched inclusion. Test exact-edge and
   very narrow polygon cases.
@@ -174,12 +227,14 @@ without partial publication. Test Float64 values not representable in Float32.
 
 ## Next implementation boundary
 
-Persisted Study Area CRS selection/validation is implemented. Next add reviewed
-acquisition grouping, required Event output cell size, grid/mask preflight and the
-cancellable Stream DEM worker. Cross-Event grid semantics are now resolved.
-No more tile previews or broad documentation pass is required. Update paired
-human/agent routes and rebuild map/site when capabilities/call paths change;
-this design-only update adds none.
+Persisted CRS, reviewed acquisition-group/output-cell-size setup, grid/source
+preflight and hierarchical masks are implemented. Next qualify horizontal-only
+source operations before the cancellable Stream DEM worker. Revalidate all inputs
+and receipt hashes at execution; do not reuse a session preflight PASS as approval.
+Cross-Event grid semantics are resolved.
+No more tile previews or broad documentation pass is required. Article 10 and the
+paired agent route trace this settings increment; update those routes and the
+map/site as processing capabilities are added.
 
 Primary references (reviewed 2026-09-19; qualify installed versions):
 [sf transformations](https://r-spatial.github.io/sf/reference/st_transform.html),
@@ -188,3 +243,39 @@ Primary references (reviewed 2026-09-19; qualify installed versions):
 [terra rasterization](https://rspatial.github.io/terra/reference/rasterize.html),
 [terra raster writing](https://rspatial.github.io/terra/reference/writeRaster.html),
 and [GDAL warp](https://gdal.org/en/stable/programs/gdalwarp.html).
+
+## Implemented mask increment (9039/9047)
+
+Event setup exposes explicit, cancellable mask-family creation for one Stream.
+The backend reuses preflight group validation and snapping; no DEM is required.
+All existing Reaches must have polygons. Strict center membership excludes exact
+exterior/hole boundary centers, and every child intersects its parent. All-NoData
+masks remain valid domain results with an explicit zero included-cell count.
+
+The writer uses compressed Byte GeoTIFFs, up to 65,536 centers per block and
+matching parent row/column reads. Default admission limits a family to 50 million
+cells and each mask to 65,536 columns, requiring available disk space of four
+uncompressed payloads plus 256 MiB. Space is not reserved. Large-study performance
+has not been qualified. Reopening verifies grids, values, parent containment,
+counts and hashes; a manifest is written last. The app rechecks revisions/hashes
+and publishes a new edition by directory rename. Failed/cancelled staging remains
+unpublished; prior editions remain intact. The UI shows the new edition path and
+counts; a persisted edition browser remains future work. Backend reopening is
+available through read_event_masks(). See article 12 and the backend mask schema.
+
+Verification (9039/9047): 94 focused backend assertions passed, including 34 mask
+assertions for holes, exact edges, narrow polygons, parent subwindows, fractional
+spacing across disk blocks, no-Reach families, resource rejection, interruption,
+immutable editions, changed manifest grid/parent records, count mismatch and
+corruption. Full app and installed-package tests passed 821 assertions with zero
+failures/skips; only the existing sf/Shiny R build-version test warnings remain.
+Source build and R CMD check --no-manual completed with the single pre-existing
+non-ASCII warning in mod_survey_collections.R. The final backend-only reopening
+and count guards were checked with the focused suite after that app check and
+installed into the isolated library. Shared runtimes and analyst data were not
+changed. Browser layout, full-size performance and live source compatibility were
+not qualified. Legacy backend reporting limitations remain as recorded above.
+The local documentation site and navigation map were rebuilt: freshness/bridge
+checks passed (76 nodes, 93 static edges, 22 reviewed bridges), and 357 local links
+across 16 pages and 14 article exports passed. The site is local; the expected
+missing-public-URL diagnostic remains. No site was published.

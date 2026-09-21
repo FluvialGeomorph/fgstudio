@@ -87,7 +87,7 @@ choices as scope and evidence develop; this is not a rigid wizard.
 | Define the study | Named Study Area with purpose, boundary, Streams and Reaches | Implemented, with local immutable revisions and supported hierarchy editing |
 | Find and inspect observations | Retained acquisition choices, original DEMs and evidence about their contents | Survey Collection discovery, DEM selection/download and bounded inspection implemented |
 | Specify analysis references | Explicit horizontal and vertical targets and units | Implemented as checked, saved specifications; no elevation conversion on save |
-| Develop analysis terrain | One consistent Stream DEM per Survey Event, aligned grids and hierarchical masks | Planned; Event membership, explicit cell size, source reconciliation and processing remain to be implemented |
+| Develop analysis terrain | One consistent Stream DEM per Survey Event, aligned grids and hierarchical masks | Reviewed groups, explicit cell size, grid/source preflight and hierarchical masks implemented; source reconciliation and DEM mosaics remain planned |
 | Analyze and report | Reach-level geometry evidence and a reviewable explanation of the study and its terrain | Shared backend capabilities and reporting designs inform the destination; app execution/report delivery remain future work |
 | Govern and share accepted content | Qualified enterprise records and relationships | Eventual FGDB integration; no Enterprise connection in this app |
 

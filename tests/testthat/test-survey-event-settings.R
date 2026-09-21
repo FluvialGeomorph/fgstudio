@@ -1,0 +1,51 @@
+test_that("group revisions retain identity, evidence, cell units and original assets", {
+  f <- event_test_setup(); s <- f$store; x <- f$x
+  withr::defer(unlink(dirname(dirname(x$path)),recursive=TRUE))
+  before <- tools::md5sum(c(x$path,f$selection))
+  save <- function(size=1,year=2020,month=2,members="USIEI:1",group=NULL,expected=NULL,events=character())
+    s$save_acquisition_group(x$key,members,x$stream_inventory$stream_id,year,month,size,"Reviewed provider acquisition dates",
+      events,group,x$path,f$selection,expected)
+  for(size in c(NA,Inf,0,-1)) expect_error(save(size=size),"positive finite")
+  expect_error(save(year=NA_real_),"known acquisition year")
+  expect_error(save(month=13),"Month")
+  expect_error(save(members="forged"),"selected collections")
+  expect_error(save(events="forged"),"Reach Events")
+  a <- save(); g <- a$groups[[1]]
+  expect_equal(g$settings$cell_size,1)
+  expect_match(g$settings$unit,"met")
+  expect_equal(c(g$settings$anchor_x,g$settings$anchor_y),c(0,0))
+  expect_identical(g$members$raw_metadata,'{"collectiondate":"2020-02-01"}')
+  expect_equal(nrow(g$streams),2L)
+  expect_error(save(),"changed")
+  b <- save(size=2.5,group=g$settings$group_id,expected=a$path)
+  expect_identical(names(b$groups),names(a$groups))
+  expect_equal(b$groups[[1]]$settings$cell_size,2.5)
+  expect_equal(fluvgeo::read_survey_acquisition_group(a$path)$settings$cell_size,1)
+  c <- save(size=.5,month=NA_integer_,expected=b$path)
+  expect_length(c$groups,2L)
+  expect_identical(tools::md5sum(c(x$path,f$selection)),before)
+  expect_equal(s$read(x$key)$events,0L)
+})
+
+test_that("Event editor requires explicit spacing, saves and reopens reviewed groups", {
+  f <- event_test_setup(); x <- f$x
+  withr::defer(unlink(dirname(dirname(x$path)),recursive=TRUE))
+  shiny::testServer(survey_event_settings_server,args=list(current=function() x,store=f$store,
+    selection_path=function() f$selection,selection_pending=function() FALSE),{
+    session$flushReact(); expect_false(session$returned$has_pending())
+    session$setInputs(new=1); expect_true(session$returned$has_pending())
+    session$setInputs(members="USIEI:1",streams=x$stream_inventory$stream_id,year=2020,month="2",rationale="Reviewed dates",save=1)
+    expect_match(status(),"not saved")
+    expect_null(saved()$path)
+    session$setInputs(cell_size=1,save=2)
+    expect_match(status(),"settings saved")
+    expect_false(session$returned$has_pending())
+    expect_length(saved()$groups,1L)
+    reload(); expect_length(saved()$groups,1L)
+    session$setInputs(group=names(saved()$groups)[1],edit=1)
+    session$setInputs(cell_size=2,save=3)
+    expect_equal(saved()$groups[[1]]$settings$cell_size,2)
+    session$setInputs(new=2,discard=1)
+    expect_false(session$returned$has_pending())
+  })
+})

@@ -1,0 +1,40 @@
+---
+title: "11. Stream DEM preflight"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{11. Stream DEM preflight}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Event setup exposes Grid and source preflight for one saved group and Stream.
+`survey_event_settings_server()` supplies the current context, selected group
+revision and available Streams to `stream_dem_preflight_server()`. The module
+blocks pending edits, gathers a request through `store$dem_preflight_request()`
+and starts `launch_stream_dem_preflight()` in a separate callr process.
+
+The store locates current file choices and compatible download attempts for every
+member collection. Missing acquisitions remain explicit NA entries so the backend
+can report blockers alongside grid estimates. The worker calls
+`fluvgeo::preflight_stream_dem()`, which owns group/hierarchy validation, sf grid
+planning, receipt hashing and source-unit/alignment screening. It allocates no
+rasters, writes no files and performs no elevation conversion. The source reader
+retains both ordinary and embedded metadata observations.
+
+The result includes snapped Study Area, Stream and available Reach envelopes,
+dimensions/cell counts, uncompressed mask/Float64 byte estimates and per-source
+PASS/REVIEW/BLOCKED rows. Grid envelopes are not masks or observed coverage.
+PASS covers only the stated metadata screen; source vertical references, epochs,
+prior conversions, valid-data coverage and scientific suitability remain unresolved.
+
+Cancel stops and joins the worker. Context/Stream changes clear results and stop
+active work. Before accepting a worker result, the module compares a fresh saved
+request with the dispatched request; stale selections are discarded. Exceptions
+and timeouts publish no result. Results are timestamped session snapshots, not
+durable processing approval; later execution must verify current inputs again.
+Reopening or reloading clears them. Immutable settings and source files are retained.
+
+Tests: `test-stream-dem-preflight.R` for orchestration/rendering/cancellation and
+the sibling fluvgeo `test_preflight_stream_dem.R` for snapping, units, real GeoTIFF
+receipts, corrupt assets, stale selections and preservation. The exact backend
+report is documented in `fluvgeo/dev/schemas/stream-dem-preflight.md`.

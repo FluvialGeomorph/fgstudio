@@ -13,6 +13,9 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 
 | Task | Article | App source | First tests | Backend boundary |
 | --- | --- | --- | --- | --- |
+| Event mask creation / staged publication / cancellation | 12 | event_masks.R, survey_event_settings.R, study_store.R | test-event-masks.R | write_event_masks, read_event_masks; event-masks schema |
+| Stream/Event grid sizing and source preflight | 11 | stream_dem_preflight.R, survey_event_settings.R, study_store.R | test-stream-dem-preflight.R | preflight_stream_dem; inspect_stream_dem_download |
+| Event group membership / acquisition evidence / required cell size | 10 | survey_event_settings.R, mod_survey_collections.R, study_store.R | test-survey-event-settings.R | propose_survey_acquisition_groups, write_survey_acquisition_group, read_survey_acquisition_group |
 | JavaScript runtime contracts / verification entry points | 01 | map_search.R, study_analysis_crs.R, inst/www/network-reference.js | test-javascript.R; javascript/ fixtures; dev/scripts/check-tests.R | Existing isolated backend; no implicit installation |
 | CRS save feedback / restored definitions / reload to saved study | 02, 08, 09 | mod_study.R, study_analysis_crs.R, study_vertical_reference.R | test-study-reload.R, test-study-module.R, test-study-analysis-crs.R, test-study-vertical-reference.R | read_study_context; existing immutable CRS writers |
 | Vertical target / epoch / model specification; CRS dropdown clipping | 09 | study_vertical_reference.R, study_analysis_crs.R, mod_study.R, study_store.R | test-study-vertical-reference.R; test-javascript.R | study_vertical_crs_candidates, validate_study_vertical_reference, set_study_vertical_reference; study_context schema 7 |

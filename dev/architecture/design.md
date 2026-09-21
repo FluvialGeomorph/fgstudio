@@ -24,6 +24,26 @@ access on USACE ArcGIS Enterprise. Enterprise transport/authentication are unkno
 
 ## Acquisition and inspection (9031)
 
+Hierarchical masks (9039/9047) run in a separate cancellable worker under Event
+setup. The store pins current inputs and publishes verified staging directories
+by rename into immutable editions. fluvgeo owns shared grid validation, strict
+cell-center membership, parent intersection, block I/O and output verification.
+Article 12 and the backend event-masks schema define this boundary. Masks require
+no DEM receipt or vertical operation.
+
+Grid/source preflight (9038/9046) is a cancellable, read-only worker under Event
+setup. `dem_preflight_request` resolves current saved sources; fluvgeo validates
+group and receipt evidence and computes grid envelopes/estimates without allocating
+rasters. Article 11 covers request freshness, failure and cancellation. Results
+are session snapshots, not execution authorization or scientific acceptance.
+
+Event setup (9037/9045) adds `survey_event_settings_server` under Survey Collections.
+The local store publishes immutable acquisition-group sidecars through fluvgeo,
+retaining collection evidence, Stream membership, required spacing in saved CRS
+units, a fixed (0, 0) anchor and optional existing Reach Event links. Article 10
+and the paired route document save/reopen/stale-write behavior. No new Reach
+Events, masks or mosaics are created by this metadata-only increment.
+
 The 9036 lifecycle refinement restores the current tab's saved study from an
 opaque URL query key through the validated store read path. There is no shared
 last-opened study. New clears that key; reload discards unsaved work. CRS feedback
@@ -99,6 +119,7 @@ Adapter groups (exact signatures remain in `R/study_store.R`):
 | Streams | define_streams, save_stream, stream_segments |
 | Reaches | preview_reach, save_reach, preview_reach_merge, merge_reaches, preview_reach_split, split_reach |
 | Hierarchy names | rename_feature |
+| Local acquisition groups and Event spacing | acquisition_groups, save_acquisition_group |
 
 The adapter returns a
 small presentation record only after rereading the saved backend context. A random

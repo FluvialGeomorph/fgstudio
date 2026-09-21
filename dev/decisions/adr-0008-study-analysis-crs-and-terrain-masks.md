@@ -1,7 +1,11 @@
 # ADR 0008: Study Area analysis CRS and terrain masks
 
 Status: owner requirements accepted and clarified, 2026-09-19. CRS selection
-implemented; Event grid and mosaicking remain pending.
+implemented; group membership and Event spacing implemented in 9037/9045.
+Read-only grid envelopes/source screening implemented in 9038/9046.
+Hierarchical mask construction implemented in 9039/9047. Strict cell-center
+interior membership excludes exterior and hole boundary centers. Mosaicking
+remains pending.
 
 ## Context
 

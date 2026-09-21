@@ -62,6 +62,12 @@ do not create a routine completion narrative. Review generated changes separatel
 - The current scripts inventory is `dev/scripts/README.md`. Existing wrappers are
   legacy execution aids under review, not a requirement to create more wrappers.
   A Windows processx pipe issue motivated direct R CMD invocation; recheck that
-  limitation before retaining its workaround. Keep live/local diagnostics opt-in.
+  limitation before retaining its workaround. Rechecked 2026-09-20:
+  `devtools::check(document=FALSE, manual=FALSE, cran=FALSE)` still fails creating
+  a processx write pipe (Windows error 5); direct `R CMD build/check` remains the
+  workstation fallback. For sandboxed vignette/site builds, set `R_CACHE_ROOTPATH`
+  to an existing writable directory under `dev/check-output`; flow/styler otherwise
+  attempts to write the per-user R cache outside the workspace.
+  Keep live/local diagnostics opt-in.
 - Follow `developer-documentation.md` when capabilities or call paths change.
   Code-map experiments are optional for routine package development.

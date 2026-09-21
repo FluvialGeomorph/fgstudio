@@ -1,0 +1,41 @@
+---
+title: "10. Survey Event settings"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{10. Survey Event settings}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Survey Collections includes Event setup after DEM files. The panel shows retained
+acquisition evidence and saved groups. New Event group and Review / edit open a
+modal; Cancel discards that editor, while Save validates and publishes a snapshot.
+Opening an editor marks pending work for the existing study lifecycle guard.
+
+`mod_survey_collections_server()` mounts `survey_event_settings_server()` with
+the current study, saved selection path and a pending-selection callback. The
+editor reads persisted selections, not unsaved search results. Proposals come from
+`fluvgeo::propose_survey_acquisition_groups()`. Using a proposal fills collection
+membership and year/month; the analyst still chooses Streams, enters output cell
+size and documents the evidence. Ambiguous evidence requires manual review.
+
+The store's `save_acquisition_group()` compares expected context, selection and
+group revision paths and rejects duplicate Reach Event links across groups.
+`fluvgeo::write_survey_acquisition_group()` owns validation, UUID identity, CRS
+units and fixed (0, 0) grid anchor, evidence tables and non-replacing publication.
+The store reads `acquisition-group-NNNNNN.gpkg` revisions and keeps the latest
+snapshot per UUID for display. Existing group edits retain the UUID. Dates are
+labels with explicit year/month precision, never identity keys.
+
+Existing Reach Events may be linked explicitly; no Reach Event is manufactured
+from a group date label. The immutable records retain Stream IDs for future
+products. Save is metadata-only and does not affect collection choices, downloads,
+CRS definitions, source assets or hierarchy contexts. Changed selection/CRS
+evidence is marked for review. Future execution must also revalidate hierarchy,
+source compatibility and grid extents before creating any product.
+
+Tests: `tests/testthat/test-survey-event-settings.R` covers adapter revision and
+Shiny state transitions; sibling fluvgeo's `test_survey_acquisition_groups.R`
+covers conservative date evidence. The backend schema is
+`fluvgeo/dev/schemas/survey-acquisition-groups.md`. No service calls or analyst
+studies are test fixtures.

@@ -247,7 +247,8 @@ reference. Set the target elevation unit independently. Optional epoch/model
 fields preserve those details without guessing from survey dates. Check and save
 the specification; this creates metadata only and does not change source DEMs.
 Incomplete and epoch-dependent targets remain explicitly unqualified for processing.
-Survey Event settings, source-reference reconciliation and mosaicking follow.
+Survey Event settings are available in Survey Collections. Source-reference
+reconciliation and mosaicking remain future work.
 
 Both CRS editors show validation errors and save confirmation beside their buttons.
 A saved definition reappears as its EPSG identifier (or authoritative WKT) when
@@ -294,10 +295,47 @@ rehashed before reuse. Reopening checks local integrity in a background worker.
 Downloads verify transfer lengths, TIFF signature and SHA-256 content identity;
 terrain suitability remains unreviewed. Previous selections and files are retained.
 
-FG Studio now supports local Study Area, Stream and Reach definition, including
-saved-Reach splitting and combining. It is not yet an L1 execution app: Survey
-Event/terrain setup, report generation and Enterprise access remain future UI
-work. Backend capabilities elsewhere in fluvgeo are not automatically exposed here.
+In **Event setup**, review the acquisition-date evidence and choose **New Event
+group**. A proposed month includes only complete acquisition intervals within that
+month; use **Use proposed membership** to fill its collections and date. Review
+the membership, choose supplied Streams, enter an output cell size in the saved
+horizontal CRS's units, and document the acquisition evidence. Missing or
+ambiguous dates require manual review; year is mandatory and month may remain
+unknown. Existing Reach Events can be linked explicitly when available.
+
+**Save Event settings** retains an immutable group revision. **Review / edit**
+reopens it; **Cancel** discards the editor. Groups have stable IDs separate from
+their date labels and Reach Event IDs. The same Study Area CRS and (0, 0) anchor
+apply across groups; equal cell sizes align. Changed selection/CRS evidence is
+flagged for review. This step creates no masks, DEMs or new Reach Events.
+
+Expand **Grid and source preflight**, choose a Stream and click **Check grid and
+saved sources**. The cancellable check verifies local receipts and shows shared-
+anchor grid sizes, uncompressed storage estimates, source spacing in native units
+and metres, and alignment/review issues. Save a DEM plan and file choices and
+download every included collection first. Changed study/selection revisions require
+reviewing and resaving Event settings. Results are timestamped session snapshots;
+rerun after changing source choices. PASS is a metadata screen, not proof of
+coverage or suitability. No masks, mosaics or elevation conversions are performed.
+
+Expand **Analysis masks**, choose a Stream and click **Create mask family** after
+saving Event settings. This creates aligned Study Area, Stream and Reach
+One/NoData masks. All existing Reaches in that Stream need saved polygons.
+Cell centers exactly on polygon or hole edges are excluded; a narrow polygon can
+have no included cells. Masks describe the analysis domain, not source coverage.
+The current limit is 50 million cells per family and 65,536 columns per mask.
+A resource check rejects insufficient disk space before processing.
+
+Cancel stops the worker. Only a verified result with unchanged saved inputs is
+published to a new study-local `event-masks/editions` directory. The result shows
+its path and included-cell counts. Earlier editions and original data remain
+unchanged. Reopening clears the session display but retains editions on disk;
+an edition browser is not yet implemented. DEM mosaics remain pending.
+
+FG Studio supports local Study Area, Stream and Reach definition, including
+saved-Reach splitting and combining. It is not yet an L1 execution app: terrain
+DEM processing, report generation and Enterprise access remain future UI work.
+Backend capabilities elsewhere in fluvgeo are not automatically exposed here.
 
 ## Run on the development workstation
 
@@ -356,4 +394,3 @@ and metadata links; the current context holds Study Area identity and Purpose,
 boundary, Streams and Reaches. Companion GeoPackages retain selected source
 geometry, buffer settings and, after splitting, versioned piece assignments.
 Move or back up the entire study folder, not only its latest context file.
-

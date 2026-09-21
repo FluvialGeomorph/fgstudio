@@ -35,6 +35,15 @@ for evidence, test-version boundaries and the current uncommitted-work caveat.
 
 ## Current task and next decision
 
+The **Survey Event membership and required output cell size** increment is
+implemented in 9037/9045: reviewed local groups retain collection/Stream membership,
+date evidence, immutable identity, spacing and optional existing Reach Event links.
+Read-only grid/source preflight is implemented in 9038/9046, with cancellable receipt
+checks and grid/storage estimates. Hierarchical masks follow in 9039/9047. Next: qualified source
+operations and Stream/Event mosaic execution. The concise
+[terrain handoff](../checkpoints/current/terrain-acquisition.md) gives the current
+state and first implementation routes; the chronology below is optional context.
+
 The 2026-09-20 documentation orientation pass places FG Studio within the wider
 project and separates analyst guidance from the retained developer/context-routing
 layer. See [documentation audiences](../features/documentation-audiences.md).
@@ -54,7 +63,8 @@ implemented, with structured epoch/model/unit fields in context schema 7 and
 metadata-only save/reopen. Both CRS dropdowns escape clipping containers.
 See [vertical reference](../features/vertical-reference-design.md) for the exact
 implemented boundary. Source compatibility, qualified coordinate operations and
-epoch export are still future work; Event membership/cell-size setup is next.
+epoch export are still future work; Event membership/cell-size setup is implemented
+in 9037/9045; read-only grid/source preflight followed in 9038/9046.
 
 2026-09-20 owner review: refine the horizontal form, remove manual Recorded by/Why
 requirements and fix false pending acquisition edits when opening a saved study.
@@ -94,9 +104,9 @@ CRS selection/validation and guided discovery are implemented in 9033/9043; see
 [Analysis CRS](../features/study-analysis-crs.md). Each Event has one user-selected
 output cell size, possibly different from its sources. One Study Area grid anchor
 ensures identical cell boundaries across equal-size Events. Different-size Events
-need not share boundaries. After vertical specification, implement acquisition grouping and required Event
-cell-size selection, followed by masks and execution. Mosaics/masks are not yet
-implemented.
+need not share boundaries. Acquisition grouping and required Event cell-size
+selection are implemented in 9037/9045. Hierarchical masks are implemented in
+9039/9047. Mosaics remain pending.
 No source transformations have run.
 
 Current accepted foundation (fgstudio 9031 / fluvgeo 9041):
@@ -107,10 +117,10 @@ Current accepted foundation (fgstudio 9031 / fluvgeo 9041):
 - Cancellable metadata inspection, tile overview and native source-window detail.
 
 [DEM inspection](../features/dem-inspection.md) retains verification evidence and
-historical increments. Download work is committed at fgstudio cf47b8b / fluvgeo
-a378771; inspection changes remain uncommitted on main in both repositories.
+historical increments. Refresh Git state before implementation; historical feature
+records do not establish the current commit or working-tree state.
 The [current handoff](../checkpoints/current/terrain-acquisition.md) is consolidated
-for mosaic design, rather than retaining multiple competing next-preview steps.
+for masks and qualified processing, rather than retaining competing next-preview steps.
 
 Preserve ADR 0007: acquisition uses the saved Stream polygon; the eventual Stream
 Survey Event terrain may draw on multiple Survey Collections. Source DEMs must
