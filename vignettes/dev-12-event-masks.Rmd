@@ -6,45 +6,29 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+Saving or opening a Survey Event starts mask preparation automatically for all
+assigned Streams, in sequence. No Stream picker or Create masks button is needed.
+`event_masks_server()` queues the saved Streams, obtains current requests from
+`store$mask_request()` and looks for matching published editions with `find_masks()`.
+The worker verifies matching editions before reuse; otherwise it writes new masks.
+Input changes and cancellation stop the worker. There is no processing timeout.
 
-Event setup supplies the selected group context to `event_masks_server()`.
-The analyst chooses a Stream and explicitly starts creation. Pending edits block
-dispatch. `store$mask_request()` pins current study, collection and group revisions;
-`prepare_masks()` allocates a unique path under the study's mask staging folder.
-`launch_event_masks()` calls `write_event_masks` in fluvgeo in a separate process.
+`fluvgeo::write_event_masks()` uses standard terra rasterize (touches=FALSE),
+classify (zero to NoData), crop and mask operations. Outputs are compressed Byte
+GeoTIFFs with BigTIFF support, using the saved CRS, spacing and shared grid anchor.
+No per-cell geometry tests or special edge correction are performed. There are
+no application cell-count, row-width or estimated-space admission limits.
+Actual I/O failures prevent publication. Sources and saved study inputs are unchanged.
 
-The backend owns geometry validation, grid snapping, strict cell-center membership,
-parent intersection, compressed disk-backed writing, resource admission and
-reopening/hash verification. Centers on exterior or hole edges are excluded;
-narrow polygons can have zero included centers. Every saved Reach in the selected
-Stream must have a polygon. Missing Reach geometry blocks creation rather than
-silently omitting a hierarchy level. Source DEMs and vertical references are not
-modified or needed to build the analysis domain.
+Successful results are published only while their input revisions still match.
+The map selector displays already-created outputs; it does not select work to run.
+The overview reads saved rasters in their analysis CRS and overlays their saved
+boundaries. Reopening verifies and reuses matching published masks. Stale or
+corrupt editions are retained while replacements are generated separately.
 
-The default family cap is 50 million cells, with no raster wider than 65,536
-columns. Blocks have at most 65,536 centers. Disk admission requires four times
-the uncompressed mask payload plus 256 MiB; it does not reserve space. Limits
-are conservative safeguards for this first processing increment, not performance
-qualification for a full-size analyst study.
+Trace `R/event_masks.R`, `R/study_store.R`, `R/survey_event_settings.R` and
+`tests/testthat/test-event-masks.R`. The backend contract and tests are
+`fluvgeo/dev/schemas/event-masks.md` and `test_event_masks.R`.
 
-The writer creates `verified.json` last. The app checks that saved revisions and
-input hashes still match before `publish_masks()` renames the staging directory
-into `event-masks/editions`. Cancellation stops and joins the worker; failures,
-timeouts, context changes and pending edits leave staging unpublished. Previous
-editions remain unchanged. The result shows the edition path and included-cell
-counts. Reopening the app clears this session result; editions remain on disk.
-An edition browser is not yet provided. Backend `read_event_masks()` reopens and
-verifies a saved family for later processing; future mosaics must also confirm
-that the edition inputs remain current.
-
-Trace app code in `R/event_masks.R`, `R/survey_event_settings.R` and
-`R/study_store.R`; orchestration and publication tests are in
-`tests/testthat/test-event-masks.R`. Scientific tests live in sibling fluvgeo's
-`tests/testthat/test_event_masks.R`, with the exact contract in
-`dev/schemas/event-masks.md`. Grid preflight and masks share the backend's
-`.fg_event_grid_inputs()` validation and `.fg_dem_grid_plan()` snapping.
-
-The block I/O follows [terra's read/write API](https://rspatial.github.io/terra/reference/readwrite.html);
-center membership uses [sf's geometric predicates](https://r-spatial.github.io/sf/reference/geos_binary_pred.html).
-Installed-version behavior is covered by synthetic raster tests, including holes,
-exact-edge centers, narrow polygons, cropped children and corrupt output.
+Reference: [terra rasterization](https://rspatial.github.io/terra/reference/rasterize.html)
+and [raster masking](https://rspatial.github.io/terra/reference/mask.html).

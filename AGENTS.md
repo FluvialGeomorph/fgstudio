@@ -2,7 +2,7 @@
 
 ## Identity and scope
 
-`fgstudio` is the current repository. Treat its code, tests, configuration, and maintained documentation as the authoritative evidence for repository-local behavior.
+`fgstudio` is the current repository. Treat its code, tests, configuration, and maintained documentation as evidence for repository-local behavior; their existence does not establish scientific correctness or author approval.
 
 ## Always-applicable rules
 
@@ -20,6 +20,7 @@
 - Function-call navigation: `dev/architecture/agent-routes.md`; human orientation: `vignettes/dev-01-code-navigation.Rmd`, followed by the workflow articles.
 - Developer-documentation changes: `dev/workflows/developer-documentation.md` and `dev/decisions/adr-0006-dual-mode-developer-documentation.md`.
 - Shiny/session/storage boundaries: `dev/architecture/design.md`
+- Raster processing design, implementation, review, or testing: read `dev/workflows/r-spatial.md` for scientific authority, native GIS operations, large-data execution, and Shiny integration.
 - Architecture, dependencies, or ownership boundaries: `dev/architecture/`
 - Consequential and durable choices: `dev/decisions/`
 - Governance or artifact lifecycle: `dev/governance/`

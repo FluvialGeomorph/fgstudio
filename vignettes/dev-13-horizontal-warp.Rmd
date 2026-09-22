@@ -1,0 +1,53 @@
+---
+title: "13. Horizontal raster qualification"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{13. Horizontal raster qualification}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The next prerequisite for Stream DEM assembly is a horizontal raster operation
+that preserves elevation units and vertical-reference evidence. This increment
+adds `warp_terrain_horizontal` to the fluvgeo backend. It is not yet an analyst
+action, and FG Studio's existing preflight PASS still authorizes no processing.
+
+The primitive takes a local source GeoTIFF, a GeoTIFF grid template and a new
+attempt directory. The template's pixels are ignored. It accepts a bounded static
+projected profile with the same identified base geodetic reference on both sides.
+It selects an explicit exact, grid-free PROJ operation, uses a separate horizontal
+source definition and disables GDAL vertical shifting. Full original compound
+CRS evidence and band units remain in the manifest. Datum/epoch operations,
+external sidecars, rotated grids and nonidentity scale/offset remain blocked.
+
+The installed GDAL control test demonstrates the reason for these guards: a
+default warp converts synthetic US-survey-foot heights to metres when targeting
+a 2D metre CRS. The guarded path preserves the original magnitudes. This is
+qualification of a specific processing profile, not vertical-datum accuracy,
+modernized NSRS readiness or acceptance of a real source set.
+
+Aligned output uses nearest sampling and exact cell-by-cell comparison with the
+source at the chosen storage precision, including cropped windows and outside-source NoData. Other grids use
+bilinear interpolation, verified with independent synthetic expectations.
+Storage defaults to Float32; Float64 storage is explicit opt-in. Working precision
+remains Float64. Aligned Float32 inputs retain exact samples; higher-precision
+inputs are rounded when written as Float32. This rounding is independent of
+elevation-unit conversion. Resource admission, bounded reads, reopening,
+input/output hashes and a manifest written last support later worker orchestration.
+The backend contract describes the limits and retained evidence in full.
+
+Trace sibling fluvgeo `R/warp_terrain_horizontal.R`,
+`tests/testthat/test_warp_terrain_horizontal.R` and
+`dev/schemas/horizontal-terrain-warp.md`. The primitive reuses metadata inspection
+and bounded block iteration. It has no current app caller; the app-only call map
+therefore has no worker bridge to it yet. Existing application behavior and mask
+creation remain unchanged.
+
+The app's [source review workflow](dev-14-source-review.html) now records analyst
+vertical/unit evidence and explicit overlap order. Next, assembly must bind those
+decisions to receipt-verified source choices, a current mask edition and Event settings
+to one cancellable assembly request. Compatible neighboring tiles must be assembled
+with interpolation halos before warping; masks are applied after assembly. A
+verified intermediate warp is not a completed or scientifically accepted Stream
+DEM. The current source set still requires reconciliation; this implementation
+does not authorize automatic datum or elevation-unit conversions.

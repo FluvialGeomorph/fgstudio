@@ -1,27 +1,30 @@
-test_that("mask workers publish only current successful results and cancellation joins", {
+test_that("saved Events automatically prepare every Stream and stop stale or cancelled jobs", {
+  local_mocked_bindings(read_study_context=function(...) list(streams=data.frame(stream_id=c("a","b"),stream_name=c("A","B"))),.package="fluvgeo")
   ctx <- list(key="key",path="context",selection="selection",group_id="group",group_path="group-path",
-    streams=data.frame(stream_id="stream",stream_name="Creek"))
-  revision <- "one";alive <- FALSE;calls <- 0L;published <- 0L;killed <- FALSE;dirty <- FALSE;failure <- FALSE
-  store <- list(mask_request=function(...) list(revision=revision),prepare_masks=function(...) "stage",
-    publish_masks=function(...) {published <<- published+1L;list(path="edition",manifest=list(products=list(
-      list(level="Stream",plan=list(cells=25),valid_cells=20,file="mask-0002.tif"))))})
-  shiny::testServer(event_masks_server,args=list(context=function() ctx,store=store,pending=function() dirty,
+    streams=data.frame(stream_id=c("a","b"),stream_name=c("A","B")))
+  active <- shiny::reactiveVal(ctx); dirty <- shiny::reactiveVal(FALSE)
+  revision <- "one";alive <- TRUE;calls <- 0L;published <- 0L;killed <- FALSE;failure <- FALSE
+  store <- list(mask_request=function(key,group,id,...) list(stream_id=id,revision=revision),
+    prepare_masks=function(...) "stage",find_masks=function(...) NULL,
+    publish_masks=function(key,group,request,...) {published <<- published+1L;list(path="edition",manifest=list(products=list(
+      list(level="Stream",id=request$stream_id,plan=list(cells=25),valid_cells=20,file="mask.tif"))))})
+  shiny::testServer(event_masks_server,args=list(context=active,store=store,pending=dirty,
     launch=function(...) {calls <<- calls+1L;list(is_alive=function() alive,
       kill=function() {killed <<- TRUE;alive <<- FALSE},wait=function(...) TRUE,
-      get_result=function() {if(failure) stop("failed verification");list()})}),{
-    session$flushReact();expect_equal(calls,0L)
-    session$setInputs(stream="stream",run=1);poll();expect_equal(published,1L)
-    expect_equal(result()$path,"edition")
-    alive <<- TRUE;session$setInputs(run=2);revision <<- "two";alive <<- FALSE;poll()
-    expect_equal(published,1L);expect_null(result());expect_match(message(),"changed")
-    alive <<- TRUE;session$setInputs(run=3,cancel=1)
-    expect_true(killed);expect_false(busy());expect_equal(published,1L)
-    dirty <<- TRUE;session$setInputs(run=4);expect_equal(calls,3L)
-    dirty <<- FALSE;failure <<- TRUE;session$setInputs(run=5);poll()
-    expect_match(message(),"failed verification");expect_equal(published,1L)
+      get_result=function() {if(failure) stop("failed verification");list(manifest=list(),path=NULL)})}),{
+    session$flushReact();expect_equal(calls,1L)
+    alive <<- FALSE;poll();poll();expect_equal(published,2L)
+    expect_named(results(),c("a","b"));expect_false(busy())
+    alive <<- TRUE;dirty(TRUE);session$flushReact();dirty(FALSE);session$flushReact()
+    revision <<- "two";alive <<- FALSE;poll()
+    expect_equal(published,2L);expect_match(message(),"changed")
+    alive <<- TRUE;active(modifyList(ctx,list(group_path="next")));session$flushReact()
+    session$setInputs(cancel=1)
+    expect_true(killed);expect_false(busy());expect_equal(published,2L)
+    failure <<- TRUE;active(modifyList(ctx,list(group_path="third")));session$flushReact();poll()
+    expect_match(message(),"failed verification");expect_equal(published,2L)
   })
 })
-
 test_that("mask storage publishes immutable editions only while saved inputs match", {
   f <- event_test_setup();s <- f$store;x <- f$x
   withr::defer(unlink(dirname(dirname(x$path)),recursive=TRUE))
@@ -41,4 +44,25 @@ test_that("mask storage publishes immutable editions only while saved inputs mat
   x <- s$rename(x$key,"Revised",x$path)
   expect_error(s$publish_masks(x$key,id,request,second,manifest),"changed")
   expect_true(dir.exists(second));expect_true(dir.exists(published$path))
+})
+
+test_that("mask review maps display generated rasters and boundaries without changing files", {
+  path <- tempfile(fileext=".tif"); withr::defer(unlink(path))
+  r <- terra::rast(nrows=501,ncols=501,xmin=500000,xmax=500501,ymin=4500000,ymax=4500501,crs="EPSG:26915")
+  terra::values(r) <- rep(c(1,NA),length.out=terra::ncell(r))
+  terra::writeRaster(r,path,datatype="INT1U",NAflag=255)
+  before <- tools::md5sum(path)
+  area <- sf::st_sf(geometry=sf::st_as_sfc(sf::st_bbox(c(xmin=500000,ymin=4500000,xmax=500501,ymax=4500501),crs=26915)))
+  image <- tempfile(fileext=".png"); withr::defer(unlink(image))
+  grDevices::png(image,width=700,height=500)
+  expect_no_error(draw_event_mask(path,area))
+  grDevices::dev.off()
+  expect_gt(file.info(image)$size,0)
+  expect_identical(tools::md5sum(path),before)
+  expect_match(mask_recovery_message(simpleError("Invalid cell size")),"invalid cell size")
+  expect_match(mask_recovery_message(simpleError("Missing Reach polygons")),"Study geometry")
+  html <- as.character(survey_event_settings_ui("event"))
+  expect_match(html,"Masks are prepared automatically")
+  expect_false(grepl("Stream to mask|Create masks",html))
+  expect_false(grepl("Grid and source preflight|Check grid and saved sources|Review DEM sources",html))
 })

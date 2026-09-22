@@ -10,6 +10,13 @@ ArcGIS toolbox are migration test targets. The owner reviews working increments
 and chooses the next functional step. Do not infer authorization for new terrain
 or scientific operations from this roadmap.
 
+Owner clarification: deliver a reviewable UI update every development turn, with
+the preview refreshed and the changed controls identified. Use established
+FluvialGeomorph terminology (Survey Event, Survey Collection, Stream, Reach).
+Ask before introducing an unfamiliar domain concept; do not expose internal
+"acquisition group" implementation names as a new analyst concept. Review the UI
+backlog before adding further terrain-processing functionality.
+
 ## Accomplished: local study hierarchy (9022)
 
 As reviewed on 2026-09-18, the working tree implements:
@@ -39,8 +46,12 @@ The **Survey Event membership and required output cell size** increment is
 implemented in 9037/9045: reviewed local groups retain collection/Stream membership,
 date evidence, immutable identity, spacing and optional existing Reach Event links.
 Read-only grid/source preflight is implemented in 9038/9046, with cancellable receipt
-checks and grid/storage estimates. Hierarchical masks follow in 9039/9047. Next: qualified source
-operations and Stream/Event mosaic execution. The concise
+checks and grid/storage estimates. Hierarchical masks follow in 9039/9047.
+Backend 9049 qualifies a bounded static, same-reference horizontal warp with
+Float32 default storage; app 9040 displays Float32 preflight estimates. App 9041
+adds durable source assessments, evidence and explicit overlap order beneath
+preflight. Next: reconcile those decisions with source metadata, bind a current
+mask and execute cancellable Stream/Event mosaics. The concise
 [terrain handoff](../checkpoints/current/terrain-acquisition.md) gives the current
 state and first implementation routes; the chronology below is optional context.
 
@@ -171,3 +182,8 @@ These are future capabilities, not an ordered implementation commitment.
 
 Historical increment evidence remains in the feature records and ADRs; dated
 "next" statements there describe their original slice, not the current plan.
+
+Analyst UI must follow useful user outcomes, not mirror backend stages. Checks run
+automatically within actions such as Create masks; show outputs for visual review
+and only actionable failures with routes to correct inputs. Do not expose backend
+reports, approval gates or save buttons without an identified analyst decision.

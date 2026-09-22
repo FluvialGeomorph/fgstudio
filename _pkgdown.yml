@@ -42,6 +42,10 @@ navbar:
           href: articles/dev-11-dem-preflight.html
         - text: "12. Hierarchical analysis masks"
           href: articles/dev-12-event-masks.html
+        - text: "13. Horizontal raster qualification"
+          href: articles/dev-13-horizontal-warp.html
+        - text: "14. DEM source review and priority"
+          href: articles/dev-14-source-review.html
 reference:
   - title: Local application entry points
     desc: Internal modules and callback paths are explained in the developer articles.
@@ -70,3 +74,5 @@ articles:
       - dev-10-event-settings
       - dev-11-dem-preflight
       - dev-12-event-masks
+      - dev-13-horizontal-warp
+      - dev-14-source-review

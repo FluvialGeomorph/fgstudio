@@ -27,8 +27,7 @@ mod_survey_collections_ui <- function(id) {
       shiny::actionButton(ns("apply_plan"),"Update acquisition plan",class="btn-outline-primary btn-sm"),
       shiny::p(class="small text-body-secondary mb-0","Planned or unresolved products may be recorded as intent. DEM acquisition comes first; point-cloud processing is a later capability. Cross-listed collections remain separate."),
       shiny::tableOutput(ns("plan"))),
-        bslib::nav_panel("DEM files",stream_dem_files_ui(ns("dem_files"))),
-        bslib::nav_panel("Event setup",survey_event_settings_ui(ns("event_settings")))),
+        bslib::nav_panel("DEM files",stream_dem_files_ui(ns("dem_files")))),
       bslib::card(full_screen=TRUE,bslib::card_header("Shared coverage map"),
         shiny::conditionalPanel("input.workflow != 'DEM files'",ns=ns,
           shiny::radioButtons(ns("map_mode"),"Show footprints",inline=TRUE,
@@ -61,7 +60,6 @@ mod_survey_collections_server <- function(id,current,store,launch=launch_survey_
     dem_files <- stream_dem_files_server("dem_files",current,result,plan,chosen,store=store)
     selection_pending <- function() !setequal(shiny::isolate(chosen()),shiny::isolate(saved_keys())) ||
       !identical(shiny::isolate(plan()),shiny::isolate(saved_plan())) || dem_files$has_pending()
-    event_settings <- survey_event_settings_server("event_settings",current,store,saved_path,selection_pending)
     shiny::observeEvent(key(), {
       if(!is.null(key()) && identical(key(),active_key)) return()
       active_key <<- key()
@@ -273,7 +271,6 @@ mod_survey_collections_server <- function(id,current,store,launch=launch_survey_
         Catalog=r$records$catalog[match(p$candidate_key,r$records$candidate_key)],Product=p$product,State="Planned acquisition; not downloaded")
     },spacing="xs",striped=TRUE,rownames=FALSE)
     session$onSessionEnded(cancel)
-    list(poll=poll,result=result,status=status,has_pending=function()
-      selection_pending() || event_settings$has_pending())
+    list(poll=poll,result=result,status=status,selection_path=saved_path,has_pending=selection_pending)
   })
 }

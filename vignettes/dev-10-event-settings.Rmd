@@ -7,17 +7,29 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Survey Collections includes Event setup after DEM files. The panel shows retained
-acquisition evidence and saved groups. New Event group and Review / edit open a
-modal; Cancel discards that editor, while Save validates and publishes a snapshot.
+Define a Survey Event is a main Study Area tab after Analysis setup, which also
+provides a Continue to Define a Survey Event button. The panel uses
+native choice lists populated from saved Survey Collections and their date evidence.
+Known same-month collections form a suggestion; unresolved dates remain explicit.
+The definition modal prefills those collections, known year/month and Streams with
+saved DEM choices (or the sole Stream). Output cell size still requires an explicit
+analyst choice. No blank saved-event selector is shown when none exist. Saved
+Survey Events use a native dropdown and a Review / edit Survey Event button.
+Cancel discards the editor; Save Survey Event validates and publishes a snapshot.
 Opening an editor marks pending work for the existing study lifecycle guard.
 
-`mod_survey_collections_server()` mounts `survey_event_settings_server()` with
+"Acquisition group" remains an internal legacy API/storage name only. It must not
+be presented as a separate analyst concept. Saving the local Survey Event definition
+does not create FGDB Reach Event records or perform DEM processing.
+
+`mod_study_server()` mounts `survey_event_settings_server()` with
 the current study, saved selection path and a pending-selection callback. The
 editor reads persisted selections, not unsaved search results. Proposals come from
 `fluvgeo::propose_survey_acquisition_groups()`. Using a proposal fills collection
 membership and year/month; the analyst still chooses Streams, enters output cell
-size and documents the evidence. Ambiguous evidence requires manual review.
+size. No membership/date rationale field is presented or required to save.
+Provider evidence is retained automatically; editing preserves older analyst notes.
+Ambiguous dates still require an explicit year and month/precision choice.
 
 The store's `save_acquisition_group()` compares expected context, selection and
 group revision paths and rejects duplicate Reach Event links across groups.

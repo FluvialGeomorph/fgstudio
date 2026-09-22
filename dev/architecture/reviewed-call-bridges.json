@@ -1,7 +1,8 @@
 {
   "scope": "FG Studio navigation supplements; reviewed source relationships, not runtime traces",
   "edges": [
-    {"from":"fgstudio::launch_event_masks","to":"fluvgeo::write_event_masks","kind":"background-worker","file":"R/event_masks.R","anchor":"callr::r_bg(function(request,directory) do.call(fluvgeo::write_event_masks,c(request,list(directory=directory))),"},
+    {"from":"fgstudio::terrain_source_review_server","to":"fgstudio::local_study_store/save_terrain_review","kind":"adapter-call","file":"R/terrain_source_review.R","anchor":"saved <- store$save_terrain_review(snapshot$key,snapshot$group_id,binding,rows(),overlap(),expected)"},
+    {"from":"fgstudio::launch_event_masks","to":"fluvgeo::write_event_masks","kind":"background-worker","file":"R/event_masks.R","anchor":"list(manifest=do.call(fluvgeo::write_event_masks,c(request,list(directory=directory))),path=NULL)"},
     {"from":"fgstudio::launch_stream_dem_preflight","to":"fluvgeo::preflight_stream_dem","kind":"background-worker","file":"R/stream_dem_preflight.R","anchor":"callr::r_bg(function(request) do.call(fluvgeo::preflight_stream_dem,request),"},
     {"from":"fgstudio::local_study_store/save_acquisition_group","to":"fluvgeo::write_survey_acquisition_group","kind":"adapter-call","file":"R/study_store.R","anchor":"fluvgeo::write_survey_acquisition_group(expected_path,expected_selection,members,stream_ids,"},
     {"from":"fgstudio::local_study_store/set_vertical_reference","to":"fluvgeo::set_study_vertical_reference","kind":"injected-writer","file":"R/study_store.R","anchor":"writer = fluvgeo::set_study_vertical_reference)"},

@@ -362,6 +362,38 @@ local_study_store <- function(data_dir) {
     list(context=expected_path,selection=expected_selection,group=expected_group,stream_id=stream_id,
       sources=do.call(rbind,rows))
   }
+  review_folder <- function(key,group_id,stream_id,create=FALSE) {
+    parent <- dirname(context_path(key))
+    id <- as.character(openssl::sha256(serialize(list(group_id,stream_id),NULL,version=2)))
+    path <- file.path(parent,"terrain-reviews",id)
+    for(p in c(dirname(path),path)) {
+      if(dir.exists(p) && !startsWith(tolower(as.character(fs::path_real(p))),
+          paste0(tolower(as.character(fs::path_real(parent))),"/"))) stop("Review storage is outside this study.")
+      if(create && !dir.exists(p) && !dir.create(p)) stop("Cannot create review storage.")
+    }
+    path
+  }
+  terrain_review <- function(key,group_id,stream_id,binding) {
+    terrain_review_latest(review_folder(key,group_id,stream_id),binding)
+  }
+  save_terrain_review <- function(key,group_id,binding,rows,overlap,expected) {
+    request <- binding$evidence$request
+    current <- dem_preflight_request(key,group_id,request$stream_id,request$context,request$selection,request$group)
+    if(!identical(request,current)) stop("Saved source choices changed. Run preflight again.")
+    hash <- function(path) {con <- file(path,"rb");on.exit(close(con));unclass(as.character(openssl::sha256(con)))}
+    for(n in c("context","selection","group"))
+      if(!identical(hash(request[[n]]),binding$evidence$inputs[[n]])) stop("Study or Event evidence changed. Run preflight again.")
+    for(i in seq_len(nrow(request$sources)))
+      if(!identical(hash(request$sources$selection_path[i]),
+          binding$evidence$source_selection_hashes[[request$sources$candidate_key[i]]]))
+        stop("Source file choices changed. Run preflight again.")
+    target <- read(key)$vertical_reference
+    matches <- rows$assessment=="matches_target"
+    if(any(matches) && (is.null(target) || target$elevation_unit=="unknown" ||
+        any(rows$elevation_unit[matches]!=target$elevation_unit)))
+      stop("A target match needs the same known elevation unit as the saved Study Area target.")
+    terrain_review_write(review_folder(key,group_id,request$stream_id,TRUE),binding,rows,overlap,expected)
+  }
   mask_request <- function(key,group_id,stream_id,expected_path,expected_selection,expected_group) {
     g <- acquisition_groups(key)$groups[[group_id]]
     if(is.null(g) || !identical(context_path(key),expected_path) ||
@@ -384,6 +416,20 @@ local_study_store <- function(data_dir) {
   prepare_masks <- function(key) {
     file.path(mask_folder(key,"staging"),paste(format(openssl::rand_bytes(16)),collapse=""))
   }
+  find_masks <- function(key,request) {
+    folder <- mask_folder(key,"editions")
+    paths <- list.dirs(folder,recursive=FALSE,full.names=TRUE)
+    paths <- paths[order(file.info(paths)$mtime,decreasing=TRUE)]
+    hash <- function(path) {con<-file(path,"rb");on.exit(close(con));unclass(as.character(openssl::sha256(con)))}
+    expected <- lapply(request[c("context","selection","group")],hash)
+    for(path in paths) {
+      m <- tryCatch(jsonlite::read_json(file.path(path,"verified.json"),simplifyVector=TRUE),error=function(e) NULL)
+      if(!is.null(m) && identical(m$schema,"EVENT_MASKS_1") && identical(m$stream_id,request$stream_id) &&
+          identical(m$boundary_rule,"terra rasterize touches=FALSE (native cell-center rule)") &&
+          identical(m$inputs,expected)) return(path)
+    }
+    NULL
+  }
   publish_masks <- function(key,group_id,request,directory,manifest) {
     current <- mask_request(key,group_id,request$stream_id,request$context,request$selection,request$group)
     if(!identical(current,request)) stop("Mask setup changed.")
@@ -404,11 +450,12 @@ local_study_store <- function(data_dir) {
   }
   list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
     dem_destination=dem_destination,prepare_dem_download=prepare_dem_download,dem_download=dem_download,
-    dem_files=dem_files,save_dem_files=save_dem_files,
+    dem_files=dem_files,save_dem_files=save_dem_files,check_dem_files=check_dem_files,
     survey_collections=survey_collections,save_survey_collections=save_survey_collections,
     acquisition_groups=acquisition_groups,save_acquisition_group=save_acquisition_group,
     dem_preflight_request=dem_preflight_request,
-    mask_request=mask_request,prepare_masks=prepare_masks,publish_masks=publish_masks,
+    terrain_review=terrain_review,save_terrain_review=save_terrain_review,
+    mask_request=mask_request,prepare_masks=prepare_masks,publish_masks=publish_masks,find_masks=find_masks,
     rename = rename, set_purpose = set_purpose, set_analysis_crs = set_analysis_crs,
     set_vertical_reference = set_vertical_reference, define_streams = define_streams,
     save_selected_boundary = save_selected_boundary, save_stream = save_stream,

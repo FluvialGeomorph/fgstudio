@@ -1,13 +1,13 @@
 test_that("preflight runs explicitly, rejects stale results and cancels workers", {
   ctx <- list(key="key",path="context",selection="selection",group_id="group",group_path="group-path",
     streams=data.frame(stream_id="stream",stream_name="Creek"))
-  revision <- "one"; alive <- FALSE; calls <- 0L; killed <- FALSE
+  revision <- "one"; alive <- FALSE; calls <- 0L; killed <- FALSE; screen <- "PASS"
   store <- list(dem_preflight_request=function(...) list(revision=revision))
   shiny::testServer(stream_dem_preflight_server,args=list(context=function() ctx,store=store,pending=function() FALSE,
     launch=function(request) {
       calls <<- calls+1L
       list(is_alive=function() alive,kill=function() {killed <<- TRUE;alive <<- FALSE},wait=function(...) TRUE,
-        get_result=function() list(marker=request$revision,checked_at="test time",grid_source_screen="PASS",
+        get_result=function() list(marker=request$revision,checked_at="test time",grid_source_screen=screen,
           grid=list(cell_size=1,unit="metre"),notes="No processing approval",
           grids=data.frame(level="Stream",columns=5,rows=5,cells=25,mask_bytes=25,float64_bytes=200),
           sources=data.frame(collection="Collection",file_id="tile",spacing_x=1,spacing_y=1,source_unit="metre",
@@ -15,11 +15,32 @@ test_that("preflight runs explicitly, rejects stale results and cancels workers"
     }),{
     session$flushReact();expect_equal(calls,0L)
     session$setInputs(stream="stream",run=1);poll();expect_equal(result()$marker,"one")
-    expect_match(output$result$html,"Uncompressed payload")
+    expect_match(output$result$html,"Uncompressed Float32 DEM")
+    expect_match(output$result$html,format(signif(100/1024^3,4),trim=TRUE),fixed=TRUE)
+    screen <<- "REVIEW"; session$setInputs(run=11); poll()
+    expect_match(message(),"Check completed: source metadata needs review")
+    expect_false(is.null(result()))
+    screen <<- "BLOCKED"; session$setInputs(run=12); poll()
+    expect_match(message(),"Plan acquisition")
+    expect_false(is.null(result()))
     alive <<- TRUE;session$setInputs(run=2);expect_true(busy())
     revision <<- "two";alive <<- FALSE;poll();expect_null(result());expect_match(message(),"changed")
     alive <<- TRUE;session$setInputs(run=3,cancel=1)
     expect_true(killed);expect_false(busy());expect_null(result())
+  })
+})
+
+test_that("Windows worker launch failures explain recovery and retain technical details", {
+  ctx <- list(key="key",path="context",selection="selection",group_id="group",group_path="group-path",
+    streams=data.frame(stream_id="stream",stream_name="Creek"))
+  shiny::testServer(stream_dem_preflight_server,args=list(context=function() ctx,
+    store=list(dem_preflight_request=function(...) list()),pending=function() FALSE,
+    launch=function(...) stop("Native call to processx_exec failed: Access is denied")),{
+    session$flushReact(); session$setInputs(stream="stream",run=1)
+    expect_false(busy()); expect_null(result())
+    expect_match(message(),"Windows blocked the worker")
+    expect_match(output$status$html,"Technical error details")
+    expect_match(output$status$html,"processx_exec")
   })
 })
 

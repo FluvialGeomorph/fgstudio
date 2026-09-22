@@ -49,6 +49,12 @@ do not create a routine completion narrative. Review generated changes separatel
 
 ## FG Studio execution constraints
 
+- Owner requirement: every app-development turn must end with a reviewable UI
+  update in a fresh local preview and precise directions to the changed controls.
+  Keep increments small enough for owner feedback before proceeding. Do not build
+  a backlog of backend functionality without UI review; if a backend-only step is
+  necessary, clarify the intended reviewable outcome with the owner first.
+
 - Scientific methods and their tests belong to fluvgeo. Use the existing isolated
   `dev/local-library` for app development; never replace the shared backend as a
   side effect of checking. In a fresh R session from this repository, select it
@@ -68,6 +74,9 @@ do not create a routine completion narrative. Review generated changes separatel
   workstation fallback. For sandboxed vignette/site builds, set `R_CACHE_ROOTPATH`
   to an existing writable directory under `dev/check-output`; flow/styler otherwise
   attempts to write the per-user R cache outside the workspace.
+  Start the local analyst preview with worker-process permission: a sandboxed
+  Windows preview can serve pages yet fail to create processx supervisor pipes
+  when a user starts background preflight, download or mask work.
   Keep live/local diagnostics opt-in.
 - Follow `developer-documentation.md` when capabilities or call paths change.
   Code-map experiments are optional for routine package development.

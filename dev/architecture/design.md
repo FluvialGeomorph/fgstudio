@@ -24,6 +24,20 @@ access on USACE ArcGIS Enterprise. Enterprise transport/authentication are unkno
 
 ## Acquisition and inspection (9031)
 
+App 9041 adds source-review annotations after preflight. The review module owns
+draft assessments and order; the store checks current metadata revisions and saves
+immutable JSON editions. Source fingerprints prevent applying old annotations to
+changed preflight snapshots. These records authorize no raster operation. Article
+14 and the app terrain-source-review schema define the boundary.
+
+Backend horizontal raster qualification (fluvgeo 9049) adds a processing primitive
+for static projected CRSs sharing an identified geodetic reference. Float32 is
+the default storage; Float64 working precision and optional storage are separate.
+App 9040 preflight estimates Float32 DEM payloads. The primitive has no
+current app caller. Article 13 explains the future worker boundary; existing
+preflight never dispatches this operation. No app call-map bridge is recorded
+until an actual assembly worker exists.
+
 Hierarchical masks (9039/9047) run in a separate cancellable worker under Event
 setup. The store pins current inputs and publishes verified staging directories
 by rename into immutable editions. fluvgeo owns shared grid validation, strict

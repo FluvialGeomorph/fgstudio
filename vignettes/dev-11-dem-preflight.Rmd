@@ -7,11 +7,25 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Event setup exposes Grid and source preflight for one saved group and Stream.
-`survey_event_settings_server()` supplies the current context, selected group
-revision and available Streams to `stream_dem_preflight_server()`. The module
+Current UI status: this diagnostic/review module is not mounted in the analyst
+workflow. Create masks runs its necessary backend checks automatically and shows
+mask outputs. The implementation below is retained for internal development;
+it does not require analyst review, approval or manual saving.
+
+
+The retained `stream_dem_preflight_server()` diagnostic accepts a current context,
+selected group revision and available Streams, but `survey_event_settings_server()`
+no longer mounts it. The diagnostic module
 blocks pending edits, gathers a request through `store$dem_preflight_request()`
 and starts `launch_stream_dem_preflight()` in a separate callr process.
+
+Worker launch failures display a recovery explanation and expandable technical
+details. On this Windows workstation, a sandboxed preview cannot create the
+processx supervisor pipe: launch the local preview with worker-process permission.
+Do not replace the cancellable worker with a blocking Shiny-session computation.
+Completed REVIEW and BLOCKED results have distinct status messages and retain their
+tables. A missing DEM plan directs the analyst to Survey Collections > Plan
+acquisition and DEM files.
 
 The store locates current file choices and compatible download attempts for every
 member collection. Missing acquisitions remain explicit NA entries so the backend
@@ -22,7 +36,7 @@ rasters, writes no files and performs no elevation conversion. The source reader
 retains both ordinary and embedded metadata observations.
 
 The result includes snapped Study Area, Stream and available Reach envelopes,
-dimensions/cell counts, uncompressed mask/Float64 byte estimates and per-source
+dimensions/cell counts, uncompressed Byte mask/Float32 DEM estimates and per-source
 PASS/REVIEW/BLOCKED rows. Grid envelopes are not masks or observed coverage.
 PASS covers only the stated metadata screen; source vertical references, epochs,
 prior conversions, valid-data coverage and scientific suitability remain unresolved.
@@ -38,3 +52,8 @@ Tests: `test-stream-dem-preflight.R` for orchestration/rendering/cancellation an
 the sibling fluvgeo `test_preflight_stream_dem.R` for snapping, units, real GeoTIFF
 receipts, corrupt assets, stale selections and preservation. The exact backend
 report is documented in `fluvgeo/dev/schemas/stream-dem-preflight.md`.
+
+After a successful source check, Review DEM sources opens the durable analyst
+review and priority workflow described in [article 14](dev-14-source-review.html).
+The review records evidence and decisions; it does not clear preflight issues or
+start processing.

@@ -69,6 +69,18 @@ operational readiness from a name, an EPSG entry or the label "2022".
 
 ## Consequences and next slice
 
+Backend implementation 9048 qualifies a bounded static same-geodetic-reference
+horizontal raster path: retain compound source evidence, pass a separate 2D
+processing definition and exact grid-free pipeline, explicitly disable vertical
+shifting, and verify the selected output precision. Owner correction in 9049 makes
+Float32 storage the default, independent of Float64 working precision; Float64
+storage is explicit opt-in. The installed GDAL control converts synthetic
+US-survey-foot heights to metres without these guards; the guarded path preserves
+them. This enables no app mosaic action or vertical/datum/epoch operation. Source
+reference reconciliation, projection suitability and scientific acceptance remain
+separate. See sibling fluvgeo's `dev/schemas/horizontal-terrain-warp.md` and the
+human developer article 13 for qualification scope and tests.
+
 Implementation 9035/9044 records vertical target metadata in context schema 7:
 exact resolved definition or explicitly unresolved/local/unknown declaration,
 height type, independent target elevation unit, coordinate epoch/status/evidence,

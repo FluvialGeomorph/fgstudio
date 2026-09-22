@@ -27,7 +27,9 @@ mod_study_ui <- function(id) {
         shiny::tabPanel("Survey Collections",mod_survey_collections_ui(ns("survey_collections"))),
         shiny::tabPanel("Analysis setup",shiny::tabsetPanel(type="pills",
           shiny::tabPanel("Horizontal CRS",study_analysis_crs_ui(ns("analysis_crs"))),
-          shiny::tabPanel("Vertical reference",study_vertical_reference_ui(ns("vertical_reference"))))))
+          shiny::tabPanel("Vertical reference",study_vertical_reference_ui(ns("vertical_reference")))),
+          shiny::actionButton(ns("continue_event"), "Continue to Define a Survey Event", class="btn-primary")),
+        shiny::tabPanel("Define a Survey Event",survey_event_settings_ui(ns("event_settings"))))
     )
   )
 }
@@ -47,7 +49,11 @@ mod_study_server <- function(id, store) {
     generation <- 0L
     pending_selection <- NULL
     collections <- mod_survey_collections_server("survey_collections",current,store)
-    analysis_pending <- function() collections$has_pending() ||
+    event_settings <- survey_event_settings_server("event_settings",current,store,
+      collections$selection_path,collections$has_pending)
+    shiny::observeEvent(input$continue_event,
+      shiny::updateTabsetPanel(session,"study_task",selected="Define a Survey Event"),ignoreInit=TRUE)
+    analysis_pending <- function() collections$has_pending() || event_settings$has_pending() ||
         (!is.null(editor) && editor$has_unsaved()) ||
         (!is.null(streams_editor) && any(nzchar(unlist(streams_editor$draft()))))
     study_vertical_reference_server("vertical_reference",current,store,has_pending=analysis_pending,
@@ -217,7 +223,7 @@ mod_study_server <- function(id, store) {
     }
     shiny::observeEvent(input$workspace_task, {
       if (!identical(input$workspace_task, "new") || is.null(current())) return()
-      if (collections$has_pending() || (!is.null(editor) && editor$has_unsaved()) ||
+      if (collections$has_pending() || event_settings$has_pending() || (!is.null(editor) && editor$has_unsaved()) ||
           (!is.null(streams_editor) && any(nzchar(unlist(streams_editor$draft()))))) {
         shiny::updateTabsetPanel(session, "workspace_task", selected = "open")
         shiny::showModal(shiny::modalDialog(title = "Start a new study?",
@@ -292,7 +298,10 @@ mod_study_server <- function(id, store) {
           Status = c(purpose, if (x$boundary) "Saved - editable" else "Not defined",
             sprintf("%d / %d / %d", x$streams, x$reaches, x$events),
             if (is.null(x$analysis_crs)) "Required before mosaicking - open Analysis setup" else x$analysis_crs$name,
-            if (x$reaches > 0L) "Open Survey Collections to discover and select lidar acquisitions" else
+            if (!is.null(collections$selection_path())) {
+              if (is.null(x$analysis_crs)) "Open Analysis setup to define the analysis reference" else
+                "Open Define a Survey Event to review your saved collections and survey date"
+            } else if (x$reaches > 0L) "Open Survey Collections to discover and select lidar acquisitions" else
             if (x$streams > 0L) "Choose Reaches on the map to define Reaches within a Stream" else
               if (x$boundary) "Choose Streams on the map to define a Stream" else "Select or draw a Study Area boundary")))
       )

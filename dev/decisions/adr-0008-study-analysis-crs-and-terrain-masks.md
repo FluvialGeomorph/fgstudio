@@ -3,9 +3,9 @@
 Status: owner requirements accepted and clarified, 2026-09-19. CRS selection
 implemented; group membership and Event spacing implemented in 9037/9045.
 Read-only grid envelopes/source screening implemented in 9038/9046.
-Hierarchical mask construction implemented in 9039/9047. Strict cell-center
-interior membership excludes exterior and hole boundary centers. Mosaicking
-remains pending.
+Hierarchical masks use standard terra rasterization and raster masking. The earlier
+agent-introduced strict-edge rule and custom per-cell testing were not owner
+requirements and are superseded. No arbitrary processing-size limits apply.
 
 ## Context
 

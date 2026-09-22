@@ -67,9 +67,8 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
         tryCatch({
           old <- store$dem_files(current()$key,input$stream,input$collection)
           saved_path(old$path)
-          if(!is.null(old$result) && identical(old$result$context_revision,basename(current()$path)) &&
-              input$collection %in% collections()$candidate_key &&
-              identical(old$result$collection$snapshot_id,collections()$snapshot_id[collections()$candidate_key==input$collection])) {
+          if(!is.null(old$result) && input$collection %in% collections()$candidate_key) {
+            store$check_dem_files(current()$key,old$result,current()$path,old$path)
             saved_ids(old$result$selected); result(old$result); saved_inventory(TRUE)
             status("Saved file choices reopened. Download outcomes appear below; suitability remains unreviewed.")
           }

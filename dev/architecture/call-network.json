@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "fgstudio",
-  "package_version": "0.0.0.9039",
+  "package_version": "0.0.0.9045",
   "generator": {
     "pkgnet": "0.6.1",
     "flow": "0.2.0"
@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "75d2ae84bd324135d9e5df71e30ba61c6d8eb342a5e4948efe0065f8dcae1677"
+      "sha256": "f1e3d98308f8b2c960daeb109126cc6f3dcf7e16ad0e55eee4432b167435ddc6"
     },
     {
       "file": "NAMESPACE",
@@ -38,7 +38,7 @@
     },
     {
       "file": "R/event_masks.R",
-      "sha256": "16486cb4e14b014d395e9a03d36febb4f70b6cd4f72599030885823f2129e109"
+      "sha256": "b7daad1beb49cb063721ed1b8c963d586f4cf537affa3a6900777613921b0775"
     },
     {
       "file": "R/map_search.R",
@@ -54,11 +54,11 @@
     },
     {
       "file": "R/mod_study.R",
-      "sha256": "a9435151fd187b0699856c5c5817caea2216da5cf9d52bf5dd4b957b941cbc57"
+      "sha256": "065b9cb6009a614e6087e19bd4dd3171afcda386e9d3206146533111420443bb"
     },
     {
       "file": "R/mod_survey_collections.R",
-      "sha256": "b2b2b9d651cd4a68a3bb582ae2b2fc3d51d6322a17c2919bd7d1e02b8ef1cd64"
+      "sha256": "50e634168de64241303d1a828dbee90c2b2a6b32de8aee6437a8c2ef4943916c"
     },
     {
       "file": "R/network_reference.R",
@@ -98,7 +98,7 @@
     },
     {
       "file": "R/stream_dem_files.R",
-      "sha256": "edfb9d5b42236452b4ed55c821ca31d6227c2442f1a7f8a5521450a70f3cb54d"
+      "sha256": "1d563bb59d89068d8390510dbd5c1228d7f2da9eb9c6186195c4bb07f233a373"
     },
     {
       "file": "R/stream_dem_inspection.R",
@@ -106,7 +106,7 @@
     },
     {
       "file": "R/stream_dem_preflight.R",
-      "sha256": "8c6a17baf34db1b062a666119bc7e48d97e2ea772d7ebcd5be698fae377497dc"
+      "sha256": "633a30c39ef88db1fd41e061de4e6f3f4f9182ff184645d0db1a3936e3aca81a"
     },
     {
       "file": "R/stream_selection.R",
@@ -122,7 +122,7 @@
     },
     {
       "file": "R/study_store.R",
-      "sha256": "dfd63b468034efb220e85fa2b2ba0e4d6430f61b808edb03aad4d6200695b1b4"
+      "sha256": "c645312e107161177cc05577e5d4d68a62ca53c41da1946d0702e4730c3a3fca"
     },
     {
       "file": "R/study_vertical_reference.R",
@@ -130,11 +130,15 @@
     },
     {
       "file": "R/survey_event_settings.R",
-      "sha256": "56f9bef4b88a29af861b3f52eb04e43fe70d9b74ae234ab596c55c11c7c6e516"
+      "sha256": "944c409c5b2838c4e494a8918b9723c29ca3a5ed0ef474da6c43efeb7554a2ab"
+    },
+    {
+      "file": "R/terrain_source_review.R",
+      "sha256": "93b50c9006b411ec4987e314f70a59e28b196918ff4bf690cada22b9648c30d7"
     },
     {
       "file": "dev/architecture/reviewed-call-bridges.json",
-      "sha256": "39dfbea8b83ded1a73bcc7c51a606e97b77e943c2788b86e37a14b4a2a3da5ea"
+      "sha256": "33d77e86c845c0b410ef7528958ead00822bf1afdcf991ffbb7d4009fa21b43a"
     }
   ],
   "nodes": [
@@ -309,6 +313,16 @@
       ]
     },
     {
+      "id": "fgstudio::draw_event_mask",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/event_masks.R",
+          "line": 35
+        }
+      ]
+    },
+    {
       "id": "fgstudio::drawn_boundary",
       "exported": false,
       "locations": [
@@ -324,7 +338,7 @@
       "locations": [
         {
           "file": "R/event_masks.R",
-          "line": 18
+          "line": 45
         }
       ]
     },
@@ -449,6 +463,16 @@
       ]
     },
     {
+      "id": "fgstudio::mask_recovery_message",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/event_masks.R",
+          "line": 22
+        }
+      ]
+    },
+    {
       "id": "fgstudio::mod_boundary_server",
       "exported": false,
       "locations": [
@@ -494,7 +518,7 @@
       "locations": [
         {
           "file": "R/mod_study.R",
-          "line": 35
+          "line": 37
         }
       ]
     },
@@ -514,7 +538,7 @@
       "locations": [
         {
           "file": "R/mod_survey_collections.R",
-          "line": 45
+          "line": 44
         }
       ]
     },
@@ -769,7 +793,7 @@
       "locations": [
         {
           "file": "R/stream_dem_preflight.R",
-          "line": 16
+          "line": 18
         }
       ]
     },
@@ -869,7 +893,7 @@
       "locations": [
         {
           "file": "R/survey_event_settings.R",
-          "line": 15
+          "line": 16
         }
       ]
     },
@@ -880,6 +904,66 @@
         {
           "file": "R/survey_event_settings.R",
           "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_review_binding",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_source_review.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_review_latest",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_source_review.R",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_review_rows",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_source_review.R",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_review_write",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_source_review.R",
+          "line": 53
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_source_review_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_source_review.R",
+          "line": 81
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_source_review_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_source_review.R",
+          "line": 74
         }
       ]
     },
@@ -951,7 +1035,13 @@
     },
     {
       "from": "fgstudio::event_masks_server",
-      "to": "fgstudio::compact_table",
+      "to": "fgstudio::draw_event_mask",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::event_masks_server",
+      "to": "fgstudio::mask_recovery_message",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -976,6 +1066,18 @@
     {
       "from": "fgstudio::launch_drainage_job",
       "to": "fgstudio::drainage_request",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::local_study_store",
+      "to": "fgstudio::terrain_review_latest",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::local_study_store",
+      "to": "fgstudio::terrain_review_write",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1190,6 +1292,12 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::survey_event_settings_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::mod_study_ui",
       "to": "fgstudio::mod_survey_collections_ui",
       "kind": "static-dependency",
@@ -1208,6 +1316,12 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::mod_study_ui",
+      "to": "fgstudio::survey_event_settings_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::mod_survey_collections_server",
       "to": "fgstudio::compact_table",
       "kind": "static-dependency",
@@ -1220,20 +1334,8 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
-      "from": "fgstudio::mod_survey_collections_server",
-      "to": "fgstudio::survey_event_settings_server",
-      "kind": "static-dependency",
-      "evidence": "pkgnet-FunctionReporter"
-    },
-    {
       "from": "fgstudio::mod_survey_collections_ui",
       "to": "fgstudio::stream_dem_files_ui",
-      "kind": "static-dependency",
-      "evidence": "pkgnet-FunctionReporter"
-    },
-    {
-      "from": "fgstudio::mod_survey_collections_ui",
-      "to": "fgstudio::survey_event_settings_ui",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1370,6 +1472,18 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::stream_dem_preflight_server",
+      "to": "fgstudio::terrain_source_review_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::stream_dem_preflight_ui",
+      "to": "fgstudio::terrain_source_review_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::stream_selection_server",
       "to": "fgstudio::channel_candidates",
       "kind": "static-dependency",
@@ -1436,22 +1550,55 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
-      "from": "fgstudio::survey_event_settings_server",
-      "to": "fgstudio::stream_dem_preflight_server",
-      "kind": "static-dependency",
-      "evidence": "pkgnet-FunctionReporter"
-    },
-    {
       "from": "fgstudio::survey_event_settings_ui",
       "to": "fgstudio::event_masks_ui",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
     {
-      "from": "fgstudio::survey_event_settings_ui",
-      "to": "fgstudio::stream_dem_preflight_ui",
+      "from": "fgstudio::terrain_review_latest",
+      "to": "fgstudio::terrain_review_rows",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_review_write",
+      "to": "fgstudio::terrain_review_latest",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_review_write",
+      "to": "fgstudio::terrain_review_rows",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_source_review_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_source_review_server",
+      "to": "fgstudio::terrain_review_binding",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_source_review_server",
+      "to": "fgstudio::terrain_review_rows",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_source_review_server",
+      "to": "fgstudio::local_study_store/save_terrain_review",
+      "kind": "adapter-call",
+      "file": "R/terrain_source_review.R",
+      "anchor": "saved <- store$save_terrain_review(snapshot$key,snapshot$group_id,binding,rows(),overlap(),expected)",
+      "line": 196,
+      "evidence": "reviewed-source-bridge"
     },
     {
       "from": "fgstudio::launch_event_masks",
@@ -1653,9 +1800,9 @@
     }
   ],
   "evaluation": {
-    "static_nodes": 76,
-    "static_edges": 93,
-    "reviewed_bridges": 22,
+    "static_nodes": 84,
+    "static_edges": 102,
+    "reviewed_bridges": 23,
     "storage_closure_detected": false,
     "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]
   }

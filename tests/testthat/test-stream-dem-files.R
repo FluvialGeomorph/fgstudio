@@ -89,6 +89,12 @@ test_that("saved file plans reopen and guard context, collection and file revisi
   expect_identical(store$dem_download(x$key,r$stream$stream_id,collection$candidate_key),attempt)
   x <- store$set_analysis_crs(x$key,"26915","Synthetic projected test area","Test analyst",x$path)
   expect_identical(store$dem_download(x$key,r$stream$stream_id,collection$candidate_key),attempt)
+  shiny::testServer(stream_dem_files_server,args=list(current=function() x,discovery=function() d,
+    plan=function() d$acquisition_plan,included=function() collection$candidate_key,store=store),{
+    session$flushReact();session$setInputs(stream=r$stream$stream_id,collection=collection$candidate_key)
+    expect_true(saved_inventory());expect_identical(saved_ids(),"tile")
+    expect_match(status(),"reopened")
+  })
   next_path <- store$save_dem_files(x$key,r,character(),x$path,path)
   expect_true(file.exists(path));expect_false(identical(path,next_path))
   store$rename(x$key,"New name",x$path)
