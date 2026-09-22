@@ -1,5 +1,11 @@
 # Stream DEM mosaics and analysis masks
 
+Current remediation route: [terrain GIS assessment and plan](terrain-gis-remediation.md).
+The 2026-09-22 audit identifies remaining acquisition restrictions, repeated I/O,
+and a reproduced broken horizontal-warp dependency. Earlier verification claims
+below do not establish readiness of the current source. Implementation remains
+pending the proposed reviewable increments beginning at Source DEM files.
+
 Status: Event group settings implemented in 9037/9045, read-only grid/source
 preflight in 9038/9046 and hierarchical masks in 9039/9047. Mosaic execution remains pending.
 Owner grid requirements clarified 2026-09-19.
@@ -63,8 +69,8 @@ and evidence review before considering a new temporal clustering algorithm.
 
 FGDB requires year, permits optional month/day, prohibits day without month, and
 uses non-unique YYYY/YYYY-MM labels. Its normative Survey Event is Reach-owned.
-A proposed local Study Area acquisition group links Stream DEMs and mask families
-to applicable Reach Survey Events. Persist explicit links; do not join only on
+The app's Survey Event setup links Stream DEMs and Study Area, Stream and Reach
+masks to applicable Reach Survey Events. Persist explicit links; do not join only on
 labels or silently change FGDB ownership. Several Collections can supply an Event.
 
 Authority: sibling FGDB `dev/schemas/conceptual-data-model.md` (Survey Event time
@@ -79,7 +85,7 @@ cell size in the saved planar CRS's units. Existing Reach Events can be linked b
 ID after parentage/date validation; this increment creates no Reach Events.
 Revisions retain previous snapshots. The local store rejects stale study,
 selection or group state and duplicate Reach Event links across groups.
-The anchor is fixed at (0, 0); changed CRS/selection evidence requires review.
+The implementation uses a (0, 0) grid-alignment anchor within the saved real-world CRS. The specific alignment convention remains unconfirmed; do not interpret it as an arbitrary CRS or move saved grids automatically.
 See article 10 and sibling fluvgeo's `dev/schemas/survey-acquisition-groups.md`.
 USIEI free-text formats beyond explicit ISO day/date intervals remain unresolved.
 
@@ -314,7 +320,7 @@ checks passed (76 nodes, 93 static edges, 22 reviewed bridges), and 357 local li
 across 16 pages and 14 article exports passed. The site is local; the expected
 missing-public-URL diagnostic remains. No site was published.
 
-## Qualified horizontal primitive (backend 9048)
+## Historical horizontal primitive delivery (backend 9048; superseded by 9053)
 
 The backend now provides warp_terrain_horizontal for static projected grids that
 share an identified, semantically equivalent 2D geodetic reference. It uses an
@@ -399,3 +405,22 @@ Validation for 9045: 61 focused assertions passed. A real background worker crea
 and verified a small temporary Study Area/Stream/Reach mask set with no DEM inputs;
 the generated raster preview was rendered and visually inspected. HTTP verification
 confirmed Create masks and Mask to view are served and both manual panels are absent.
+
+## Current GIS remediation (FG Studio 9048 / fluvgeo 9053)
+
+The current processing contracts supersede the historical constraints above:
+[remediation assessment](terrain-gis-remediation.md), articles 07/12/13 and sibling
+backend inspection/mask/warp schemas. Source viewing uses one cold hash and
+session-owned caches; masks reuse a shared Study Area raster, consolidate native
+checks, cache worker-prepared display rasters and clean stopped job staging.
+Horizontal warping uses native summaries without custom cell traversal or
+application size/disk admission rules. Float32 storage remains the default;
+GDAL chooses working precision. No new mosaic or vertical-transformation feature
+is introduced by this remediation.
+
+The owner has not approved a particular numeric grid anchor. Legacy toolbox
+processing uses the input DEM as `arcpy.env.snapRaster` (tools 02, 07, 08, 09, 10),
+while the new design requires one shared Study Area grid across equal-resolution
+Events. That evidence does not identify a canonical first grid for this new
+workflow. Preserve saved grids; resolve initial-grid selection in project terms
+before changing it. A coordinate alignment convention is not a replacement CRS.

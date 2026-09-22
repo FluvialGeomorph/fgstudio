@@ -284,16 +284,20 @@ links only; unsupported links are reported explicitly. File size and resolution
 evidence are metadata, not verified raster properties. Review starts in the
 session and is not yet a download step. **Select all** checks all returned tiles;
 **Save file choices** retains them for offline reopening. Save the collection's DEM
-acquisition plan first. Partial queries remain incomplete even when all are selected.
+acquisition plan first. Searches retrieve all catalog pages. Older saved partial
+queries remain incomplete until refreshed.
 
 After **Save file choices**, select **Download saved files** to acquire original
-source GeoTIFFs in the study's `source-dem` folder. Expand **Download location and
-limits** to review the destination and limits. Downloads run one file at a time;
+source GeoTIFFs in the study's `source-dem` folder. Expand **Download location**
+to review the destination. Downloads stream one file at a time without size or
+total-duration caps;
 **Cancel download** retains completed files. Per-file outcomes distinguish success,
 failure and unfinished work. Start again to retry: matching completed files are
 rehashed before reuse. Reopening checks local integrity in a background worker.
 Downloads verify transfer lengths, TIFF signature and SHA-256 content identity;
 terrain suitability remains unreviewed. Previous selections and files are retained.
+The **Saved source DEM files** table remains available when choices are refreshed;
+**Saved previously** distinguishes local files outside the current saved choices.
 
 After **Analysis setup**, use **Continue to Define a Survey Event** or open the
 adjacent **Define a Survey Event** main tab. Select from **Saved Survey Collections for this Survey

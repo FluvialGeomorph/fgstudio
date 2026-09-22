@@ -27,8 +27,9 @@ Possible mid-resolution Study Area terrain is a separate future workflow.
 
 The backend queries OPR or 1 m products only for supported USGS directory links.
 It filters metadata bounding boxes, not actual valid-elevation footprints.
-COMPLETE is catalog-query completion, not terrain coverage; PARTIAL denotes the
-bounded record cap. FAILED and UNSUPPORTED are not evidence of no available DEMs.
+COMPLETE is catalog-query completion, not terrain coverage. All catalog pages are
+requested before completion; `max_records` is page size, not a total cap. Historic
+PARTIAL selections remain readable. FAILED and UNSUPPORTED are not evidence of no available DEMs.
 No browser-supplied URL is fetched: endpoints are fixed and collection evidence
 comes from the server-held discovery. Unknown resolution/size stays unknown.
 Publication date is not survey date. No default scientific suitability follows.
@@ -40,8 +41,8 @@ estimate. Unknown resolution stays unknown and coarser-than-1-m tiles are flagge
 Transfer start is a separate explicit action. Empty results explain that a collection found
 for the Study Area may not have any matching tiles for this Stream.
 
-The child module manages a cancellable worker, 90-second outer timeout and
-45-second request timeout. Changing context revision, discovery, planned candidates,
+The child module manages a cancellable worker and 45-second per-request timeout,
+without a total paging deadline. Changing context revision, discovery, planned candidates,
 Stream or collection cancels and clears it, then restores any compatible saved
 file choices. Checkboxes remain draft until Save file choices; Select all and Clear
 update the same control. Save requires the persisted DEM acquisition plan and
@@ -73,14 +74,12 @@ input. Later checkbox changes cannot change the active attempt's files.
 
 The separate callr worker runs sequential transfers and writes advisory progress
 for the child to poll. Byte counts are measured; percentages appear only with a
-usable transfer length. Known oversized plans fail before start; streaming limits
-also apply to unknown sizes. Failed files have their own receipts, and later files
-can still succeed within the attempt budget. Explicit start again creates another
-attempt, rehashes compatible completed source assets and retries unsuccessful files.
+usable transfer length. Healthy transfers have no byte or elapsed-time cap.
+Connection and idle timeouts identify failed/stalled requests. Failed files have
+their own receipts, and later files can still succeed. Explicit start again creates
+another attempt, rehashes compatible completed source assets and retries unsuccessful files.
 
-Context/source/saved-selection changes cancel the child job. The controller kills
-the worker after an eight-hour outer deadline as well, covering startup and local
-verification beyond the backend's transfer timers. On cancellation it kills
+Context/source/saved-selection changes cancel the child job. On cancellation it kills
 and joins the process before asking the backend to clean that attempt's numbered
 incomplete files. Session end uses the same path. A late result is never attached
 to the new scope. Opening a saved attempt launches a verification-only worker;
@@ -93,8 +92,25 @@ Assets use relative content-identifying paths and non-replacing publication.
 HTTP/catalog length and TIFF signature checks plus SHA-256 identify transferred
 bytes; none establishes raster readability, resolution, vertical datum, coverage
 or suitability. The UI remains a compact download action, status and per-file
-table. Local destination/limits are expandable. Source and receipt publication
+table. Local destination is expandable. Source and receipt publication
 are separate: orphan bytes after a receipt failure do not count as a download.
+
+### Saved availability across refreshed choices (9047/9052)
+
+`store$dem_download_history` locates attempts by Study, Stream and Collection,
+independently of the active selection edition. The verification-only callr worker
+uses `read_saved_dem_history` to combine outcomes, retaining an available older
+copy ahead of a failed retry. Each inspection choice carries its original attempt
+path. The **Saved source DEM files** table distinguishes files listed in saved
+choices from those saved previously. Availability does not imply inclusion or
+scientific acceptance; the existing analysis request binding is unchanged.
+
+Explicit download of refreshed choices can reuse a checksum-verified asset with
+the same Collection, file ID and URL and a compatible known byte size. The new
+receipt binds the reused bytes to the new snapshot. Remote freshness is not checked.
+Historical request byte/duration fields are ignored; connection/idle settings remain.
+The next remediation increment will reduce repeated verification reads; this
+increment still verifies saved bytes in a background worker.
 
 Additional sources: `R/stream_dem_download.R`, sibling
 `fluvgeo/R/stream_dem_download.R` and its `dev/schemas/stream-dem-downloads.md`.

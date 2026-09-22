@@ -13,7 +13,7 @@ test_that("detail requests use only the current view brush and full preview rese
     sampled_size=c(20,10),native=FALSE,band_unit="")
   shiny::testServer(stream_dem_inspection_server,args=list(
     context=function() list(attempt="one",files=data.frame(file_id="tile",title="Tile")),
-    launch=function(attempt,file_id,preview=FALSE,window=NULL) {
+    launch=function(attempt,file_id,preview=FALSE,window=NULL,cache_dir=NULL) {
       n <<- n+1L;windows[n] <<- list(window)
       list(is_alive=function() FALSE,get_result=function() list(preview=p))
     }),{
@@ -28,17 +28,17 @@ test_that("detail requests use only the current view brush and full preview rese
   })
 })
 
-test_that("preview runs only explicitly and is cleared with the selected file", {
+test_that("selecting a saved file starts its preview and changing file clears it", {
   calls <- 0L
   p <- list(values=matrix(c(1,NA,3,4),2),sampled_size=c(2,2),source_size=c(20,20),band_unit="")
   shiny::testServer(stream_dem_inspection_server,args=list(
     context=function() list(attempt="one",files=data.frame(file_id="tile",title="Tile")),
-    launch=function(attempt,file_id,preview=FALSE) {
+    launch=function(attempt,file_id,preview=FALSE,window=NULL,cache_dir=NULL) {
       expect_true(preview);calls <<- calls+1L
       list(is_alive=function() FALSE,get_result=function() list(preview=p))
     }),{
     session$flushReact();expect_equal(calls,0L)
-    session$setInputs(file="tile",preview=1);poll();session$flushReact()
+    session$setInputs(file="tile");poll();session$flushReact()
     expect_equal(calls,1L);expect_equal(result()$preview,p)
     expect_match(output$preview_panel$html,"unknown elevation unit",fixed=TRUE)
     expect_match(output$preview_panel$html,"Small features and gaps may be missed",fixed=TRUE)
@@ -69,7 +69,7 @@ test_that("a fast successful inspection survives file-selection invalidation", {
 test_that("inspection is explicit, cancellable and cannot return into a changed context", {
   context <- shiny::reactiveVal(list(attempt="one",files=data.frame(file_id="tile",title="Tile")))
   control <- new.env();control$alive <- FALSE;control$reads <- 0;control$launches <- 0
-  launch <- function(attempt,file_id) {
+  launch <- function(attempt,file_id,...) {
     control$launches <- control$launches+1;control$alive <- TRUE
     list(is_alive=function() control$alive,kill=function() {control$alive <- FALSE},
       wait=function(timeout) NULL,get_result=function() {control$reads <- control$reads+1;list(title="Tile")})
@@ -89,7 +89,7 @@ test_that("inspection is explicit, cancellable and cannot return into a changed 
   })
 })
 
-test_that("inspection worker errors and timeout remain visible", {
+test_that("inspection errors remain visible and healthy work has no elapsed-time cutoff", {
   control <- new.env();control$alive <- FALSE;control$time <- as.POSIXct(0,origin="1970-01-01")
   shiny::testServer(stream_dem_inspection_server,args=list(
     context=function() list(attempt="one",files=data.frame(file_id="tile",title="Tile")),
@@ -98,6 +98,6 @@ test_that("inspection worker errors and timeout remain visible", {
     session$flushReact();session$setInputs(file="tile",inspect=1);poll()
     expect_match(message(),"bad checksum");expect_null(result())
     control$alive <- TRUE;session$setInputs(inspect=2);control$time <- control$time+1801;poll()
-    expect_false(busy());expect_match(message(),"timed out")
+    expect_true(busy());expect_true(control$alive)
   })
 })

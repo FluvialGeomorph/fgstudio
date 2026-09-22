@@ -12,7 +12,7 @@ stream_dem_files_ui <- function(id) {
     shiny::div(class="d-flex gap-2",
       shiny::actionButton(ns("find"),"Find DEMs",class="btn-primary btn-sm"),
       shiny::actionButton(ns("cancel"),"Cancel",class="btn-outline-secondary btn-sm")),
-    shiny::tags$details(shiny::tags$summary("About this search"),shiny::p(class="small mb-0","Matches source-directory files whose reported bounds intersect the Stream. Bounds are not valid-elevation footprints. No download or suitability approval. Save choices before switching Stream or collection; unsaved edits will be discarded.")),
+    shiny::tags$details(shiny::tags$summary("About this search"),shiny::p(class="small mb-0","Searches all catalog pages for source-directory files whose reported bounds intersect the Stream. Saved downloads remain listed when you refresh file choices. Bounds are not valid-elevation footprints. Save choices before switching Stream or collection; unsaved edits will be discarded.")),
     shiny::div(class="d-flex gap-2 mt-1",
       shiny::actionButton(ns("select_all"),"Select all",class="btn-outline-primary btn-sm"),
       shiny::actionButton(ns("select_none"),"Clear",class="btn-outline-secondary btn-sm"),
@@ -90,9 +90,6 @@ stream_dem_files_server <- function(id,current,discovery,plan,included,launch=la
     },ignoreInit=TRUE)
     poll <- function() {
       if(is.null(job)) return()
-      if(as.numeric(difftime(Sys.time(),started,units="secs"))>90) {
-        cancel();status("File search timed out; this is not a no-files result.");return()
-      }
       if(job$is_alive()) return()
       tryCatch({
         r <- job$get_result(); result(r); status(paste(r$outcome,r$message,sep=": "))

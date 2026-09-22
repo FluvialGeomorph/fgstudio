@@ -7,47 +7,42 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-The next prerequisite for Stream DEM assembly is a horizontal raster operation
-that preserves elevation units and vertical-reference evidence. This increment
-adds `warp_terrain_horizontal` to the fluvgeo backend. It is not yet an analyst
-action, and FG Studio's existing preflight PASS still authorizes no processing.
+`fluvgeo::warp_terrain_horizontal()` is an existing backend primitive; there is no
+current FG Studio caller or new analyst approval step. It takes a source GeoTIFF,
+a template defining the output grid, and a new output directory. Template values
+are not applied as a mask.
 
-The primitive takes a local source GeoTIFF, a GeoTIFF grid template and a new
-attempt directory. The template's pixels are ignored. It accepts a bounded static
-projected profile with the same identified base geodetic reference on both sides.
-It selects an explicit exact, grid-free PROJ operation, uses a separate horizontal
-source definition and disables GDAL vertical shifting. Full original compound
-CRS evidence and band units remain in the manifest. Datum/epoch operations,
-external sidecars, rotated grids and nonidentity scale/offset remain blocked.
+The implementation uses native GDAL warping with an explicit horizontal pipeline
+and `-novshift`. This option matters: the installed GDAL control test converts
+compound US-survey-foot heights to metres under a default warp to a 2D metre CRS.
+The guarded operation preserves the height units and retains source declarations.
+It does not perform a vertical transformation or certify source suitability.
 
-The installed GDAL control test demonstrates the reason for these guards: a
-default warp converts synthetic US-survey-foot heights to metres when targeting
-a 2D metre CRS. The guarded path preserves the original magnitudes. This is
-qualification of a specific processing profile, not vertical-datum accuracy,
-modernized NSRS readiness or acceptance of a real source set.
+Aligned grids use nearest sampling; other grids use bilinear interpolation.
+Float32 is the storage default and Float64 is optional. GDAL chooses working
+precision and memory settings. Native terra summaries replace custom R block
+traversal and the broken deleted-helper dependency. Exact sample comparisons
+remain in small independent tests, not a second exhaustive production audit.
+There are no application cell-count, row-width or estimated-disk admission caps.
 
-Aligned output uses nearest sampling and exact cell-by-cell comparison with the
-source at the chosen storage precision, including cropped windows and outside-source NoData. Other grids use
-bilinear interpolation, verified with independent synthetic expectations.
-Storage defaults to Float32; Float64 storage is explicit opt-in. Working precision
-remains Float64. Aligned Float32 inputs retain exact samples; higher-precision
-inputs are rounded when written as Float32. This rounding is independent of
-elevation-unit conversion. Resource admission, bounded reads, reopening,
-input/output hashes and a manifest written last support later worker orchestration.
-The backend contract describes the limits and retained evidence in full.
+GDAL handles affine source rotation and unequal spacing. Ordinary overviews are
+allowed, but analytical warping uses base pixels to avoid inheriting an unknown
+overview resampling method. The output template must be north-up. The retained
+operation profile supports static east/north projected CRSs with the same identified
+geodetic base; datum/epoch changes, nonidentity scale/offset and external
+georeferencing/mask sidecars still need explicit implementation. These are API
+scope boundaries, not universal GIS restrictions.
 
 Trace sibling fluvgeo `R/warp_terrain_horizontal.R`,
 `tests/testthat/test_warp_terrain_horizontal.R` and
-`dev/schemas/horizontal-terrain-warp.md`. The primitive reuses metadata inspection
-and bounded block iteration. It has no current app caller; the app-only call map
-therefore has no worker bridge to it yet. Existing application behavior and mask
-creation remain unchanged.
+`dev/schemas/horizontal-terrain-warp.md`. Tests retain independent interpolation,
+NoData, unit-conversion controls, crop/extension and wide-grid cases. Source and
+output hashes, metadata, native summaries and software/options are recorded before
+the final manifest is written. No shared library is upgraded.
 
-The app's [source review workflow](dev-14-source-review.html) now records analyst
-vertical/unit evidence and explicit overlap order. Next, assembly must bind those
-decisions to receipt-verified source choices, a current mask edition and Event settings
-to one cancellable assembly request. Compatible neighboring tiles must be assembled
-with interpolation halos before warping; masks are applied after assembly. A
-verified intermediate warp is not a completed or scientifically accepted Stream
-DEM. The current source set still requires reconciliation; this implementation
-does not authorize automatic datum or elevation-unit conversions.
+Stream/Event mosaic assembly remains unimplemented. Compatible neighbouring tiles
+need the intended overlap rule and interpolation support before warping, followed
+by the saved Stream mask. The unmounted [source-review module](dev-14-source-review.html)
+is not a manual approval prerequisite for current mask creation. Remediating this
+primitive does not authorize new vertical operations or establish the scientific
+compatibility of all source DEMs.

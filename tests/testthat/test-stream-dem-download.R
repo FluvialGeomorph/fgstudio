@@ -71,7 +71,7 @@ test_that("delayed process termination cannot expose a result in a new scope", {
   })
 })
 
-test_that("the outer watchdog also bounds startup and local verification", {
+test_that("healthy workers are not killed after the former duration cap", {
   control <- new.env();control$time <- as.POSIXct(0,origin="1970-01-01");control$alive <- TRUE
   store <- list(dem_download=function(...) NULL,dem_destination=function(...) "synthetic/source-dem",
     prepare_dem_download=function(...) "attempt")
@@ -85,6 +85,37 @@ test_that("the outer watchdog also bounds startup and local verification", {
     testthat::with_mocked_bindings({poll()},
       cancel_stream_dem_download=function(...) {expect_false(control$alive)},
       read_stream_dem_download=function(...) NULL,.package="fluvgeo")
-    expect_false(busy());expect_match(message(),"timed out after eight hours")
+    expect_true(busy());expect_true(control$alive)
+    expect_false(grepl("timed out",message()))
   })
+})
+
+test_that("saved download history opens even while file choices are unsaved", {
+  paths <- NULL
+  store <- list(dem_download_history=function(...) c("new-attempt","old-attempt"),
+    dem_destination=function(...) "source-dem")
+  shiny::testServer(stream_dem_download_server,args=list(current=function() list(key="key",path="revision"),
+    selection=function() list(path=NULL,stream="s",collection="c",ids="selected"),scope=function() "scope",store=store,
+    launch=function(attempt,verify_only) {
+      paths <<- attempt
+      list(is_alive=function() FALSE,get_result=function() list(files=data.frame(file_id="old",title="Saved tile",
+        outcome="DOWNLOADED",bytes=32,message="Verified",attempt="old-attempt")))
+    }),{
+      session$flushReact();poll();session$flushReact()
+      expect_identical(paths,c("new-attempt","old-attempt"))
+      expect_match(output$files$html,"Saved previously")
+      expect_identical(inspection_context()$files$attempt,"old-attempt")
+    })
+})
+
+test_that("available older copies survive failed retries in saved history", {
+  testthat::with_mocked_bindings({
+    h <- read_saved_dem_history(c("new","old"))
+    expect_identical(h$files$file_id,c("tile","missing"))
+    expect_identical(h$files$attempt,c("old","new"))
+    expect_identical(h$files$outcome,c("DOWNLOADED","UNAVAILABLE"))
+  },read_stream_dem_download=function(attempt,verify) list(files=data.frame(
+    file_id=c("tile","missing"),title=c("Tile","Missing"),
+    outcome=c(if(attempt=="old") "DOWNLOADED" else "FAILED","UNAVAILABLE"),bytes=32,message="fixture")),
+  .package="fluvgeo")
 })

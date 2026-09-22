@@ -1,10 +1,28 @@
 # Stream-scoped source DEM file discovery
 
+## Current remediation (9047 / fluvgeo 9052)
+
+Source DEM discovery reads all catalog pages. Download size and healthy-transfer
+duration caps are removed, including legacy request restrictions. Connection/idle
+recovery and cancellation remain. Saved availability is read across attempt history
+independently of selection refresh; each preview retains its receipt's attempt.
+Explicit refreshed selections can reuse matching verified source bytes.
+
+Focused backend discovery/download tests passed, including the local HTTP transfer
+fixture; the directory-symlink case remains skipped on this account. App download,
+file-selection and inspection tests passed. Only the isolated development backend
+was installed. See article 06 and the current checkpoint for preview verification.
+The real app saved-history worker passed against an existing synthetic local tile;
+a live DEM query through a worker returned COMPLETE using the saved synthetic
+public fixture. Preview 9047 runs on port 8782, leaving the old browser session
+untouched. Interactive visual acceptance remains owner review.
+Earlier verification below is historical and does not reinstate retired limits.
+
 ## Source download increment (9028 / fluvgeo 9038)
 
 The owner approved the [download design](dem-download-proposal.md). Download saved
 files revalidates current study/source/selection evidence and acquires originals
-under the study's `source-dem` folder. Sequential transfers have byte/time limits,
+under the study's `source-dem` folder. Sequential transfers have connection/idle recovery,
 per-file outcomes and immutable provenance receipts. Cancel stops and joins the
 worker before cleaning its incomplete files. Completed assets survive failure,
 cancel and explicit retries. Retry rehashes compatible sources before reuse;
@@ -90,7 +108,7 @@ and query status. Reopening the same context and source snapshot restores choice
 offline. Stale context/file revisions, changed geometry/source evidence, or a DEM
 collection not in the saved acquisition plan block saving. Refresh requires draft
 choices to be saved first. Switching Stream/collection discards unsaved choices.
-Query cap is PARTIAL; Select all means all returned tiles, not guaranteed complete
+Historic PARTIAL results require a new complete search; Select all means all returned tiles, not guaranteed complete
 coverage. No asset registration, download, mosaic, suitability decision
 or Event creation is implied. Those are subsequent slices. Existing study files,
 the production toolboxes, ohwm2 and shared libraries are unchanged.

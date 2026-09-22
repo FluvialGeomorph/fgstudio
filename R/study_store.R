@@ -346,6 +346,23 @@ local_study_store <- function(data_dir) {
     }
     NULL
   }
+  dem_download_history <- function(key,stream_id,candidate_key) {
+    # Asset history is independent of active selection/geometry revisions.
+    root <- dem_destination(key)
+    attempts <- file.path(root,"attempts")
+    if(!dir.exists(attempts)) return(character())
+    inside <- function(p) startsWith(tolower(as.character(fs::path_real(p))),
+      paste0(tolower(as.character(fs::path_real(root))),"/"))
+    if(!inside(attempts)) stop("Download attempts are outside this study.")
+    paths <- list.files(attempts,pattern="^[0-9a-f]{32}$",full.names=TRUE)
+    paths <- paths[order(file.info(file.path(paths,"request.json"))$mtime,decreasing=TRUE)]
+    paths[vapply(paths,function(path) {
+      if(!inside(path)) stop("Download attempt is outside this study.")
+      m <- tryCatch(jsonlite::read_json(file.path(path,"request.json"),simplifyVector=TRUE),error=function(e) NULL)
+      !is.null(m) && identical(m$schema,"STREAM_DEM_DOWNLOAD_1") &&
+        identical(m$stream_id,stream_id) && identical(m$candidate_key,candidate_key)
+    },logical(1))]
+  }
   dem_preflight_request <- function(key,group_id,stream_id,expected_path,expected_selection,expected_group) {
     groups <- acquisition_groups(key)
     g <- groups$groups[[group_id]]
@@ -414,7 +431,38 @@ local_study_store <- function(data_dir) {
     path
   }
   prepare_masks <- function(key) {
-    file.path(mask_folder(key,"staging"),paste(format(openssl::rand_bytes(16)),collapse=""))
+    folder <- mask_folder(key,"staging")
+    # Reclaim only our recorded jobs after both owning processes have exited.
+    # Unknown legacy staging is never guessed to be abandoned by its age.
+    for(record in list.files(folder,pattern="^[0-9a-f]{32}\\.json$",full.names=TRUE)) {
+      owner <- tryCatch(jsonlite::read_json(record,simplifyVector=TRUE),error=function(e) NULL)
+      path <- sub("\\.json$","",record)
+      alive <- function(pid) {
+        if(is.null(pid)) return(FALSE)
+        if(!is.numeric(pid) || length(pid)!=1L || !is.finite(pid) || pid<1) return(TRUE)
+        tryCatch(pid %in% ps::ps_pids(),error=function(e) TRUE)
+      }
+      if(!is.null(owner) && identical(owner$schema,"FGSTUDIO_MASK_JOB_1") &&
+          !is.null(owner$owner_pid) && !alive(owner$owner_pid) &&
+          ((!is.null(owner$worker_pid) && !alive(owner$worker_pid)) || !dir.exists(path)))
+        discard_masks(key,path)
+    }
+    path <- file.path(folder,paste(format(openssl::rand_bytes(16)),collapse=""))
+    jsonlite::write_json(list(schema="FGSTUDIO_MASK_JOB_1",owner_pid=Sys.getpid(),worker_pid=NULL),
+      paste0(path,".json"),auto_unbox=TRUE,null="null")
+    path
+  }
+  discard_masks <- function(key,directory) {
+    if(is.null(directory)) return(invisible(NULL))
+    stage <- as.character(fs::path_real(mask_folder(key,"staging")))
+    target <- if(dir.exists(directory)) as.character(fs::path_real(directory)) else
+      as.character(fs::path(as.character(fs::path_real(dirname(directory))),basename(directory)))
+    if(!grepl("^[0-9a-f]{32}$",basename(target)) ||
+        !identical(tolower(as.character(fs::path_dir(target))),tolower(stage)))
+      stop("Invalid mask staging cleanup directory.")
+    unlink(target,recursive=TRUE)
+    unlink(paste0(target,".json"))
+    invisible(NULL)
   }
   find_masks <- function(key,request) {
     folder <- mask_folder(key,"editions")
@@ -422,11 +470,15 @@ local_study_store <- function(data_dir) {
     paths <- paths[order(file.info(paths)$mtime,decreasing=TRUE)]
     hash <- function(path) {con<-file(path,"rb");on.exit(close(con));unclass(as.character(openssl::sha256(con)))}
     expected <- lapply(request[c("context","selection","group")],hash)
+    recipe <- NULL
     for(path in paths) {
       m <- tryCatch(jsonlite::read_json(file.path(path,"verified.json"),simplifyVector=TRUE),error=function(e) NULL)
       if(!is.null(m) && identical(m$schema,"EVENT_MASKS_1") && identical(m$stream_id,request$stream_id) &&
           identical(m$boundary_rule,"terra rasterize touches=FALSE (native cell-center rule)") &&
-          identical(m$inputs,expected)) return(path)
+          (if(is.null(m$recipe_key)) identical(m$inputs,expected) else {
+            if(is.null(recipe)) recipe <- do.call(fluvgeo::event_mask_key,request)
+            identical(m$recipe_key,recipe)
+          })) return(path)
     }
     NULL
   }
@@ -446,6 +498,7 @@ local_study_store <- function(data_dir) {
         !identical(manifest$inputs,hashes)) stop("Verified masks do not match current inputs.")
     path <- file.path(mask_folder(key,"editions"),id)
     if(file.exists(path) || !file.rename(directory,path)) stop("Could not publish mask edition.")
+    discard_masks(key,directory)
     list(path=path,manifest=manifest)
   }
   list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
@@ -456,6 +509,8 @@ local_study_store <- function(data_dir) {
     dem_preflight_request=dem_preflight_request,
     terrain_review=terrain_review,save_terrain_review=save_terrain_review,
     mask_request=mask_request,prepare_masks=prepare_masks,publish_masks=publish_masks,find_masks=find_masks,
+    discard_masks=discard_masks,
+    dem_download_history=dem_download_history,
     rename = rename, set_purpose = set_purpose, set_analysis_crs = set_analysis_crs,
     set_vertical_reference = set_vertical_reference, define_streams = define_streams,
     save_selected_boundary = save_selected_boundary, save_stream = save_stream,

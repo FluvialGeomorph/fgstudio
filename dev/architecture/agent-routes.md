@@ -13,6 +13,7 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 
 | Task | Article | App source | First tests | Backend boundary |
 | --- | --- | --- | --- | --- |
+| Complete source DEM paging / uncapped transfers / saved availability across refresh | 06 | stream_dem_files.R, stream_dem_download.R, study_store.R | test-stream-dem-files.R, test-stream-dem-download.R | discover_stream_dem_files; run_stream_dem_download; immutable receipts retained; history is not analysis binding |
 | Saved DEMs hidden after metadata revision; Survey Event terminology and suggested choices | 06, 10 | stream_dem_files.R, survey_event_settings.R, study_store.R | test-stream-dem-files.R, test-survey-event-settings.R | Existing Stream geometry/collection compatibility; legacy group API stays internal |
 | Source vertical/unit review, explicit priority and saved overlap rule | 14 | terrain_source_review.R, stream_dem_preflight.R, study_store.R | test-terrain-source-review.R | App-owned annotations; terrain-source-review schema; no processing authorization |
 | Horizontal raster operation qualification and Float32 storage before assembly | 13 | No app caller yet; sibling fluvgeo/R/warp_terrain_horizontal.R | sibling test_warp_terrain_horizontal.R | warp_terrain_horizontal; horizontal-terrain-warp schema |
@@ -58,10 +59,12 @@ Reach parent IDs are reassigned. Verify these guards in source before changing t
 Downloaded DEM inspection: `R/stream_dem_inspection.R` consumes the download
 module's `inspection_context`; its callr worker invokes
 `fluvgeo::inspect_stream_dem_download`. Article 07 explains receipt binding,
-ordinary/embedded metadata, cancellation and session-only results. Tests:
+ordinary/embedded metadata, cancellation and session-owned metadata/display caching.
+Choosing a file automatically starts a preview; optional integrity rechecking
+forces a fresh checksum. Healthy work has no elapsed-time cutoff. Tests:
 `tests/testthat/test-stream-dem-inspection.R`.
 
-Visual overview: the same worker's explicit preview branch calls
+Visual overview: the same worker's preview branch calls
 `fluvgeo::preview_stream_dem_download`; `draw_dem_preview` renders its bounded
 numeric matrix in source pixel order. Article 07 describes sampling and limits.
 

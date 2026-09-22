@@ -44,6 +44,18 @@ test_that("mask storage publishes immutable editions only while saved inputs mat
   x <- s$rename(x$key,"Revised",x$path)
   expect_error(s$publish_masks(x$key,id,request,second,manifest),"changed")
   expect_true(dir.exists(second));expect_true(dir.exists(published$path))
+  expect_error(s$discard_masks(x$key,published$path),"Invalid mask staging")
+  s$discard_masks(x$key,second)
+  expect_false(dir.exists(second));expect_true(dir.exists(published$path))
+  orphan <- s$prepare_masks(x$key);dir.create(orphan)
+  jsonlite::write_json(list(schema="FGSTUDIO_MASK_JOB_1",owner_pid=999998L,worker_pid=999999L),
+    paste0(orphan,".json"),auto_unbox=TRUE)
+  with_mocked_bindings({
+    next_attempt <- s$prepare_masks(x$key)
+    expect_false(dir.exists(orphan));expect_false(file.exists(paste0(orphan,".json")))
+    expect_true(file.exists(published$path))
+    s$discard_masks(x$key,next_attempt)
+  },ps_pids=function() integer(),.package="ps")
 })
 
 test_that("mask review maps display generated rasters and boundaries without changing files", {

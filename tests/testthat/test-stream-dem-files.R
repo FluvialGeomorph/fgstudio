@@ -96,6 +96,8 @@ test_that("saved file plans reopen and guard context, collection and file revisi
     expect_match(status(),"reopened")
   })
   next_path <- store$save_dem_files(x$key,r,character(),x$path,path)
+  expect_identical(store$dem_download_history(x$key,r$stream$stream_id,collection$candidate_key),attempt)
+  expect_length(store$dem_download_history(x$key,"unrelated",collection$candidate_key),0L)
   expect_true(file.exists(path));expect_false(identical(path,next_path))
   store$rename(x$key,"New name",x$path)
   expect_error(store$save_dem_files(x$key,r,"tile",x$path,next_path),"newer")

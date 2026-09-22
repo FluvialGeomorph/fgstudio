@@ -10,7 +10,7 @@ Saving or opening a Survey Event starts mask preparation automatically for all
 assigned Streams, in sequence. No Stream picker or Create masks button is needed.
 `event_masks_server()` queues the saved Streams, obtains current requests from
 `store$mask_request()` and looks for matching published editions with `find_masks()`.
-The worker verifies matching editions before reuse; otherwise it writes new masks.
+The worker checks matching editions' metadata before reuse; otherwise it writes new masks.
 Input changes and cancellation stop the worker. There is no processing timeout.
 
 `fluvgeo::write_event_masks()` uses standard terra rasterize (touches=FALSE),
@@ -23,8 +23,19 @@ Actual I/O failures prevent publication. Sources and saved study inputs are unch
 Successful results are published only while their input revisions still match.
 The map selector displays already-created outputs; it does not select work to run.
 The overview reads saved rasters in their analysis CRS and overlays their saved
-boundaries. Reopening verifies and reuses matching published masks. Stale or
-corrupt editions are retained while replacements are generated separately.
+boundaries. Display rasters are prepared in the worker and cached for this session,
+so reactive redraws read the bounded display product. Later Streams reuse
+the existing Study Area mask through a native hard link where available,
+with a copy fallback. Reopening does not rerun rasterization or pixel audits.
+Explicit backend checksum verification remains available. Cancellation, failure
+and session close stop workers before cleaning owned staging/cache directories;
+published editions are retained.
+
+For new outputs, `fluvgeo::event_mask_key()` identifies geometry, grid and native
+processing dependencies so unrelated metadata changes do not regenerate rasters.
+Older outputs without this key still require exact input matches. Staging owner
+records allow later cleanup after both app and worker have exited; the app never
+guesses that a job is abandoned merely because it is old.
 
 Trace `R/event_masks.R`, `R/study_store.R`, `R/survey_event_settings.R` and
 `tests/testthat/test-event-masks.R`. The backend contract and tests are

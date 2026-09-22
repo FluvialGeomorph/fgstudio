@@ -44,12 +44,11 @@ requires a new attempt and retains the earlier source-to-content association.
 
 ## Transfer and verification
 
-Use one background worker and sequential files. Configurable ceilings:
-10 GiB per file, 50 GiB per attempt, 30 seconds to connect, 120 seconds without
-progress, two hours per file and eight hours per attempt. Reject known over-limit
-plans before starting; enforce byte limits during transfer when size is unknown
-or reported incorrectly. Surface limits in download details. A limit failure
-preserves completed files and reports the remaining work explicitly.
+Use one background worker and sequential streaming files. The owner's large-data
+guidance supersedes the former size/duration ceilings: do not reject a large plan
+or stop a healthy transfer because of its size or elapsed time. Connection and
+stalled-transfer recovery default to 30 and 120 seconds respectively. Cancellation
+and actual transfer failures preserve completed files and report remaining work.
 
 Accept only HTTPS object URLs under the supported public USGS source-directory
 prefix validated against the saved collection. Reject userinfo, ambiguous paths

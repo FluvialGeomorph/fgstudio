@@ -1,14 +1,43 @@
-launch_event_masks <- function(request,directory,existing=NULL) {
-  callr::r_bg(function(request,directory,existing) {
-    if(!is.null(existing)) {
-      m <- tryCatch(fluvgeo::read_event_masks(existing),error=function(e) NULL)
-      hash <- function(path) {con<-file(path,"rb");on.exit(close(con));unclass(as.character(openssl::sha256(con)))}
-      if(!is.null(m) && identical(m$inputs,lapply(request[c("context","selection","group")],hash)) &&
-          identical(m$stream_id,request$stream_id)) return(list(manifest=m,path=existing))
+launch_event_masks <- function(request,directory,existing=NULL,cache_dir=NULL,study_mask_source=NULL) {
+  callr::r_bg(function(request,directory,existing,cache_dir,study_mask_source,prepare_display) {
+    record <- paste0(directory,".json")
+    if(file.exists(record)) {
+      owner <- jsonlite::read_json(record,simplifyVector=TRUE)
+      owner$worker_pid <- Sys.getpid()
+      jsonlite::write_json(owner,record,auto_unbox=TRUE,null="null")
     }
-    list(manifest=do.call(fluvgeo::write_event_masks,c(request,list(directory=directory))),path=NULL)
-  },args=list(request=request,directory=directory,existing=existing),libpath=.libPaths(),stdout=NULL,stderr=NULL,
+    if(!is.null(existing)) {
+      m <- tryCatch(fluvgeo::read_event_masks(existing,verify=FALSE),error=function(e) NULL)
+      hash <- function(path) {con<-file(path,"rb");on.exit(close(con));unclass(as.character(openssl::sha256(con)))}
+      if(!is.null(m) && (if(is.null(m$recipe_key))
+          identical(m$inputs,lapply(request[c("context","selection","group")],hash)) else
+          identical(m$recipe_key,do.call(fluvgeo::event_mask_key,request))) &&
+          identical(m$stream_id,request$stream_id)) return(list(manifest=m,path=existing,
+            display=prepare_display(m,existing,cache_dir)))
+    }
+    m <- do.call(fluvgeo::write_event_masks,c(request,list(directory=directory,study_mask_source=study_mask_source)))
+    list(manifest=m,path=NULL,display=prepare_display(m,directory,cache_dir))
+  },args=list(request=request,directory=directory,existing=existing,cache_dir=cache_dir,study_mask_source=study_mask_source,
+    prepare_display=prepare_mask_display),libpath=.libPaths(),stdout=NULL,stderr=NULL,
     poll_connection=FALSE,user_profile=FALSE,system_profile=FALSE,supervise=TRUE)
+}
+
+prepare_mask_display <- function(manifest,directory,cache_dir) {
+  if(is.null(cache_dir)) return(NULL)
+  dir.create(cache_dir,recursive=TRUE,showWarnings=FALSE)
+  paths <- lapply(manifest$products,function(p) {
+    target <- file.path(cache_dir,paste0(p$sha256,".tif"))
+    if(!file.exists(target)) {
+      temporary <- tempfile("mask-view-",tmpdir=cache_dir,fileext=".tif")
+      on.exit(unlink(temporary),add=TRUE)
+      r <- terra::rast(file.path(directory,p$file))
+      if(terra::ncell(r)>250000) r <- terra::spatSample(r,250000,method="regular",as.raster=TRUE)
+      terra::writeRaster(r,temporary,datatype="INT1U",NAflag=255)
+      if(!file.rename(temporary,target)) stop("Could not publish the mask display cache.")
+    }
+    target
+  })
+  stats::setNames(paths,vapply(manifest$products,function(p) p$file,character(1)))
 }
 
 event_masks_ui <- function(id) {
@@ -50,6 +79,7 @@ draw_event_mask <- function(path,boundary) {
 
 event_masks_server <- function(id,context,store,pending,launch=launch_event_masks) {
   shiny::moduleServer(id,function(input,output,session) {
+    cache_dir <- tempfile("mask-display-session-");dir.create(cache_dir)
     results <- shiny::reactiveVal(list()); busy <- shiny::reactiveVal(FALSE)
     message <- shiny::reactiveVal("Save a Survey Event to prepare its masks automatically.")
     job <- NULL; request <- NULL; directory <- NULL; owner <- NULL; queue <- character()
@@ -57,6 +87,9 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
       if(!is.null(job) && job$is_alive()) {job$kill();job$wait(timeout=2000)}
       if(!is.null(job) && job$is_alive()) stop("Mask worker has not stopped.")
       job <<- NULL; busy(FALSE)
+      if(!is.null(directory) && !is.null(store$discard_masks) && !is.null(owner))
+        store$discard_masks(owner$key,directory)
+      directory <<- NULL
     }
     make_request <- function(stream_id) {
       x <- context()
@@ -68,10 +101,12 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
       tryCatch({
         request <<- make_request(id);directory <<- store$prepare_masks(owner$key)
         existing <- store$find_masks(owner$key,request)
-        job <<- launch(request,directory,existing);busy(TRUE)
+        completed <- results()
+        shared <- if(length(completed)) completed[[1L]]$path else NULL
+        job <<- launch(request,directory,existing,cache_dir=cache_dir,study_mask_source=shared);busy(TRUE)
         name <- owner$streams$stream_name[match(id,owner$streams$stream_id)]
         message(paste(if(is.null(existing)) "Preparing masks for" else "Opening saved masks for",name))
-      },error=function(e) {queue <<- character();busy(FALSE);message(mask_recovery_message(e))})
+      },error=function(e) {stop_job();queue <<- character();message(mask_recovery_message(e))})
     }
     shiny::observeEvent(list(context(),pending()),{
       stop_job();results(list());queue <<- character();owner <<- context()
@@ -89,9 +124,12 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
         completed <- job$get_result()
         edition <- if(is.null(completed$path))
           store$publish_masks(owner$key,owner$group_id,request,directory,completed$manifest) else completed
+        edition$display <- completed$display
+        if(!is.null(store$discard_masks)) store$discard_masks(owner$key,directory)
+        directory <<- NULL
         all <- results();all[[request$stream_id]] <- edition;results(all)
         job <<- NULL;next_stream()
-      },error=function(e) {job <<- NULL;queue <<- character();busy(FALSE);message(mask_recovery_message(e))})
+      },error=function(e) {stop_job();queue <<- character();message(mask_recovery_message(e))})
     }
     shiny::observe({if(busy()) {shiny::invalidateLater(500,session);poll()}})
     shiny::observeEvent(input$cancel,{
@@ -102,7 +140,9 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
       for(r in all) for(p in r$manifest$products) {
         key <- paste(p$level,p$id,sep=":")
         if(key %in% seen) next
-        seen <- c(seen,key);p$path <- file.path(r$path,p$file);rows[[key]] <- p
+        seen <- c(seen,key)
+        p$path <- if(!is.null(r$display[[p$file]])) r$display[[p$file]] else file.path(r$path,p$file)
+        rows[[key]] <- p
       }
       rows
     })
@@ -138,7 +178,7 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
         "Reach"=ctx$reaches[ctx$reaches$reach_id==p$id,,drop=FALSE])
       draw_event_mask(p$path,area)
     })
-    session$onSessionEnded(function() try(stop_job(),silent=TRUE))
+    session$onSessionEnded(function() try({stop_job();unlink(cache_dir,recursive=TRUE)},silent=TRUE))
     list(result=results,busy=busy,poll=poll,message=message)
   })
 }

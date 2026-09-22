@@ -8,7 +8,13 @@ vignette: >
 ---
 
 The download module exposes recorded source files to a child metadata inspector.
-The analyst explicitly chooses one file; no inspection runs when the panel opens.
+Choosing a file under **View downloaded DEM** starts its preview automatically.
+**Recheck file integrity** explicitly repeats checksum verification. Cold viewing
+hashes the source once. Metadata and bounded preview results are reused from a
+session-owned disk cache when the receipt, file size/timestamps, sidecars and
+software version match. Size/time indicators do not establish cryptographic
+integrity; changed or missing files invalidate reuse. Session close stops the
+worker before removing its viewing cache.
 
 Version 9031 adds rectangular detail selection. Drag a brush on the current image
 and choose **Inspect selected area**. `dem_brush_window` maps displayed coordinates
@@ -47,13 +53,13 @@ with asymmetric grids, scaled data, missing values and constant/all-missing grid
 | `stream_dem_download_server` to `inspection_context` | Current attempt, scope and eligible receipt file IDs; null during transfers or verification |
 | `stream_dem_inspection_server` to `launch_stream_dem_inspection_job` | Explicit file selection, separate callr process, isolated library paths |
 | Worker to `fluvgeo::inspect_stream_dem_download` | Validate immutable selection/receipt association and contained asset; verify checksum |
-| Backend to `inspect_terrain_vertical_reference` | Hash before/after read; ordinary and embedded compound CRS observations plus grid metadata |
+| Backend to `inspect_terrain_vertical_reference` | One cold checksum read; ordinary and embedded compound CRS observations plus grid metadata |
 | Result to UI | Escaped text tables and WKT; session-only observations, no writes or acceptance |
 
 The controller captures context and file ID. A changed context clears the result
 and stops/joins the worker; polling rejects results for a changed file even if
-termination is delayed. Cancel and session close stop the worker. A 30-minute
-watchdog covers startup and local hashing as well as GDAL reads. Errors remain
+termination is delayed. Cancel and session close stop the worker. Healthy local
+work has no elapsed-time cutoff. Errors remain
 visible instead of being converted to unknown metadata.
 
 Grid spacing is the length of each affine column/row vector in source CRS units.

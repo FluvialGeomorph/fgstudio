@@ -1,7 +1,24 @@
+read_saved_dem_history <- function(attempts,verify=TRUE) {
+  issues <- character()
+  rows <- lapply(attempts,function(path) {
+    tryCatch({
+      x <- fluvgeo::read_stream_dem_download(path,verify=verify)$files
+      x$attempt <- path;x
+    },error=function(e) {issues <<- c(issues,conditionMessage(e));NULL})
+  })
+  files <- do.call(rbind,rows)
+  if(is.null(files)) stop(paste(c("Saved download records could not be read.",issues),collapse=" "))
+  # Show an available saved copy ahead of an unsuccessful retry of the same file.
+  good <- files$outcome %in% c("DOWNLOADED","REUSED","RECORDED")
+  files <- files[order(!good),,drop=FALSE]
+  files <- files[!duplicated(files$file_id),,drop=FALSE]
+  list(files=files,issues=issues)
+}
+
 launch_stream_dem_download_job <- function(attempt,verify_only=FALSE) {
-  callr::r_bg(function(attempt,verify_only) {
-    if(verify_only) fluvgeo::read_stream_dem_download(attempt) else fluvgeo::run_stream_dem_download(attempt)
-  },args=list(attempt=attempt,verify_only=verify_only),libpath=.libPaths(),
+  callr::r_bg(function(attempt,verify_only,read_history) {
+    if(verify_only) read_history(attempt,verify=FALSE) else fluvgeo::run_stream_dem_download(attempt)
+  },args=list(attempt=attempt,verify_only=verify_only,read_history=read_saved_dem_history),libpath=.libPaths(),
   stdout=NULL,stderr=NULL,poll_connection=FALSE,user_profile=FALSE,system_profile=FALSE,supervise=TRUE)
 }
 
@@ -35,17 +52,18 @@ stream_dem_download_server <- function(id,current,selection,scope,store,launch=l
       job_started <<- clock()
       job <<- launch(path,verify_only=verify);busy(TRUE)
       message(if(verify) "Checking saved local source files\u2026" else "Downloading saved source files\u2026")
-      shiny::showNotification(if(verify) "Checking local DEM integrity\u2026" else "Downloading source DEMs\u2026",
+      shiny::showNotification(if(verify) "Opening saved source DEMs\u2026" else "Downloading source DEMs\u2026",
         id=session$ns("activity"),duration=NULL,session=session)
     }
     shiny::observeEvent(scope(),{
       tryCatch({
         state(NULL);activity(NULL);stop_job();attempt <<- NULL;message("")
         x <- current();s <- selection()
-        if(!is.null(store) && !is.null(x) && !is.null(s$path) &&
+        if(!is.null(store) && !is.null(x) &&
             length(s$stream)==1L && length(s$collection)==1L) {
-          path <- store$dem_download(x$key,s$stream,s$collection)
-          if(!is.null(path)) launch_job(path,TRUE)
+          path <- if(is.function(store$dem_download_history)) store$dem_download_history(x$key,s$stream,s$collection) else
+            store$dem_download(x$key,s$stream,s$collection)
+          if(length(path)) launch_job(path,TRUE)
         }
       },error=function(e) message(conditionMessage(e)))
     },ignoreNULL=FALSE)
@@ -61,16 +79,6 @@ stream_dem_download_server <- function(id,current,selection,scope,store,launch=l
     },ignoreInit=TRUE)
     poll <- function() {
       if(is.null(job)) return()
-      # Bound startup and local verification too, beyond curl's transfer timers.
-      if(as.numeric(difftime(clock(),job_started,units="secs"))>8*3600) {
-        tryCatch({
-          stop_job()
-          if(identical(job_scope,shiny::isolate(scope())))
-            state(fluvgeo::read_stream_dem_download(attempt,verify=FALSE)) else state(NULL)
-          message("Operation timed out after eight hours. Completed receipts remain; start again to retry.")
-        },error=function(e) message(conditionMessage(e)))
-        return()
-      }
       # If process termination was delayed, its eventual result still belongs
       # to the original scope. Never display it against the newly selected study.
       if(!identical(job_scope,shiny::isolate(scope()))) {
@@ -85,13 +93,14 @@ stream_dem_download_server <- function(id,current,selection,scope,store,launch=l
       tryCatch({
         result <- job$get_result();state(result)
         f <- result$files
-        good <- sum(f$outcome %in% c("DOWNLOADED","REUSED"))
-        message(paste(good,"/",nrow(f),"source files verified locally.",
+        good <- sum(f$outcome %in% c("DOWNLOADED","REUSED","RECORDED"))
+        message(paste(good,"/",nrow(f),"source files available locally.",
           if(any(f$outcome %in% c("FAILED","UNAVAILABLE","INTERRUPTED","NOT_STARTED","CANCELLED")))
-            "Review per-file outcomes; start again to retry." else "Terrain suitability remains unreviewed."))
+            "Review per-file outcomes; start again to retry." else "Saved downloads are separate from the current file choices.",
+          if(length(result$issues)) paste("Some saved records could not be read:",paste(unique(result$issues),collapse="; "))))
       },error=function(e) {
         message(paste("Operation stopped:",conditionMessage(e),"Completed receipts are retained; start again to retry."))
-        state(tryCatch(fluvgeo::read_stream_dem_download(attempt,verify=FALSE),error=function(e) NULL))
+        state(tryCatch(read_saved_dem_history(attempt,verify=FALSE),error=function(e) NULL))
       })
       job <<- NULL;busy(FALSE);activity(NULL)
       shiny::removeNotification(session$ns("activity"),session=session)
@@ -101,16 +110,16 @@ stream_dem_download_server <- function(id,current,selection,scope,store,launch=l
       if(!busy()) return()
       tryCatch({
         stop_job()
-        state(fluvgeo::read_stream_dem_download(attempt,verify=FALSE))
+        state(read_saved_dem_history(attempt,verify=FALSE))
         message("Download/check cancelled. Completed receipts remain; recorded files will be rechecked before reuse.")
       },error=function(e) message(conditionMessage(e)))
     },ignoreInit=TRUE)
     output$destination <- shiny::renderUI({
       x <- current(); if(is.null(x) || is.null(store)) return(NULL)
       path <- tryCatch(store$dem_destination(x$key),error=function(e) conditionMessage(e))
-      shiny::tags$details(shiny::tags$summary("Download location and limits"),
+      shiny::tags$details(shiny::tags$summary("Download location"),
         shiny::p(class="small mb-1",style="overflow-wrap:anywhere",path),
-        shiny::p(class="small mb-0","Original source files: 10 GiB per file, 50 GiB per attempt; one file at a time. Connection: 30 s; idle: 120 s; file: 2 h; attempt: 8 h. Start again retries unsuccessful files and rechecks completed files for reuse."))
+        shiny::p(class="small mb-0","Original files stream directly to disk, one at a time, without file-size or total-duration caps. Cancel when needed. Failed or stalled transfers can be retried; completed local files are retained."))
     })
     output$status <- shiny::renderUI({
       p <- activity()
@@ -123,15 +132,19 @@ stream_dem_download_server <- function(id,current,selection,scope,store,launch=l
     })
     output$files <- shiny::renderUI({
       s <- state(); if(is.null(s)) return(NULL)
-      shiny::div(style="max-height:220px;overflow:auto;",tabindex="0",role="region",`aria-label`="DEM download outcomes",
+      shiny::div(shiny::h5("Saved source DEM files"),
+        shiny::p(class="small","Local availability is shown independently of the current file choices. Refreshing choices does not delete downloaded files."),
+        shiny::div(style="max-height:220px;overflow:auto;",tabindex="0",role="region",`aria-label`="DEM download outcomes",
         compact_table(data.frame(File=s$files$title,Outcome=s$files$outcome,
+          Choices=ifelse(s$files$file_id %in% selection()$ids,"In saved choices","Saved previously"),
           MB=round(s$files$bytes/1e6,1),Details=s$files$message)),
-        if(any(s$files$outcome=="RECORDED")) shiny::p(class="small","RECORDED: receipt exists; checksum has not been rechecked in this view."))
+        if(any(s$files$outcome=="RECORDED")) shiny::p(class="small","RECORDED: receipt exists; checksum has not been rechecked in this view.")))
     })
     inspection_context <- shiny::reactive({
       s <- state()
       if(busy() || is.null(s) || is.null(attempt)) return(NULL)
-      files <- s$files[s$files$outcome %in% c("DOWNLOADED","REUSED","RECORDED"),c("file_id","title"),drop=FALSE]
+      files <- s$files[s$files$outcome %in% c("DOWNLOADED","REUSED","RECORDED"),
+        intersect(c("file_id","title","attempt"),names(s$files)),drop=FALSE]
       list(attempt=attempt,scope=scope(),files=files)
     })
     stream_dem_inspection_server("inspection",inspection_context)

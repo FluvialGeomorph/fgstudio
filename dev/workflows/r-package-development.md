@@ -78,5 +78,9 @@ do not create a routine completion narrative. Review generated changes separatel
   Windows preview can serve pages yet fail to create processx supervisor pipes
   when a user starts background preflight, download or mask work.
   Keep live/local diagnostics opt-in.
+  For Windows package checks, set `LC_ALL=C` in the check process when the host
+  supplies the unsupported `C.UTF-8` locale. Startup warnings can otherwise
+  contaminate metadata checks and produce misleading Author/Maintainer errors.
+  Build the source archive with standard `R CMD build` before checking it.
 - Follow `developer-documentation.md` when capabilities or call paths change.
   Code-map experiments are optional for routine package development.

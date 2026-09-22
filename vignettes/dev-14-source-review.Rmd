@@ -8,13 +8,12 @@ vignette: >
 ---
 
 Current UI status: this diagnostic/review module is not mounted in the analyst
-workflow. Create masks runs its necessary backend checks automatically and shows
+workflow. Saving/opening a Survey Event runs necessary mask checks automatically and shows
 mask outputs. The implementation below is retained for internal development;
 it does not require analyst review, approval or manual saving.
 
 
-Event setup now exposes Review DEM sources after grid/source preflight. Analysts
-see the saved target and observed source band unit/embedded CRS, record their
+The unmounted module can display the saved target and observed source band unit/embedded CRS and record
 assessment and prior conversion evidence, order sources and choose first- or
 last-valid overlap. Save retains an immutable local review; a fresh preflight
 reopens it only when the checked inputs still match. Float32 remains the intended
