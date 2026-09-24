@@ -26,8 +26,8 @@ stream_dem_download_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::div(class="d-flex gap-2 mt-1",
-      shiny::actionButton(ns("start"),"Download saved files",class="btn-primary btn-sm"),
-      shiny::actionButton(ns("cancel"),"Cancel download",class="btn-outline-secondary btn-sm")),
+      shiny::actionButton(ns("start"),"Acquire Source DEMs",class="btn-primary btn-sm"),
+      shiny::actionButton(ns("cancel"),"Cancel Acquisition",class="btn-outline-secondary btn-sm")),
     shiny::uiOutput(ns("destination")),shiny::uiOutput(ns("status")),shiny::uiOutput(ns("files")),
     stream_dem_inspection_ui(ns("inspection")))
 }

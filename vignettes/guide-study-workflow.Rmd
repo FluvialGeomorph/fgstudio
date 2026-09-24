@@ -274,7 +274,7 @@ focused footprint; **Custom comparison** lets you toggle footprints without
 changing saved inclusion. Zoom buttons return to the Study Area or visible set.
 Product review shows reported DEM pixel size: 1 m or finer is required but does
 not prove suitability. Downloaded tiles support metadata inspection and bounded
-terrain previews; multi-source Event assembly remains pending. Acquisition plans
+terrain previews and aligned-grid Stream assembly under Survey Events. Acquisition plans
 can be revised and resaved.
 
 In **DEM files**, choose a saved Stream and a collection with DEM in your plan,
@@ -287,11 +287,11 @@ session and is not yet a download step. **Select all** checks all returned tiles
 acquisition plan first. Searches retrieve all catalog pages. Older saved partial
 queries remain incomplete until refreshed.
 
-After **Save file choices**, select **Download saved files** to acquire original
+After **Save file choices**, select **Acquire Source DEMs** to acquire original
 source GeoTIFFs in the study's `source-dem` folder. Expand **Download location**
 to review the destination. Downloads stream one file at a time without size or
 total-duration caps;
-**Cancel download** retains completed files. Per-file outcomes distinguish success,
+**Cancel Acquisition** retains completed files. Per-file outcomes distinguish success,
 failure and unfinished work. Start again to retry: matching completed files are
 rehashed before reuse. Reopening lists recorded local availability without rehashing every file.
 Downloads verify transfer lengths, TIFF signature and SHA-256 content identity;
@@ -307,8 +307,14 @@ source-window detail; **Preview elevations** returns to the whole tile. These
 display samples do not change the original DEM.
 
 After **Analysis**, use **Continue to Survey Events** or open the
-adjacent **Survey Events** main tab. Select from **Saved Survey Collections for this Survey
-Event**, then click **Define a Survey Event**. The form starts with those saved
+adjacent **Survey Events** main tab. For an existing event, choose its date in
+**Survey Event date** (for example, **2019-12**). Its DEM appears immediately
+below; there is no separate date tab or DEM navigation step. Expand **Event
+Settings** only to review or edit the selected event.
+
+To create another event, expand **Define a Survey Event** in the top Event panel. Select
+from **Saved Survey Collections for this Survey Event**, then click **Define a
+Survey Event**. The form starts with those saved
 collections, known dates and Streams associated with saved DEM selections. A suggested month includes only complete acquisition intervals within that
 month; **Use suggested collections** can apply another saved date suggestion. Review
 the membership, choose supplied Streams, enter an output cell size in the saved
@@ -403,7 +409,27 @@ The Study Workspace sidebar can be collapsed with its edge toggle and reopened
 when you need another study. The bordered main tab set is **Geometry**,
 **Collections**, **Analysis**, and **Survey Events**.
 
-When a DEM has been saved for the selected Survey Event settings, its **DEM** card
-shows the result and **Download DEM (GeoTIFF)**. Reopening uses the saved file
-without processing it again. Current development output covers a labeled portion
-of a Reach; it is not yet a complete Stream DEM. Mask troubleshooting stays hidden.
+## Survey Events: top-to-bottom workflow
+
+Choose an existing Event or open **Define a Survey Event** in the top panel.
+**Event Settings** holds changes to the selected definition. The **DEMs** card below contains a tab for each assigned Stream. Saved DEMs are
+reused; unfinished Streams process automatically, one at a time. Select a Stream's
+tab to inspect its map. Tab selection does not start processing or require approval.
+
+**Pause DEM Processing** is available during processing. A failed or paused Stream
+retains its status and message; **Resume Unfinished DEMs** then resumes unfinished
+work. There is no update button while opening saved results or waiting for masks.
+If selected source files are missing, return to Collections > DEM files to acquire
+them. White cells in a DEM indicate NoData.
+
+The saved 2019-12 example now includes Spencer Creek mainstem and both unnamed
+tributary DEMs. Each has its own Stream tab and filesystem GeoTIFF. There is no
+output-download/save step. GeoPackages hold vectors and related tables; portable
+folder metadata and enterprise transfer remain unfinished. The current RDS edition
+index is internal R serialization. Mask troubleshooting remains hidden.
+
+Elevation units appear above each map. Open
+**DEM details** below the map for optional grid, source, storage and processing
+information. No review or approval of these details is required.
+
+Processing messages appear only while building DEMs or when work is paused or needs attention. Opening saved DEMs does not show Waiting or Ready notifications.

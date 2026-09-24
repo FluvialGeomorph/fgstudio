@@ -6,6 +6,7 @@ test_that("DEM jobs reuse completed real-window results and cancel unpublished w
   withr::local_options(list(fgstudio.dem_trial=TRUE,fgstudio.dem_trial_cache=cache))
   ctx <- list(group_id=trial$group_id,path=trial$context_path,group_path=trial$group_path)
   active <- shiny::reactiveVal(ctx); calls <- 0; alive <- TRUE; killed <- FALSE
+  ready <- shiny::reactiveVal(FALSE)
   launcher <- function(trial,directory) {
     calls <<- calls+1
     list(is_alive=function() alive,kill=function() {killed <<- TRUE;alive <<- FALSE},
@@ -13,10 +14,12 @@ test_that("DEM jobs reuse completed real-window results and cancel unpublished w
   }
   wrapper <- function(id) shiny::moduleServer(id,function(input,output,session) {
     task <- terrain_dem_trial_job(input,output,session,trial,active,
-      function() list(key=trial$key),launch=launcher)
+      function() list(key=trial$key),launch=launcher,request_ready=ready)
   })
   shiny::testServer(wrapper,{
-    session$flushReact(); expect_equal(calls,1); expect_true(task$busy())
+    session$flushReact();expect_equal(calls,0)
+    expect_false(grepl('Retry DEM',output$job_status$html))
+    ready(TRUE);session$flushReact(); expect_equal(calls,1); expect_true(task$busy())
     alive <<- FALSE; task$poll(); expect_false(task$busy()); expect_equal(task$value()$stage,'international_feet')
     active(modifyList(ctx,list(group_id='other')));session$flushReact();expect_null(task$value())
     active(ctx);session$flushReact();expect_equal(calls,1);expect_match(task$notice(),'Reused')

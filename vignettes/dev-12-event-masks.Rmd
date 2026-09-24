@@ -22,7 +22,9 @@ Actual I/O failures prevent publication. Sources and saved study inputs are unch
 
 Successful results are published only while their input revisions still match.
 Normal sessions do not mount the map selector, create a display cache, load
-boundary labels or render mask plots. Only compact progress/errors remain.
+boundary labels or render mask plots. Only actionable errors remain in normal sessions.
+Normal sessions hide routine boundary preparation progress and show actionable
+failures. There is no analyst decision at this intermediate backend stage.
 `options(fgstudio.mask_diagnostics = TRUE)` before app startup enables the optional
 development troubleshooting view. This is a temporary development facility;
 remove its UI hook when DEM integration is complete, retaining analytical masks.

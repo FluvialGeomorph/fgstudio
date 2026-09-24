@@ -1,17 +1,17 @@
 survey_event_settings_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::p("Define a Survey Event from your saved Survey Collections and DEM choices. Confirm the survey date, Streams and output cell size."),
-    shiny::uiOutput(ns("status")),
-    shiny::uiOutput(ns("event_choices")),
-    shiny::uiOutput(ns("definition_choices")),
-    shiny::actionButton(ns("new"),"Define a Survey Event",class="btn-primary btn-sm"),
-    shiny::p(class="small","Opens a review of the selected collections and dates. Nothing is saved until you choose Save Survey Event; no DEMs are downloaded or created."),
-    shiny::tableOutput(ns("inventory")),
+    bslib::card(bslib::card_header("Survey Event"),
+      shiny::p("Choose a Survey Event, then review its Stream DEMs below. Saved settings and source selections drive processing automatically."),
+      shiny::uiOutput(ns("event_choices")),
+      shiny::uiOutput(ns("status")),
+      shiny::conditionalPanel("input.group != null && input.group !== ''",ns=ns,
+        shiny::tags$details(shiny::tags$summary("Event Settings"),
+          shiny::tableOutput(ns("inventory")),
+          shiny::actionButton(ns("edit"),"Review / edit Survey Event",class="btn-outline-primary btn-sm"))),
+      shiny::uiOutput(ns("new_event_controls"))),
     shiny::conditionalPanel("input.group != null && input.group !== ''",ns=ns,
-      event_masks_ui(ns("masks"))),
-    terrain_mosaic_trial_ui(ns("mosaic_trial")),
-    shiny::tags$details(shiny::tags$summary("Acquisition date evidence"),shiny::tableOutput(ns("evidence"))))
+      event_masks_ui(ns("masks")),survey_event_dems_ui(ns("dems"))))
 }
 
 survey_event_settings_server <- function(id,current,store,selection_path,selection_pending) {
@@ -28,33 +28,40 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
         vertical_reference=x$vertical_reference,
         streams=x$stream_inventory[x$stream_inventory$stream_id %in% g$streams$stream_id,,drop=FALSE])
     })
-    terrain_mosaic_trial_server("mosaic_trial", current, shiny::reactive({
-      if (isTRUE(editing()) || selection_pending()) return(NULL)
-      preflight_context()
-    }), store=store)
     masks <- event_masks_server("masks",preflight_context,store,
       pending=function() isTRUE(editing()) || selection_pending())
+    survey_event_dems_server("dems", current, shiny::reactive({
+      if (isTRUE(editing()) || selection_pending()) return(NULL)
+      preflight_context()
+    }), store=store,ready=function() !is.function(masks$busy) || !masks$busy())
     reload <- function() {
       x <- current(); editing(FALSE); shiny::removeModal(session=session)
       saved(list(path=NULL,groups=list())); discovery(NULL)
       if(is.null(x)) return()
       tryCatch({
         saved(store$acquisition_groups(x$key)); discovery(store$survey_collections(x$key)$discovery)
-        status("Choose saved Survey Collections below to define a Survey Event, or select an existing Survey Event to review it.")
+        status("")
       },error=function(e) status(conditionMessage(e)))
     }
     shiny::observeEvent(list(current()$key,current()$path,selection_path()),reload(),ignoreNULL=FALSE)
     output$event_choices <- shiny::renderUI({
       groups <- saved()$groups
-      if(!length(groups)) return(shiny::p("No Survey Events have been defined yet. Start with the saved collections below."))
+      if(!length(groups)) return(shiny::p("No Survey Events yet. Use Define a Survey Event below to create the first one."))
       labels <- vapply(groups,function(g) paste0(g$settings$year,
-        if(!is.na(g$settings$month)) sprintf("-%02d",g$settings$month) else "",
-        " | ",paste(g$members$title,collapse=", ")," | ",g$settings$cell_size," ",g$settings$unit),character(1))
-      shiny::tagList(shiny::selectInput(session$ns("group"),"Saved Survey Event",
+        if(!is.na(g$settings$month)) sprintf("-%02d",g$settings$month) else " (month unknown)"),character(1))
+      duplicate <- duplicated(labels) | duplicated(labels,fromLast=TRUE)
+      labels[duplicate] <- paste(labels[duplicate],vapply(groups[duplicate],function(g) paste(g$members$title,collapse=", "),character(1)),sep=" | ")
+      shiny::selectInput(session$ns("group"),"Survey Event date",
         choices=stats::setNames(as.character(names(groups)),labels),selectize=FALSE,
-        selected=shiny::isolate(input$group)),
-        shiny::actionButton(session$ns("edit"),"Review / edit Survey Event",class="btn-outline-primary btn-sm"))
+        selected=shiny::isolate(input$group))
     })
+    output$new_event_controls <- shiny::renderUI(shiny::tags$details(
+      open=if(!length(saved()$groups)) TRUE else NULL,
+      shiny::tags$summary("Define a Survey Event"),
+      shiny::p("Use this only to add another Survey Event from saved Survey Collections. Existing events are selected above."),
+      shiny::uiOutput(session$ns("definition_choices")),
+      shiny::actionButton(session$ns("new"),"Define a Survey Event",class="btn-primary btn-sm"),
+      shiny::tags$details(shiny::tags$summary("Acquisition Date Evidence"),shiny::tableOutput(session$ns("evidence")))))
     proposals <- shiny::reactive({
       if(is.null(discovery())) return(NULL)
       fluvgeo::propose_survey_acquisition_groups(discovery())
@@ -71,7 +78,7 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
     })
     output$definition_choices <- shiny::renderUI({
       options <- definition_options()
-      if(!length(options)) return(shiny::p("Save selections in Survey Collections first."))
+      if(!length(options)) return(shiny::p("Save selections in Collections first."))
       shiny::selectInput(session$ns("definition"),"Saved Survey Collections for this Survey Event",
         choices=stats::setNames(names(options),vapply(options,`[[`,character(1),"label")),selectize=FALSE)
     })
@@ -154,7 +161,9 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
     output$status <- shiny::renderUI(shiny::div(role="status",status()))
     output$editor_status <- shiny::renderUI(shiny::div(role="status",status()))
     output$inventory <- shiny::renderTable({
-      groups <- saved()$groups; if(!length(groups)) return(NULL)
+      groups <- saved()$groups
+      if(length(input$group)!=1L || is.null(groups[[input$group]])) return(NULL)
+      groups <- groups[input$group]
       do.call(rbind,lapply(groups,function(g) data.frame(Year=g$settings$year,Month=g$settings$month,
         Cell_size=g$settings$cell_size,Unit=g$settings$unit,Collections=nrow(g$members),Streams=nrow(g$streams),
         Reach_events=nrow(g$event_links),Review=if(is.null(current()$analysis_crs) ||

@@ -28,6 +28,7 @@ test_that("group revisions retain identity, evidence, cell units and original as
 })
 
 test_that("Event editor requires explicit spacing, saves and reopens reviewed groups", {
+  local_mocked_bindings(event_masks_server=function(...) list())
   f <- event_test_setup(); x <- f$x
   withr::defer(unlink(dirname(dirname(x$path)),recursive=TRUE))
   shiny::testServer(survey_event_settings_server,args=list(current=function() x,store=f$store,
@@ -48,6 +49,8 @@ test_that("Event editor requires explicit spacing, saves and reopens reviewed gr
     expect_length(saved()$groups,1L)
     expect_identical(saved()$groups[[1]]$settings$rationale, "")
     reload(); expect_length(saved()$groups,1L)
+    expect_match(output$event_choices$html,"Survey Event date")
+    expect_match(output$event_choices$html,"2020-02</option>")
     session$setInputs(group=names(saved()$groups)[1],edit=1)
     session$setInputs(cell_size=2,save=3)
     expect_equal(saved()$groups[[1]]$settings$cell_size,2)

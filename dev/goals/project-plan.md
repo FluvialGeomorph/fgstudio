@@ -42,66 +42,47 @@ for evidence, test-version boundaries and the current uncommitted-work caveat.
 
 ## Current terrain workflow and next decision
 
-Previous masking increment (9050/9055) applies the saved Reach mask to the real
-mosaic and displays it only for the matching Survey Event. The existing horizontal
-grid already matches. Source NAVD88 metres differ from the saved NAVD88
-international-foot target. Increment 9051/9056 now performs that explicit conversion, with the same horizontal grid and NoData. Retain the
-small real-data development loop before full Stream assembly or publication.
+FG Studio 9062 with isolated fluvgeo 9057 completes the aligned-grid DEM increment:
+source acquisition/viewing, saved Study analysis references, Survey Event settings,
+automatic masks, serial Stream assembly, NAVD88 international-foot conversion,
+immutable local GeoTIFF publication and reuse, and per-Stream map review. The owner
+accepted the increment and considers the UI polished enough for now.
 
-The next feature has begun with a deliberately small real-data trial (9049/9054):
-native source-grid mosaicking of two downloaded DEM windows in part of Reach R2,
-shown in an opt-in app preview. It does not publish a Stream DEM or resolve the
-target-grid/vertical questions below. Continue with actual small Reach subsets,
-not synthetic rasters or whole-Stream iterative tests. The mosaic design and
-current handoff record the exact boundary.
+Survey Events follows saved inputs. One DEMs card contains Stream tabs and optional
+technical details; messages appear for processing, failure or pause. No backend
+approval screens, extra source/Stream pickers or output-download/save controls.
+Masks remain hidden except optional development troubleshooting.
 
-FG Studio 0.0.0.9048 with isolated fluvgeo 2026.09.22.9053 implements source
-acquisition and viewing, Study Area analysis references, Survey Event settings,
-and automatic Study Area, Stream and Reach masks. Engineering remediation covers
-the existing developer articles 06–14. See the
-[remediation record](../features/terrain-gis-remediation.md) for scope, measured
-worker results and verification limits; the
-[current handoff](../checkpoints/current/terrain-acquisition.md) retains the
-remaining review state.
+The [mosaic design](../features/dem-mosaic-design.md) owns the current processing
+contract, measured real-data evidence and unresolved choices. The
+[edition schema](../schemas/survey-event-dem.md) owns local persistence. The
+[analyst guide](../../vignettes/guide-study-workflow.Rmd) owns UI procedure; article
+13 and [agent routes](../architecture/agent-routes.md) trace implementation.
 
-Downloaded DEMs remain available across compatible metadata revisions. Selecting
-a saved file starts its preview; optional integrity refresh remains available.
-Saving or reopening a Survey Event prepares or reuses masks for its assigned
-Streams automatically. Preflight and source-review modules are retained internal
-capabilities, not mounted analyst steps or approval prerequisites.
+Next feature selection remains with the owner. Remaining terrain work includes
+qualified differing-grid integration, confirmation of the initial grid-alignment
+convention, other vertical operations, and FGDB portable folder binding. The
+standalone horizontal-warp primitive has no app caller. Preserve saved grids and
+retain actionable unsupported-case failures until methods are resolved. Do not
+infer authorization for a new scientific operation from this list.
 
-Stream DEM mosaics, source reconciliation and vertical transformations remain
-future work. The standalone horizontal-warp backend has no app caller. The
-initial numeric grid alignment convention is not author-confirmed; preserve
-existing grids until it is resolved. A grid's cell alignment is within the saved
-real-world CRS, not a replacement CRS. Follow the
-[mosaic design](../features/dem-mosaic-design.md) and
-[R spatial workflow](../workflows/r-spatial.md) before further processing work.
+Follow [R spatial processing](../workflows/r-spatial.md): native terra/GDAL,
+file-backed large rasters, no arbitrary processing caps, and small actual DEM
+windows for development. Full Stream runs require a specific integration question.
+FGDB ADR-0025 requires filesystem GeoTIFF DEMs with GeoPackage vectors/tables and
+linked metadata; the internal RDS index does not complete portable delivery.
 
-The owner accepted tile preview/detail functionality and requested no additional
-tile-preview features. UI review takes priority over extending terrain processing.
-Use established Survey Event, Survey Collection, Study Area, Stream and Reach
-terminology. Internal acquisition-group identifiers do not define a new analyst
-entity. FGDB Survey Events remain Reach-owned; app settings retain explicit links.
+Preserve acquisition ADR 0007 and reference/vertical-operation ADR 0009. FGDB
+Survey Events remain Reach-owned; app settings retain explicit links. Do not expose
+internal acquisition-group identifiers as analyst terminology.
 
-Preserve ADR 0007: acquisition uses the saved Stream polygon. Source resolution
-of 1 m or finer alone does not establish suitability. Preserve unknown metadata.
-Study Area mid-resolution terrain and point-cloud processing are separate scopes.
-Apply ADR 0009 to future reference/epoch/unit reconciliation; recording a target
-does not qualify an elevation transformation or complete NSRS modernization.
+Other pending work includes boundary import, Stream geometry editing, pre-assembly
+cuts, child/Event reconciliation, downstream L1/report integration and Enterprise
+authentication/edit transport. These are not an ordered implementation commitment.
 
-Other pending capabilities include boundary import, Stream geometry editing,
-pre-assembly cuts, child/Event reconciliation, terrain assembly, report integration,
-L1 execution and Enterprise authentication/edit transport. Only saved-Reach
-splitting is exposed from ADR 0005. These are not an ordered implementation
-commitment or authorization to add scientific operations.
-
-Developer documentation follows ADR 0006 and the
-[paired maintenance workflow](../workflows/developer-documentation.md).
-Human and agent development must remain interchangeable. The completed navigation
-pilot supports concise routes and articles; speed/context savings remain unproven.
-Use the [R package workflow](../workflows/r-package-development.md) for development
-and keep live/local diagnostics opt-in.
+Developer documentation follows ADR 0006 and the paired maintenance workflow.
+Human and agent development must remain interchangeable; generated navigation is
+not scientific authority. Keep local diagnostics opt-in.
 
 ## Standing safeguards
 
@@ -118,23 +99,6 @@ and keep live/local diagnostics opt-in.
 - Existing active studies are retained. The earlier authorized retirement of four
   trial studies is not standing permission to clear current studies.
 
-Historical increment evidence remains in the feature records and ADRs; dated
-"next" statements there describe their original slice, not the current plan.
-
-Analyst UI must follow useful user outcomes, not mirror backend stages. Checks run
-automatically when saved Survey Event settings determine the work; show masks for visual review
-and only actionable failures with routes to correct inputs. Do not expose backend
-reports, approval gates or save buttons without an identified analyst decision.
-
-Current increment 9052 joins the existing real-window mosaic, masking and foot
-conversion in one background job with cancellation and completed-result reuse.
-Mask visualization is disabled by default to conserve DEM-processing resources;
-its temporary developer switch is slated for removal after integration. Next,
-connect this verified small-area lifecycle to durable Survey Event DEM products;
-keep unresolved source/grid cases explicit and continue using real small extents.
-
-Increment 9053 now saves and reopens the qualified Reach-portion DEM with the
-Survey Event, including a GeoTIFF download in normal app sessions. This completes
-the initial local publication/reopening path, not full Stream processing. Continue
-with source/grid qualification and complete Stream assembly, verifying on small
-real extents before any scale run. The edition schema owns current scope/guards.
+The current handoff records the local review setup and unresolved work. Measured
+terrain evidence is consolidated in the mosaic feature record; do not restore
+superseded development steps as standing instructions.

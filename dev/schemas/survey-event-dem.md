@@ -1,9 +1,19 @@
 # Local Survey Event DEM editions
 
+The accepted storage boundary is GeoPackage vectors/tables with external filesystem
+GeoTIFF DEMs and linked metadata, per
+[FGDB ADR-0025](../../../FGDB/dev/decisions/adr-0025-folder-deliverables-and-geotiff-terrain.md).
+The [completed Esri tests](../../../FGDB/dev/experiments/geopackage-raster/FINAL-FINDINGS.md)
+reject the tested GeoPackage numerical-raster round trip. Do not migrate DEMs into
+GeoPackages. Analyst download/export controls are not part of this workflow.
+The GeoTIFF payload below follows the selected format; its internal RDS index does
+not yet fulfill the portable [folder metadata requirements](../../../FGDB/dev/schemas/local-project-folder-requirements.md).
+Folder binding, relocation qualification and enterprise transfer remain unfinished.
+
 The app-owned `study_dem_store()` adapter stores immutable local output editions
 under `<study>/event-dems/editions/<random-id>/`. Backend raster calculations
-remain in fluvgeo. Current output scope is explicitly `reach_portion`; neither
-publication nor a successful test claims full Reach/Stream coverage or scientific
+remain in fluvgeo. Output scope identifies a Reach, Stream or bounded portion; neither
+publication nor a successful test establishes complete source observations or scientific
 acceptance of other source combinations.
 
 The edition contains `dem-international-feet.tif` and `edition.rds` with schema
@@ -13,7 +23,7 @@ raster path is relative, resolved only inside the managed edition. The binding
 identifies the Study, saved context revision, Survey Event settings revision and
 Survey Collection selection. The recipe records source/mask file identity metadata,
 backend version, overlap order and units. Source paths remain provenance; a saved
-DEM can be displayed and downloaded without development fixture options.
+DEM can be displayed without development fixture options.
 
 Workers write only into unique managed staging directories. An already verified
 cached DEM can be copied and metadata-checked in a worker instead of recomputed.
@@ -31,13 +41,36 @@ size check are not cryptographic integrity verification. Corrupt/missing edition
 are skipped. The current strict revision binding excludes earlier results after
 settings changes; metadata-only reuse across revisions is future work.
 
-The Survey Events DEM card shows saved status, explicit Reach-portion coverage,
-the DEM and a Shiny `downloadHandler` GeoTIFF download. The download serves only
-the selected saved result; study directories are not exposed as static resources.
-The real-window developer builder remains opt-in. Full Stream source assembly,
-source/grid qualification and complete Stream output publication remain unfinished.
+## Requests, scope and selection identity
 
-Verification uses the existing small real DEM window, exact file checksum equality
-for publication/download, fresh adapter/session reopening, stale binding rejection,
-and managed cleanup protection. No synthetic rasters or new raster calculations
-are needed to qualify this storage increment.
+Supported scopes are `reach`, `reach_portion`, `stream` and `stream_portion`.
+The recipe identifies the target Reach/Stream, optional source-CRS extent and
+ordered candidate/file IDs, selection paths and acquisition attempts. An extent
+change invalidates reuse. Sources can be original downloaded files or bounded
+real-data diagnostic windows. With saved-source resolution enabled, publication
+and reopening reject changed selections; receipt checks do not rehash every view.
+
+Full Reach/Stream grid dimensions and alignment must match the corresponding saved
+mask before publication. Portion scopes remain for older and bounded diagnostics.
+Available mosaic/masked intermediate paths become relative at publication and are
+resolved inside the edition on reopening, including earlier staging-path records.
+This does not fabricate missing intermediates in cached-final-only editions.
+
+`find_dem(binding, recipe=NULL, stream_id=NULL, scope=NULL)` optionally filters by
+Stream and scope. Normal Event tabs request their own Stream edition. Unfiltered
+lookup remains backward compatible for older single-result callers. The session
+queue publishes Streams independently and serially after current-input checks;
+it does not change the storage contract or scientific method.
+
+## Review and qualification
+
+One DEMs card contains Stream maps and optional technical details. Ordinary saved
+output needs no development options. No download handler or static exposure of
+Study directories is part of the output workflow. See the analyst guide for
+controls and article 13 for request/worker/display ownership.
+
+Verification covers real DEM publication with exact file checksum equality,
+fresh adapter/session reopening, stale binding/selection rejection, Stream-scoped
+lookup and managed cleanup protection. Raster calculations are independently
+qualified in fluvgeo. General differing-grid integration, metadata-only reuse
+across revisions and portable folder relocation remain unfinished.

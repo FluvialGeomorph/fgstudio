@@ -7,41 +7,77 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## Real-data mosaic development preview
+## Current Stream DEM workflow
 
-The first mosaic increment joins two small windows from actual downloaded DEMs
-at their existing source grid. `launch_terrain_mosaic_trial()` calls
-`fluvgeo::mosaic_terrain_tiles()` in a separate process, using native terra merge
-with explicit first/last-valid source precedence and no resampling. This path
-does not call the horizontal-warp primitive described below.
+The normal Survey Events page processes assigned Streams from saved settings and
+shows each result in a Stream tab within one DEMs card. It needs no development
+fixture or single-Stream option. Optional DEM details are unbordered; queue messages
+appear only for actual processing, failure or pause. Waiting and Ready remain
+internal states and do not measure drawing time.
 
-An explicit `fgstudio.mosaic_trial` option supplies the small real-data fixture
-when developing the producer. `terrain_mosaic_trial_ui/server()` now also renders
-saved DEM editions in ordinary sessions under Survey Events, after Event settings,
-with the saved Reach boundary and tile boundary. No development option is needed
-to reopen a saved result. Current editions cover a portion of a Reach, not a full
-Stream DEM; the publication and download path is described below.
+`survey_event_settings_server()` supplies context to `survey_event_dems_server()`.
+The latter serializes all assigned Streams through one `terrain_dem_trial_job()`
+with a saved-record request factory. It waits for automatic masks, reuses matching
+editions, advances after success/failure, and pauses remaining work on cancel.
+Resume retries only unfinished Streams. Each tab uses a display-only
+`terrain_mosaic_trial_server()` that cannot launch a worker.
 
-The masking increment uses `launch_terrain_mask_trial()` and
-`fluvgeo::mask_terrain_mosaic()` to apply a small window of the existing saved
-Reach mask. The source and saved Event horizontal grids already match, so no warp
-or resampling is needed. The original full compound CRS and metre elevation units
-are retained. Horizontal component comparison allows the DEM's compound CRS and
-the mask's 2D CRS without relabeling either input.
+## Source selection, request and worker
 
-The masked trial is displayed only for its matching Study Area and Survey Event.
-The real source declares NAVD88 metres; the saved target is NAVD88 international
-feet. The current trial uses `launch_terrain_feet_trial()` to call
-`fluvgeo::terrain_to_international_feet()`: native terra division by exactly
-0.3048, retaining NoData, Float32 storage and the horizontal metre grid. Output
-vertical CRS is EPSG:8228; no datum transformation occurs. The conversion does
-not change the saved vertical specification. The saved mask grid
-is reused without establishing a new initial-grid convention.
+`terrain_dem_request()` constructs the active Stream request from saved Study
+geometry, Event membership, file selections, mask/grid and vertical target.
+`terrain_dem_sources()` resolves member Collections through the store's request
+adapter and acquisition reader, preserving saved file order as source precedence.
+Missing acquisitions or unavailable files route to Collections > DEM files.
+Receipt reopening checks existence/size against retained transfer evidence;
+selection identities are rechecked before publication and ordinary reuse.
 
-Trace `R/terrain_mosaic_trial.R` and `tests/testthat/test-terrain-mosaic-trial.R`.
-The backend contract is `fluvgeo/dev/schemas/terrain-tile-mosaic.md`; opt-in
-testthat inputs are small real DEM windows. Unknown vertical compatibility and
-the future target-grid convention are not resolved by a same-grid trial.
+`launch_terrain_dem_trial()` in `R/terrain_dem_trial.R` calls fluvgeo
+`mosaic_terrain_tiles()` -> `mask_terrain_mosaic()` ->
+`terrain_to_international_feet()` in one worker. The source-CRS extent participates
+in recipe identity. Native file-backed crop/merge uses first-valid precedence,
+then applies the saved Stream mask and divides NAVD88 metres by 0.3048. Output is
+Float32 with vertical EPSG:8228. The exercised source/Event grids already align;
+this path performs neither resampling nor a datum transformation. Differing grids
+and other vertical operations remain unsupported here.
+
+## Publication and reopening
+
+`local_study_store()` delegates to `study_dem_store()` in `R/study_dem_store.R`.
+The job uses Study-owned staging, rechecks current binding/recipe, then publishes
+an immutable edition by directory rename. Cancellation, edits or session close
+stop workers before owned staging cleanup; completed editions are retained.
+Full Stream/Reach output grids are checked against the corresponding saved mask.
+
+`find_dem(binding, recipe=NULL, stream_id=NULL, scope=NULL)` filters each normal
+result tab to its Stream. Reopening checks the record and raster presence/size,
+without a repeated pixel/hash scan. Available intermediate paths resolve inside
+the edition; missing intermediates in older final-only editions are not invented.
+
+FGDB ADR-0025 requires filesystem GeoTIFF DEMs with GeoPackage vectors/tables and
+linked metadata. The internal RDS edition index does not complete portable folder
+binding or enterprise transfer. Follow `dev/workflows/r-spatial.md` to the accepted
+storage decision and completed Esri findings before changing raster persistence.
+The exact app contract is `dev/schemas/survey-event-dem.md`.
+
+## Development and verification
+
+The normal Event queue is separate from optional bounded diagnostics. A configured
+`fgstudio.dem_reach` or `fgstudio.dem_stream` targets one saved record; an explicit
+`fgstudio.mosaic_trial` fixture supports older real-window trials. These are not
+production size limits. Earlier Reach/portion editions remain readable.
+`fgstudio.mask_diagnostics` is disabled by default to avoid mask-display work.
+
+Use small actual downloaded DEM windows, not synthetic rasters or repeated full
+Stream builds, for parameter development. The feature record consolidates measured
+runs: full R1, mainstem and both tributaries. The three 2019-12 Stream editions have
+been reopened; the Event run reused mainstem and processed tributaries serially.
+
+Trace tests `test-survey-event-dems.R`, `test-terrain-dem-trial.R`,
+`test-terrain-dem-request.R`, `test-terrain-dem-sources.R`,
+`test-study-dem-store.R` and `test-terrain-mosaic-trial.R`. Real raster checks are
+opt-in; lifecycle tests use mock process handles with the existing real fixture.
+Backend scientific tests and the terrain-tile-mosaic contract belong to fluvgeo.
 
 ## Horizontal warp primitive
 
@@ -78,40 +114,6 @@ NoData, unit-conversion controls, crop/extension and wide-grid cases. Source and
 output hashes, metadata, native summaries and software/options are recorded before
 the final manifest is written. No shared library is upgraded.
 
-Stream/Event mosaic assembly remains unimplemented. Compatible neighbouring tiles
-need the intended overlap rule and interpolation support before warping, followed
-by the saved Stream mask. The unmounted [source-review module](dev-14-source-review.html)
-is not a manual approval prerequisite for current mask creation. Remediating this
-primitive does not authorize new vertical operations or establish the scientific
-compatibility of all source DEMs.
-
-## Combined real-window worker
-
-`R/terrain_dem_trial.R` now connects the three existing backend primitives in one
-worker: `mosaic_terrain_tiles()` -> `mask_terrain_mosaic()` ->
-`terrain_to_international_feet()`. The opt-in trial starts automatically for its
-matching saved Study Area and Event. It offers cancellation, retry after failure,
-and reuse of completed output based on its recorded local input recipe. There
-are no intermediate approval buttons. Edits, a changed Event or session closure
-stop pending work before cleaning its unique staging directory. Tests use the
-existing real Reach fixture and mock process handles for lifecycle assertions.
-The normal mask display is disabled; optional `fgstudio.mask_diagnostics` is only
-for development troubleshooting. The feature design owns cache details and limits.
-This is still a small Reach development path, not full Stream/Event publication.
-
-## Saved output and normal app sessions
-
-`local_study_store()` includes the `study_dem_store()` adapter from
-`R/study_dem_store.R`. `terrain_dem_trial_job()` can stage output in the Study
-store and call `publish_dem()` after saved binding/input checks. Completed cached
-output is copied in a worker rather than recalculated. A directory rename publishes
-an immutable edition; cancellation cleanup cannot remove a published edition.
-
-`terrain_mosaic_trial_server()` now also serves saved DEMs in ordinary sessions,
-without development fixture options. The Survey Events card shows saved status,
-explicit **Reach portion** scope, a map and **Download DEM (GeoTIFF)**. Reopening
-checks the edition record and file size, without raster scans. Developer options
-still control the small-area builder; this does not enable full Stream assembly.
-Trace `tests/testthat/test-study-dem-store.R` and the app contract
-`dev/schemas/survey-event-dem.md`. The local binding includes the saved Study,
-Event and collection selection; stale editions are excluded from current output.
+The unmounted [source-review module](dev-14-source-review.html) is not an analyst
+approval prerequisite. Integrating this primitive still requires qualification
+of the intended source/Event operation and preservation of vertical evidence.

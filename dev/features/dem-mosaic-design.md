@@ -1,10 +1,10 @@
 # Stream DEM mosaic design
 
-Current state: FG Studio 9051 / isolated fluvgeo 9056 retains source acquisition,
-viewing, analysis references, Survey Event settings and automatic masks, and adds
-the small real-data mosaic and saved-Reach-mask trial described below.
-Full Stream DEM mosaic execution remains pending. The standalone horizontal-warp
-primitive has no app caller. See the [remediation record](terrain-gis-remediation.md)
+Current state: FG Studio 9062 / isolated fluvgeo 9057 assembles and reuses
+assigned Stream DEMs serially from saved Event settings. All three 2019-12
+Streams are saved. The owner accepted this increment and UI polish. Mixed-grid
+integration and portable folder binding remain unfinished.
+See the [remediation record](terrain-gis-remediation.md)
 for the completed engineering corrections across steps 06–14 and their limits.
 Tile preview/detail functionality is accepted; further tile-preview features are
 not a prerequisite to assembly.
@@ -210,150 +210,95 @@ do not process all assigned Streams or the workspace as an iterative test harnes
 Small-area results must be identified as development previews, not complete
 Stream terrain or evidence of full-scale performance.
 
-## Implemented masks and pending assembly
+## Implemented processing and ownership
 
-Previous masking increment (9050 / fluvgeo 9055): `mask_terrain_mosaic()` applies the saved
-Reach mask to the existing small real-data mosaic with native terra crop/mask.
-CRS horizontal components, spacing and cell alignment match the saved Event grid;
-no resampling is needed. The DEM retains its compound NAVD88 CRS and metre unit,
-while the membership mask retains its 2D CRS. terra's warning about the full-CRS
-difference is covered explicitly by the real-data test, not handled by stripping
-or reassigning CRS metadata. The saved Study Area target is NAVD88 international
-feet; increment 9051/9056 now converts the masked result with metres / 0.3048 and records vertical EPSG:8228. Matching study and
-Event identities control display. Original downloads and published masks remain
-unchanged; the result is still a development trial, not published Event terrain.
+The normal Event workflow needs no development fixture or configured Stream.
+`survey_event_settings_server()` supplies saved context to
+`survey_event_dems_server()`, which queues assigned Streams in saved order through
+one `terrain_dem_trial_job()`. Automatic masks gate readiness. A completed matching
+edition is reused; success or failure advances the queue. Pause retains completed
+products and stops unfinished work; resume retries only unfinished Streams.
 
-The real 192-by-256-cell window retains 30,205 valid elevation cells after masking.
-Worker elapsed time was 8.83 seconds including startup. Nine real-data backend
-assertions and eight UI assertions passed, including wrong-Event display exclusion.
-The existing Shiny build-version warning remains. Input checksums matched and the
-rendered masked plot was inspected. Full Stream processing was not run.
+`terrain_dem_request()` binds saved geometry, Event settings, Stream mask, vertical
+target and source selection. `terrain_dem_sources()` resolves member Collections,
+current file selections and acquisition receipts in saved precedence order.
+Receipt reopening checks existence/size against retained transfer evidence, not a
+fresh raster hash. Source identities are rechecked before publication and reuse.
 
-First real-data mosaic increment (9049 / fluvgeo 9054): the backend now exposes
-`mosaic_terrain_tiles()` for compatible source-grid tiles. FG Studio's
-`launch_terrain_mosaic_trial()` runs it in a separate process. An explicitly
-configured `fgstudio.mosaic_trial` result path enables a read-only development
-preview under Define a Survey Event, after Analysis masks; ordinary sessions do not show it or dispatch
-new terrain work. The result is a small portion of a Reach, not a published
-Stream/Survey Event product. This increment retains native source alignment and
-does not resolve the future analysis-grid convention or vertical reconciliation.
-See article 13 for the trial route and the backend terrain-tile-mosaic contract.
+One worker calls fluvgeo `mosaic_terrain_tiles()` -> `mask_terrain_mosaic()` ->
+`terrain_to_international_feet()`. Native file-backed crops restrict reads to the
+requested extent; merge uses explicit first-valid precedence; the saved mask
+retains the Event grid. NAVD88 metres are divided by 0.3048, with Float32 output
+and vertical EPSG:8228. No resampling or datum transformation is added by this path.
+Source files and earlier successful editions are retained.
 
-Measured first trial: two original Float32, metre-valued, EPSG:6344 source windows
-across a tile boundary in Spencer Creek mainstem Reach R2 produced a 192-by-256
-cell mosaic at native 1 m spacing. Worker elapsed time was 9.51 seconds including
-startup. Eight opt-in backend assertions passed using real source samples and
-unchanged input checksums; five app assertions passed with an existing Shiny
-R-build-version warning. Original download hashes matched before/after the actual
-worker. The plot and Shiny render were checked. These adjacent windows establish
-joining and sample preservation, not conflicting-overlap policy qualification,
-full-scale performance or scientific acceptance. No saved products were replaced.
-The paired article and generated call map were refreshed; freshness/bridge checks
-and 435 local documentation links passed. This increment used focused real-data
-tests and package installation, not the full legacy backend suite or a new
-full-package check. Existing unrelated working-tree documentation edits were retained.
+`study_dem_store()` stages and publishes immutable external GeoTIFF editions.
+See [the edition schema](../schemas/survey-event-dem.md) for bindings, scope,
+reopening, stale-result rejection and cleanup. The RDS index is internal; it does
+not fulfill FGDB's portable folder metadata contract. Follow FGDB ADR-0025 and
+its Esri findings through [R spatial processing](../workflows/r-spatial.md).
 
-Saving or reopening Survey Event settings prepares masks for all assigned
-Streams automatically. The optional developer map selector chooses a completed mask to view; normal sessions omit it.
-There is no Stream processing picker, Create masks button, or manual preflight
-approval. Optional notes are not a save requirement.
+## Analyst presentation
 
-fluvgeo uses native terra operations and compressed file-backed Byte GeoTIFFs.
-Shared Study Area masks and unchanged geometry/grid/recipe outputs are reused.
-Publication consolidates native summaries and checksums; managed reopening uses
-metadata checks rather than repeated raster scans. Workers prepare cached display
-rasters. Cancellation/failure stops the worker before removing owned staging;
-recorded abandoned jobs are reclaimed only after their owners exit. Older saved
-outputs retain compatibility. No arbitrary cell, row, file-size or duration
-admission rule is introduced. Article 12 and the backend event-masks schema own
-the exact interfaces.
+Survey Events starts with date selection, Event Settings and Define a Survey Event.
+Creation is expanded for the first Event and collapsed when saved Events exist.
+One DEMs card contains Stream tabs, maps and an optional unbordered DEM details
+expander. Tabs select a view, not work. No nested DEM cards, routine output badges,
+Waiting/Ready notifications, preflight approval or output-download/save buttons.
+Only actual processing, failure or pause produces a queue message. Details group
+grid, source, storage, method and timing metadata; limited development previews
+retain a plain-text scope label. Units and the NoData legend remain visible.
 
-The horizontal-warp primitive uses native summaries and GDAL-selected working
-precision with Float32 default storage. Explicit horizontal-only controls retain
-source vertical evidence and prevent unintended elevation conversion. Affine
-source rotation and unequal spacing are supported. Remaining external
-georeferencing/mask, scale/offset and datum/epoch restrictions are this API's
-scope, not universal GIS limitations. See article 13 and the backend
-horizontal-terrain-warp schema.
+Masks are automatic backend dependencies. Their optional troubleshooting display
+is disabled by default and is a candidate for removal after integration. Normal
+preparation does not show transient boundary-progress screens.
 
-Before enabling Stream DEM assembly, resolve source reference/unit compatibility,
-source precedence and the initial grid convention, then bind current sources and
-masks to a cancellable worker. Retained source-review annotations (article 14) are
-not currently exposed and do not authorize a raster operation.
+## Verification evidence
 
-The specific numeric grid anchor is not author-confirmed. Legacy toolbox steps
-snap to an input DEM; that does not identify a canonical first grid for the new
-cross-Event design. Preserve saved grids until the convention is resolved.
-Coordinates such as (0, 0) describe cell alignment inside the real-world CRS,
-not an arbitrary replacement CRS.
+These are recorded real-data runs, not benchmarks rerun during consolidation.
+Inputs are actual downloaded Spencer Creek DEMs; diagnostic records remain under
+ignored `dev/check-output/real-reach-mosaic/` and are not shipped fixtures.
 
-Primary API references retained from the design review:
-[sf transformations](https://r-spatial.github.io/sf/reference/st_transform.html),
-[terra projection/templates](https://rspatial.github.io/terra/reference/project.html),
-[terra rasterization](https://rspatial.github.io/terra/reference/rasterize.html),
-[terra raster writing](https://rspatial.github.io/terra/reference/writeRaster.html),
-and [GDAL warp](https://gdal.org/en/stable/programs/gdalwarp.html).
-Use installed help and the R spatial workflow when implementing these operations.
+| Output | Grid (rows x columns) | Recorded worker time | Independent checks |
+| --- | --- | --- | --- |
+| R2 development window | 192 x 256 | 8.87 s, saved-record verification | 64 sampled cells |
+| Full Reach R1 | 1,353 x 1,265 | 9.27 s | 846,914 valid cells; saved/reopened |
+| Mainstem Stream | 8,974 x 10,688 | 18.86 s | 80 source/mask samples including tile seam |
+| East unnamed tributary | 5,631 x 3,764 | 11.44 s | 64 source/mask samples |
+| West unnamed tributary | 4,525 x 3,551 | 10.16 s | 64 source/mask samples |
 
-Owner UI correction (2026-09-23): review DEM results in Survey Events,
-after Event settings, rather than a top-of-app development panel. The current
-trial renders only for its saved Study Area. Use portable ASCII separators in
-these labels to avoid Windows locale substitutions such as <U+00D7>.
+Mainstem has 10,890,882 valid cells. Stream samples checked conversion within
+0.0001 international foot and exact NoData. The Event queue reused mainstem and
+built the two tributaries serially; all three distinct editions reopened. Earlier
+small-window trials verified unchanged originals and Float32 sample preservation.
+These runs qualify the exercised aligned inputs, not all possible source cases.
 
-International-foot increment (9051 / fluvgeo 9056): native terra arithmetic
-converts the existing masked real window using the exact 0.3048 metre/foot
-factor. Horizontal EPSG:6344 coordinates and the 1 m grid remain unchanged;
-vertical CRS becomes EPSG:8228. Elevation range is 669.9174–712.9763 ft.
-Worker time was 11.76 seconds including startup. Eleven backend assertions and
-seven app assertions passed. The bounded sample comparison includes Float32
-rounding and NoData; source hashes remain unchanged. Source-test CRS assignment
-emitted PROJ database warnings despite successful reopened CRS/unit checks.
-The converted plot was visually inspected. Full Stream scale was not exercised.
-Study Workspace now uses bslib's collapsible sidebar; the bordered main tabs are
-Geometry, Collections, Analysis and Survey Events. The result remains an opt-in
-small real-data trial, not a published Survey Event DEM.
+Focused UI/storage/source/queue checks cover saved reuse, one active worker,
+failure retention, pause/resume and stale display exclusion. The final presentation
+checks passed with known installed-package R-build-version warnings. UI acceptance
+is owner feedback; it is not comprehensive browser automation or production
+qualification. Continue parameter development on small actual DEM windows.
 
-## Integrated small Reach DEM job (9052)
+## Remaining decisions and work
 
-Normal sessions hide mask troubleshooting and pass no display-cache directory to
-mask workers. They do not prepare overview rasters, load mask selector labels or
-render mask maps. Compact preparation progress and actionable errors remain.
-Developers may set `options(fgstudio.mask_diagnostics = TRUE)` before startup.
-This temporary UI hook is intended for removal after DEM integration; analytical
-mask generation/reuse remains a backend dependency. The owner verified the native
-bslib sidebar collapse; do not add custom collapse logic or extensive tests.
+- Integrate differing source/Event grids only after qualifying the intended
+  interpolation and vertical-preservation behavior. The standalone
+  `warp_terrain_horizontal()` primitive has no app caller; article 13 describes
+  its supported operation profile. Its existence does not qualify every input.
+- The specific numeric initial grid anchor remains unconfirmed. It describes cell
+  placement inside the saved real-world CRS, not a replacement CRS. Preserve saved
+  grids; do not silently choose another alignment convention.
+- Other vertical references, datum/epoch changes and mixed source compatibility
+  need explicit methods and provenance under ADR 0009.
+- Implement FGDB portable folder metadata binding, relocation qualification and
+  enterprise transfer separately from the completed local GeoTIFF edition path.
+- Broader downstream L1 analysis remains outside this increment.
 
-With the development options `fgstudio.dem_trial = TRUE`, `fgstudio.mosaic_trial`
-pointing to the existing real fixture, and `fgstudio.dem_trial_cache` naming an
-existing developer-owned directory, selecting the matching saved Event runs one
-background job: native source-grid mosaic, saved Reach mask, then international
-feet. The three existing fluvgeo primitives retain their scientific contracts.
-No additional analyst steps or scientific choices are introduced.
+Human implementation route: [article 13](../../vignettes/dev-13-horizontal-warp.Rmd).
+Analyst procedure: [Study workflow](../../vignettes/guide-study-workflow.Rmd).
 
-`terrain_dem_trial_job()` manages cancellation, stale context exclusion and
-session shutdown. Each job has a unique directory. A completed result index is
-written only after the worker returns and the saved input snapshot still matches.
-The recipe includes source/mask/context/Event paths, sizes, modification times,
-overlap order, backend version and units. This is a local development cache,
-not a cryptographic integrity check or production Survey Event publication.
-Matching completed outputs are reopened without rerunning raster processing.
-Failed/cancelled staging is removed only after the worker stops. Completed trial
-outputs remain for development review; there is no production cache lifecycle yet.
-
-Verification of increment 9052: 37 mask assertions, 7 preview assertions and 12
-job-lifecycle assertions passed. The actual combined worker took 9.76 seconds;
-64 sampled outputs match the previous real DEM including NoData. Reopening
-reused the completed result with unchanged modification time. Source checksums
-are unchanged. Full Streams and synthetic raster fixtures were not processed.
-
-## Saved Survey Event DEM editions (9053)
-
-`study_dem_store()` now adds immutable local editions beneath the Study directory.
-The combined job publishes only while its saved binding remains current. Existing
-verified trial output is copied in a worker; raster computation is not repeated.
-Normal app sessions can reopen, display and download saved GeoTIFFs without the
-trial options or cache. The DEM card clearly labels this result as a Reach portion.
-It does not claim a complete Stream DEM. The exact storage/lifecycle contract is
-in `dev/schemas/survey-event-dem.md`; `tests/testthat/test-study-dem-store.R` covers
-real-file publication, fresh reopening, download equality, staleness and cleanup.
-Full Stream assembly and publication remain the next integration scope.
+Documentation consolidation verification: the full local pkgdown site rebuilt
+successfully after this increment. Code-map freshness/bridge checks passed;
+439 local links across 18 pages and 16 article navigation/text exports passed.
+No public site URL is configured. No raster processing or app behavior changed
+as part of consolidation.

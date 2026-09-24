@@ -1,12 +1,16 @@
 # Opt-in real-window producer with cached or Study-owned output. The developer
 # supplies the small fixture; saved editions explicitly retain Reach-portion scope.
 terrain_dem_trial_recipe <- function(trial) {
-  paths <- c(trial$sources, trial$mask_file, trial$context_path, trial$group_path)
+  paths <- c(trial$sources, trial$mask_file, trial$context_path, trial$group_path,
+    unique(trial$source_selection$selection_path))
   info <- file.info(paths)
   if (anyNA(info$size)) stop("A saved trial input is unavailable.")
   list(version = 1L, backend = as.character(utils::packageVersion("fluvgeo")),
     paths = paths, size = info$size, modified = as.numeric(info$mtime),
-    overlap = trial$unmasked_result$overlap, units = "international_foot")
+    overlap = trial$unmasked_result$overlap, source_extent = trial$source_extent,
+    source_selection = trial$source_selection, scope = trial$scope, reach_id = trial$reach$reach_id,
+    stream_id = trial$stream_id,
+    units = "international_foot")
 }
 
 launch_terrain_dem_trial <- function(trial, directory, cached = NULL) {
@@ -29,11 +33,16 @@ launch_terrain_dem_trial <- function(trial, directory, cached = NULL) {
     }
     started <- proc.time()[["elapsed"]]
     trial$unmasked_result <- fluvgeo::mosaic_terrain_tiles(trial$sources,
-      file.path(directory, "mosaic.tif"), trial$unmasked_result$overlap)
+      file.path(directory, "mosaic.tif"), trial$unmasked_result$overlap,
+      extent = trial$source_extent)
     trial$masked_result <- fluvgeo::mask_terrain_mosaic(trial$unmasked_result$path,
       trial$mask_file, file.path(directory, "masked.tif"))
     trial$result <- fluvgeo::terrain_to_international_feet(trial$masked_result$path,
       file.path(directory, "dem-international-feet.tif"))
+    if (isTRUE(trial$scope %in% c("reach","stream")) &&
+        !terra::compareGeom(terra::rast(trial$result$path),terra::rast(trial$mask_file),
+          crs=FALSE,stopOnError=FALSE))
+      stop("Source coverage does not span the saved analysis grid. The DEM was not published.")
     trial$stage <- "international_feet"
     trial$seconds <- proc.time()[["elapsed"]] - started
     trial
@@ -43,15 +52,25 @@ launch_terrain_dem_trial <- function(trial, directory, cached = NULL) {
 }
 
 terrain_dem_trial_job <- function(input, output, session, initial, context, current,
-                                  launch = launch_terrain_dem_trial, store = NULL) {
+                                  launch = launch_terrain_dem_trial, store = NULL, request_factory = NULL,
+                                  request_ready = function() TRUE) {
   value <- shiny::reactiveVal(initial)
   busy <- shiny::reactiveVal(FALSE)
   notice <- shiny::reactiveVal(NULL)
   job <- NULL; directory <- NULL; recipe <- NULL; target <- NULL
-  enabled <- isTRUE(getOption("fgstudio.dem_trial", FALSE))
+  enabled <- isTRUE(getOption("fgstudio.dem_trial", FALSE)) || !is.null(request_factory)
   cache <- getOption("fgstudio.dem_trial_cache")
   binding <- NULL
   durable <- !is.null(store)
+  resolve_sources <- function() {
+    if (!isTRUE(initial$use_saved_sources)) return(initial)
+    if (is.null(store)) stop("Saved-source processing requires the Study store.")
+    resolved <- initial
+    resolved$source_selection <- terrain_dem_sources(store, initial$key, initial$group_id,
+      if(is.null(initial$stream_id)) initial$reach$stream_id else initial$stream_id, context()$path, context()$group_path)
+    resolved$sources <- unique(resolved$source_selection$path)
+    resolved
+  }
   matching <- function() {
     ctx <- context()
     !is.null(ctx) && !is.null(current()) &&
@@ -78,9 +97,14 @@ terrain_dem_trial_job <- function(input, output, session, initial, context, curr
     stop_job()
     if (!enabled) return()
     value(NULL)
-    if (!matching()) { notice("Select the saved 2019-12 trial Event. Edited inputs need a refreshed development fixture."); return() }
     tryCatch({
-      if (is.null(cache) || !dir.exists(cache)) stop("The development DEM cache is unavailable.")
+      if (!request_ready()) { notice(NULL); return() }
+      if (!is.null(request_factory)) initial <<- request_factory()
+      if (is.null(initial)) { notice(NULL); return() }
+      if (!matching()) { notice("Waiting for matching saved Survey Event settings."); return() }
+      cache_available <- !is.null(cache) && dir.exists(cache)
+      if (!durable && !cache_available) stop("The development DEM cache is unavailable.")
+      initial <<- resolve_sources()
       recipe <<- terrain_dem_trial_recipe(initial)
       if (durable) {
         binding <<- store$dem_request(initial$key,initial$group_id,context()$path,context()$group_path)
@@ -88,8 +112,8 @@ terrain_dem_trial_job <- function(input, output, session, initial, context, curr
         if (!is.null(saved)) { value(saved); notice("Saved DEM ready. No raster processing needed."); return() }
       }
       key <- as.character(openssl::sha256(serialize(recipe, NULL)))
-      target <<- file.path(cache, paste0(key, ".rds"))
-      if (file.exists(target)) {
+      target <<- if(cache_available) file.path(cache, paste0(key, ".rds")) else NULL
+      if (!is.null(target) && file.exists(target)) {
         saved <- readRDS(target)
         if (identical(saved$recipe, recipe) && file.exists(saved$trial$result$path)) {
           if (durable) {
@@ -104,19 +128,19 @@ terrain_dem_trial_job <- function(input, output, session, initial, context, curr
         directory <<- tempfile("dem-job-", tmpdir = cache); dir.create(directory)
       }
       job <<- launch(initial, directory); busy(TRUE)
-      notice("Building the small Reach DEM: mosaic, saved mask, then international feet.")
+      notice("Building the DEM from saved sources and the Event grid, then converting to international feet.")
     }, error = function(e) { stop_job(); notice(paste("DEM could not be built.", conditionMessage(e))) })
   }
   poll <- function() {
     if (is.null(job) || job$is_alive()) return()
     tryCatch({
       completed <- job$get_result()
-      if (!matching() || !identical(recipe, terrain_dem_trial_recipe(initial)))
+      if (!matching() || !identical(recipe, terrain_dem_trial_recipe(resolve_sources())))
         stop("Saved inputs changed; the earlier result was not retained.")
       if (durable) {
         completed <- store$publish_dem(binding,recipe,directory,completed)
         directory <<- NULL; job <<- NULL; busy(FALSE); value(completed)
-        notice("DEM saved with this Survey Event. Ready to reopen or download.")
+        notice("Development DEM saved with this Survey Event. Ready to review.")
         return()
       }
       temporary <- tempfile("result-", tmpdir = cache)
@@ -127,7 +151,7 @@ terrain_dem_trial_job <- function(input, output, session, initial, context, curr
       notice("DEM ready. Mosaic, masking and international-foot conversion completed.")
     }, error = function(e) { stop_job(); notice(paste("DEM could not be built.", conditionMessage(e))) })
   }
-  shiny::observeEvent(list(context(), current()$key), start(), ignoreNULL = FALSE)
+  shiny::observeEvent(list(context(), current()$key, request_ready()), start(), ignoreNULL = FALSE)
   shiny::observe({ if (busy()) { shiny::invalidateLater(500, session); poll() } })
   shiny::observeEvent(input$cancel_dem, { stop_job(); notice("DEM preparation cancelled. Completed results are retained.") }, ignoreInit = TRUE)
   shiny::observeEvent(input$resume_dem, start(), ignoreInit = TRUE)
@@ -135,7 +159,9 @@ terrain_dem_trial_job <- function(input, output, session, initial, context, curr
     if (!enabled) return(NULL)
     shiny::tagList(shiny::div(role = "status", notice()),
       if (busy()) shiny::actionButton(session$ns("cancel_dem"), "Cancel", class = "btn-outline-secondary btn-sm") else
-        if (is.null(value()) && matching()) shiny::actionButton(session$ns("resume_dem"), "Retry DEM", class = "btn-outline-secondary btn-sm"))
+        if (is.null(value()) && matching() && is.character(notice()) &&
+            any(startsWith(notice(),c("DEM could not be built.","DEM preparation cancelled."))))
+          shiny::actionButton(session$ns("resume_dem"), "Retry DEM", class = "btn-outline-secondary btn-sm"))
   })
   session$onSessionEnded(function() try(stop_job(), silent = TRUE))
   list(value = value, busy = busy, poll = poll, notice = notice)

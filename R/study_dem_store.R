@@ -51,16 +51,20 @@ study_dem_store <- function(context_path, acquisition_groups, survey_collections
   reopen <- function(path) {
     record <- readRDS(file.path(path,"edition.rds"))
     if (!identical(record$schema,"FGSTUDIO_DEM_EDITION_1") ||
-        !identical(record$scope,"reach_portion") ||
+        !record$scope %in% c("reach_portion","reach","stream_portion","stream") ||
         !identical(record$trial$result$path,"dem-international-feet.tif")) stop("Invalid DEM edition.")
     raster <- file.path(path,record$trial$result$path)
     if (!file.exists(raster) || !identical(unname(file.info(raster)$size),record$bytes))
       stop("Saved DEM is missing or incomplete.")
     record$trial$result$path <- raster
+    for (entry in c("unmasked_result","masked_result")) {
+      name <- if(entry == "unmasked_result") "mosaic.tif" else "masked.tif"
+      if(file.exists(file.path(path,name))) record$trial[[entry]]$path <- file.path(path,name)
+    }
     record$trial$saved_dem <- list(id=basename(path),scope=record$scope,created=record$created)
     record
   }
-  find <- function(binding, recipe=NULL) {
+  find <- function(binding, recipe=NULL, stream_id=NULL, scope=NULL) {
     paths <- list.dirs(folder(binding$key,"editions"),recursive=FALSE,full.names=TRUE)
     paths <- paths[grepl("^[0-9a-f]{32}$",basename(paths))]
     paths <- paths[order(file.info(paths)$mtime,decreasing=TRUE)]
@@ -68,7 +72,9 @@ study_dem_store <- function(context_path, acquisition_groups, survey_collections
       # Resolve links before reading any edition data.
       if (!identical(tolower(as.character(fs::path_real(p))),tolower(gsub("\\\\","/",p)))) next
       record <- tryCatch(reopen(p),error=function(e) NULL)
-      if (!is.null(record) && identical(record$binding,binding) &&
+      recorded_stream <- if(is.null(record$trial$stream_id)) record$trial$reach$stream_id else record$trial$stream_id
+      if (!is.null(record) && (is.null(stream_id) || identical(recorded_stream,stream_id)) &&
+          (is.null(scope) || identical(record$scope,scope)) && identical(record$binding,binding) &&
           (is.null(recipe) || identical(record$recipe,recipe))) return(record$trial)
     }
     NULL
@@ -83,7 +89,13 @@ study_dem_store <- function(context_path, acquisition_groups, survey_collections
         !identical(trial$key,binding$key) || !identical(trial$group_id,binding$group_id) ||
         !identical(trial$stage,"international_feet")) stop("DEM does not match its saved Event.")
     trial$result$path <- basename(raster)
-    record <- list(schema="FGSTUDIO_DEM_EDITION_1",scope="reach_portion",binding=binding,
+    for(entry in c("unmasked_result","masked_result")) {
+      name <- if(entry == "unmasked_result") "mosaic.tif" else "masked.tif"
+      if(file.exists(file.path(directory,name))) trial[[entry]]$path <- name
+    }
+    scope <- if(is.null(trial$scope)) "reach_portion" else trial$scope
+    if(length(scope)!=1L || !scope %in% c("reach_portion","reach","stream_portion","stream")) stop("Unknown DEM scope.")
+    record <- list(schema="FGSTUDIO_DEM_EDITION_1",scope=scope,binding=binding,
       recipe=recipe,created=format(Sys.time(),tz="UTC",usetz=TRUE),
       bytes=unname(file.info(raster)$size),trial=trial)
     saveRDS(record,file.path(directory,"edition.rds"))

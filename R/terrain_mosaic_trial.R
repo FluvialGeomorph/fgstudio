@@ -1,5 +1,4 @@
-# Saved DEM review plus an opt-in real-window producer. Never auto-dispatches
-# full Streams; current saved editions explicitly describe a Reach portion.
+# Saved DEM review; the Survey Event queue coordinates production work.
 launch_terrain_mosaic_trial <- function(sources, filename, overlap) {
   callr::r_bg(function(sources, filename, overlap) {
     fluvgeo::mosaic_terrain_tiles(sources, filename, overlap)
@@ -26,26 +25,36 @@ launch_terrain_feet_trial <- function(source, filename) {
 
 terrain_mosaic_trial_ui <- function(id) {
   ns <- shiny::NS(id)
-  bslib::card(
-    bslib::card_header("DEM"),
+  shiny::div(class = "pt-3",
     shiny::uiOutput(ns("job_status")),
     shiny::uiOutput(ns("summary")),
-    shiny::uiOutput(ns("download_ui")),
     shiny::conditionalPanel("output.has_dem === 'true'",ns=ns,
       shiny::plotOutput(ns("map"), height = "480px"),
-      shiny::p(class = "small", "Orange: saved Reach boundary. Dashed line: source tile boundary. White: NoData. This Reach portion is not a completed Stream DEM.")))
+      shiny::p(class = "small", "Orange: saved analysis boundary. Dashed line: source tile boundary. White: NoData."), shiny::uiOutput(ns("details"))))
 }
 
-terrain_mosaic_trial_server <- function(id, current, event_context = function() NULL, store = NULL) {
+terrain_mosaic_trial_server <- function(id, current, event_context = function() NULL, store = NULL,
+                                      request_ready = function() TRUE, target_stream = NULL, process = TRUE) {
   path <- getOption("fgstudio.mosaic_trial")
   shiny::moduleServer(id, function(input, output, session) {
-    initial <- if (!is.null(path)) readRDS(path) else NULL
-    task <- if (!is.null(initial)) terrain_dem_trial_job(input, output, session, initial, event_context, current, store=store) else list(value=function() NULL)
+    initial <- if (process && !is.null(path)) readRDS(path) else NULL
+    reach_id <- getOption("fgstudio.dem_reach")
+    stream_id <- if(is.null(target_stream)) getOption("fgstudio.dem_stream") else target_stream
+    factory <- if(process && (!is.null(reach_id) || !is.null(stream_id))) function()
+      terrain_dem_request(store,current(),event_context(),reach_id,stream_id=stream_id) else NULL
+    task <- if (!is.null(initial) || !is.null(factory)) terrain_dem_trial_job(input, output, session, initial, event_context, current, store=store,request_factory=factory,request_ready=request_ready) else list(value=function() NULL)
     saved <- shiny::reactive({
       ctx <- event_context()
       if (is.null(store) || is.null(current()) || is.null(ctx)) return(NULL)
       binding <- store$dem_request(current()$key,ctx$group_id,ctx$path,ctx$group_path)
-      store$find_dem(binding)
+      result <- if(is.null(target_stream)) store$find_dem(binding) else
+        store$find_dem(binding,stream_id=target_stream,scope="stream")
+      if (isTRUE(result$use_saved_sources)) {
+        selected <- terrain_dem_sources(store, current()$key, ctx$group_id,
+          if(is.null(result$stream_id)) result$reach$stream_id else result$stream_id, ctx$path, ctx$group_path)
+        if (!identical(selected, result$source_selection)) return(NULL)
+      }
+      result
     })
     displayed <- shiny::reactive({
       pending_result <- task$value()
@@ -63,41 +72,45 @@ terrain_mosaic_trial_server <- function(id, current, event_context = function() 
         "to view its small Reach mosaic trial.")))
       trial <- displayed()
       if (is.null(trial)) return(shiny::p("No DEM has been saved for these Survey Event settings."))
+      full_reach <- identical(trial$saved_dem$scope,"reach") || identical(trial$scope,"reach")
+      full_stream <- identical(trial$saved_dem$scope,"stream") || identical(trial$scope,"stream")
       shiny::tagList(
-      shiny::p(paste(trial$stream_name, "-", trial$reach$reach_name,
-                     "(portion of Reach); two actual downloaded DEM windows.")),
-      if (!is.null(trial$saved_dem)) shiny::p("Saved with this Survey Event - Reach portion. Full Stream coverage has not been built."),
-      shiny::p(paste(paste(trial$result$dimensions[1:2], collapse = " x "),
-                     "cells; 1 m source spacing; Float32;", trial$source_crs)),
-      if (identical(trial$stage, "international_feet")) shiny::p(
-        "Elevation: NAVD88 international feet (metres / 0.3048). Horizontal grid: unchanged, 1 metre. No resampling or datum transformation. Saved Reach mask retained.") else
-        shiny::p(paste("Source elevation unit:", trial$source_unit,
-                     "- no resampling or elevation conversion.")),
-      if (identical(trial$stage, "reach_masked")) shiny::tagList(
-        shiny::p("Saved Reach mask applied. Outside-Reach cells are NoData; retained elevations are unchanged. The existing Survey Event grid already matches the source grid."),
-        shiny::p(paste("Preview: NAVD88 metres. Saved target:", trial$target_vertical$reference_name,
-                       "(international feet). Unit conversion is pending; this is not target-unit terrain."))),
-      shiny::p(sprintf("Recorded processing time: %.2f seconds. Source DEMs and saved Study/Event settings are unchanged.", trial$seconds)))
+        if(!full_stream && !full_reach) shiny::p(
+          if(identical(trial$level,"Stream")) "Preview: Stream portion" else "Preview: portion of Reach"),
+        shiny::p(class = "mb-0",
+          if (identical(trial$stage, "international_feet")) "Elevation: NAVD88 international feet." else
+            paste("Source elevation unit:", trial$source_unit, "- no resampling or elevation conversion.")),
+        if (identical(trial$stage, "reach_masked")) shiny::p(class = "text-warning",
+          "Unit conversion is pending; this preview retains source elevations."))
+    })
+    output$details <- shiny::renderUI({
+      shiny::req(matching_study(), matching_event())
+      trial <- displayed(); shiny::req(trial)
+      item <- function(label, value) shiny::tagList(
+        shiny::tags$dt(class = "col-sm-3", label),
+        shiny::tags$dd(class = "col-sm-9", value))
+      shiny::tags$details(class = "mt-2",
+        shiny::tags$summary(class = "fw-semibold", "DEM details"),
+        shiny::div(class = "mt-3",
+          shiny::tags$dl(class = "row small mb-0",
+            item("Grid dimensions", paste(paste(format(trial$result$dimensions[1:2], big.mark = ",", trim = TRUE), collapse = " x "), "(rows x columns)")),
+            item("Cell spacing", paste(paste(trial$result$resolution, collapse = " x "),
+              if(is.null(trial$horizontal_unit)) "metre" else trial$horizontal_unit)),
+            item("Storage", paste(trial$result$datatype, "GeoTIFF", if(!is.null(trial$saved_dem)) "in the Study folder")),
+            item("Sources", if(!is.null(trial$source_selection)) paste(nrow(trial$source_selection),
+              "DEM files selected automatically from saved Survey Event and Stream assignments.") else paste(length(trial$sources), "source DEM files")),
+            item("Processing", if(identical(trial$stage, "international_feet"))
+              "Metres / 0.3048. Saved Event grid and analysis mask retained. No resampling or datum transformation." else
+              "Source elevations retained; no resampling or elevation conversion."),
+            item("Processing time", sprintf("%.2f seconds", trial$seconds)))))
     })
     output$map <- shiny::renderPlot({
       shiny::req(matching_study(), matching_event())
       trial <- displayed(); shiny::req(trial)
       draw_terrain_mosaic_trial(trial)
     })
-    output$download_ui <- shiny::renderUI({
-      shiny::req(matching_study(),matching_event())
-      trial <- displayed(); shiny::req(trial$saved_dem)
-      shiny::downloadButton(session$ns("download_dem"),"Download DEM (GeoTIFF)")
-    })
     output$has_dem <- shiny::renderText(if (matching_study() && matching_event() && !is.null(displayed())) "true" else "false")
     shiny::outputOptions(output,"has_dem",suspendWhenHidden=FALSE)
-    output$download_dem <- shiny::downloadHandler(
-      filename=function() paste0("DEM-",gsub("[^A-Za-z0-9_-]","_",displayed()$event_label),"-Reach-portion-international-feet.tif"),
-      content=function(file) {
-        shiny::req(matching_study(),matching_event())
-        trial <- displayed(); shiny::req(trial$saved_dem)
-        if (!file.copy(trial$result$path,file,overwrite=TRUE)) stop("Could not download the saved DEM.")
-      },contentType="image/tiff")
   })
 }
 
@@ -105,8 +118,9 @@ draw_terrain_mosaic_trial <- function(trial) {
   r <- terra::rast(trial$result$path)
   if (terra::ncell(r) > 250000) r <- terra::spatSample(r, 250000, method = "regular", as.raster = TRUE)
   terra::plot(r, col = grDevices::hcl.colors(80, "Terrain"), axes = TRUE,
-              main = if (identical(trial$stage, "international_feet")) "Reach DEM (international feet)" else if (identical(trial$stage, "reach_masked")) "Reach DEM preview (source metres)" else "Mosaicked elevation (source metres)")
-  graphics::plot(sf::st_geometry(trial$reach), add = TRUE, border = "#e68a00", lwd = 2)
+              main = if (identical(trial$stage, "international_feet")) paste(if(identical(trial$level,"Stream")) "Stream" else "Reach","DEM (international feet)") else if (identical(trial$stage, "reach_masked")) "Reach DEM preview (source metres)" else "Mosaicked elevation (source metres)")
+  boundary <- sf::st_transform(if(is.null(trial$boundary)) trial$reach else trial$boundary,terra::crs(r))
+  graphics::plot(sf::st_geometry(boundary), add = TRUE, border = "#e68a00", lwd = 2)
   for (p in trial$sources) {
     e <- as.vector(terra::ext(terra::rast(p)))
     graphics::rect(e[1], e[3], e[2], e[4], lty = 2)

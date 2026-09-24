@@ -14,13 +14,16 @@ Known same-month collections form a suggestion; unresolved dates remain explicit
 The definition modal prefills those collections, known year/month and Streams with
 saved DEM choices (or the sole Stream). Output cell size still requires an explicit
 analyst choice. No blank saved-event selector is shown when none exist. Saved
-Survey Events use a native dropdown and a Review / edit Survey Event button.
+Survey Events use a short date dropdown above the DEM. Event Settings contains
+the selected event's details and Review / edit Survey Event button. Creation
+controls and acquisition evidence are grouped separately in Define a Survey Event
+in the top panel, collapsed when saved events exist and expanded for the first event.
 Cancel discards the editor; Save Survey Event validates and publishes a snapshot.
 Opening an editor marks pending work for the existing study lifecycle guard.
 
 "Acquisition group" remains an internal legacy API/storage name only. It must not
 be presented as a separate analyst concept. Saving the local Survey Event definition
-does not create FGDB Reach Event records or perform DEM processing.
+does not create FGDB Reach Event records. Saving updates the context used by automatic mask preparation and the Stream DEM queue described in article 13.
 
 `mod_study_server()` mounts `survey_event_settings_server()` with
 the current study, saved selection path and a pending-selection callback. The
@@ -54,3 +57,8 @@ Shiny state transitions; sibling fluvgeo's `test_survey_acquisition_groups.R`
 covers conservative date evidence. The backend schema is
 `fluvgeo/dev/schemas/survey-acquisition-groups.md`. No service calls or analyst
 studies are test fixtures.
+
+The current top panel includes both existing Event selection and the collapsed
+creation section, so first-time setup starts at the top of the page. After selection,
+`survey_event_dems_server()` (article 13) presents the assigned Stream queue and
+result tabs. The earlier single-DEM development panel is no longer the normal flow.

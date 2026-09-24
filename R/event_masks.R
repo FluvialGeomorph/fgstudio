@@ -151,7 +151,7 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
       rows
     })
     output$status <- shiny::renderUI({
-      if (!diagnostics && !busy() && !startsWith(message(), "Masks could not be created.")) return(NULL)
+      if (!diagnostics && !startsWith(message(), "Masks could not be created.")) return(NULL)
       shiny::div(role="status", if (busy() && !diagnostics) "Preparing DEM boundaries..." else message(),
         if(busy()) shiny::tags$progress(style="width:100%"))
     })

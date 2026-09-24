@@ -1,6 +1,6 @@
 Package: fgstudio
 Title: FluvialGeomorph Studio
-Version: 0.0.0.9053
+Version: 0.0.0.9062
 Authors@R: c(
     person("Michael", "Dougherty", , "Michael.P.Dougherty@usace.army.mil", role = "aut",
            comment = c(ORCID = "0000-0002-1465-5927")),

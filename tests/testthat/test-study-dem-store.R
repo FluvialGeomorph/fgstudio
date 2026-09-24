@@ -41,11 +41,10 @@ test_that('real Reach DEM editions reopen, exclude stale settings and protect pu
   ctx <- shiny::reactiveVal(list(group_id=trial$group_id,path=context,group_path=trial$group_path))
   shiny::testServer(terrain_mosaic_trial_server,args=list(current=function() list(key=trial$key),
       event_context=ctx,store=s),{
-    expect_match(output$summary$html,'Saved with this Survey Event')
-    expect_match(output$download_ui$html,'Download DEM')
+    expect_match(output$details$html,'GeoTIFF in the Study folder')
+    expect_false(grepl('download',as.character(terrain_mosaic_trial_ui('dem')),ignore.case=TRUE))
     expect_identical(output$has_dem,"true")
-    expect_equal(unname(tools::md5sum(output$download_dem)),unname(tools::md5sum(trial$result$path)))
     ctx(modifyList(ctx(),list(group_id='other')));session$flushReact()
-    expect_error(output$download_ui)
+    expect_error(output$summary)
   })
 })

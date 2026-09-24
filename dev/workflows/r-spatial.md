@@ -164,6 +164,20 @@ still match; do not repeat full raster validation on every reactive redraw.
 
 ## 7. Manage durable output and temporary files
 
+**Accepted FluvialGeomorph storage boundary:** DEMs must remain external filesystem
+GeoTIFFs. Use GeoPackages for vectors and related tables, with portable metadata
+linking the files in the Reach–Survey–Event folder. Before changing terrain storage,
+read [FGDB ADR-0025](../../../FGDB/dev/decisions/adr-0025-folder-deliverables-and-geotiff-terrain.md),
+its [completed interoperability findings](../../../FGDB/dev/experiments/geopackage-raster/FINAL-FINDINGS.md),
+and [folder requirements](../../../FGDB/dev/schemas/local-project-folder-requirements.md).
+GDAL-only numerical GeoPackage success does not qualify the required Esri round
+trip or reopen the accepted storage decision. The tested ArcGIS Pro 3.6
+`AddRasterToGeoPackage` path converted analytical rasters to Byte PNG tiles,
+changing values and NoData masks. Numerical reading worked; the report does not
+establish the internal driver cause or a universal failure of every Esri path.
+Do not repeat broad raster-GeoPackage qualification or migrate DEMs into GeoPackage.
+An internal RDS cache/index is not the portable delivery metadata contract.
+
 Choose format, tiling, compression, BigTIFF behavior, datatype, and NoData options
 for the actual product and expected scale. Preserve original inputs. Write into
 job-owned staging locations, close outputs, perform proportionate verification,

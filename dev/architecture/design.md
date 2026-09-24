@@ -22,27 +22,16 @@ ArcGIS toolbox intact. Backend capabilities belong to fluvgeo and should also
 serve QGIS. Begin with local storage; ultimately support approved FGDB read/write
 access on USACE ArcGIS Enterprise. Enterprise transport/authentication are unknown.
 
-## Terrain workflow (9048 / fluvgeo 9053)
+## Terrain workflow
 
-Increment 9050 / fluvgeo 9055 reuses the saved Reach mask for the small real-data
-mosaic through `launch_terrain_mask_trial()` and `mask_terrain_mosaic()`. The
-trial display is bound to its Study Area and Survey Event. Horizontal grid
-compatibility is checked separately from the DEM's vertical CRS; full source CRS
-and units survive masking. Source metres versus saved target international feet
-are shown explicitly. No target-unit product is published by this increment.
-
-Increment 9049 / fluvgeo 9054 adds an opt-in real-data mosaic development preview
-through `R/terrain_mosaic_trial.R`. Its worker calls `mosaic_terrain_tiles()` on
-small source windows; its read-only display is mounted by `survey_event_settings.R` only when the
-local launcher supplies a completed trial result. There is no full Stream
-dispatch, Study Area mutation or Survey Event publication in this increment.
-Article 13 and the mosaic design distinguish this source-grid path from future
-analysis-grid assembly.
+FG Studio 9062 / isolated fluvgeo 9057 supports the aligned-grid Stream DEM
+workflow through local publication and map review. The mosaic feature record owns
+current methods, evidence and unresolved scientific choices.
 
 Articles 06–14 and the [agent routes](agent-routes.md) trace the implemented
 boundaries. The [remediation record](../features/terrain-gis-remediation.md)
 retains qualification evidence; the [mosaic design](../features/dem-mosaic-design.md)
-owns scientific choices and pending assembly work.
+owns scientific choices and remaining grid/storage work.
 
 - Source acquisition uses cancellable workers, complete catalog paging, streamed
   original downloads and immutable receipts. Reopening saved availability reads
@@ -54,7 +43,7 @@ owns scientific choices and pending assembly work.
 - Analysis setup persists the Study Area's horizontal and vertical target
   definitions through fluvgeo context writers. It does not transform terrain.
   Tab-local reload restores saved study revisions and discards transient edits.
-- Define a Survey Event is a main Study Area tab after Analysis setup. It records
+- Survey Events is a main Study Area tab after Analysis. Its definition panel records
   Collection/Stream membership, retained date evidence, output cell size and
   optional existing Reach Event links. Legacy acquisition-group sidecars are an
   internal persistence contract, not a new FGDB entity. The initial numeric grid
@@ -74,7 +63,7 @@ owns scientific choices and pending assembly work.
 - The standalone horizontal-warp primitive uses native GDAL processing and terra
   summaries, Float32 default storage and GDAL-selected working precision. Explicit
   horizontal-only controls prevent unintended elevation changes. It has no app
-  caller; Stream DEM assembly and vertical transformations remain unimplemented.
+  caller; differing-grid integration and other vertical transformations remain open.
 
 Backend functions own scientific raster operations. App modules own session
 state, dispatch, progress and presentation; the local store owns durable paths,
@@ -383,23 +372,26 @@ Saved record details / Map and coordinate information sections from the UI.
 Evidence remains in GeoPackages; source/CRS/storage guidance remains in README,
 attribution/search tooltip and the compact public-service disclosure.
 
-Current increment (9051 / isolated fluvgeo 9056) converts the masked real Reach
-window from NAVD88 metres to international feet using native terra arithmetic,
-metres / 0.3048. The horizontal grid stays EPSG:6344 at 1 metre; no resampling or
-datum transformation occurs. The new compound CRS carries vertical EPSG:8228.
-The opt-in preview appears after Event settings in Survey Events, bound to the
-matching Study Area/Event. The Study Workspace uses bslib's collapsible sidebar;
-a bordered main navigation group contains Geometry, Collections, Analysis and
-Survey Events. This result is a small development trial, not published Event DEM.
+## Stream DEM orchestration and review
 
-Increment 9052 integrates the three qualified small real-window DEM operations
-into one cancellable worker with completed-result reuse. The normal Event view
-omits mask troubleshooting and all mask-display cache generation. The optional
-development flag and local trial cache contract are maintained in the mosaic
-design and articles 12/13. Full Stream/Event publication remains future work.
+`survey_event_settings_server()` supplies saved context to
+`survey_event_dems_server()`. One `terrain_dem_trial_job()` processes/reuses all
+assigned Streams serially. `terrain_dem_request()` binds the active Stream's
+saved mask, geometry, target and receipt-backed source selections; the worker
+calls fluvgeo crop/merge, mask and NAVD88 metre-to-international-foot conversion.
+Full-grid publication checks against the saved mask. The supported app path uses
+already aligned grids; it does not silently introduce warping or datum changes.
 
-Increment 9053 adds app-owned immutable local DEM editions through
-`study_dem_store()` (see `dev/schemas/survey-event-dem.md`). The existing worker
-can save its verified Reach portion while current input bindings still match.
-Ordinary sessions reopen and download the edition without development options.
-Full Stream coverage is not implied by storage publication.
+`study_dem_store()` publishes immutable GeoTIFF editions under the current input
+binding. Tabs mount display-only `terrain_mosaic_trial_server()` instances with
+Stream/scope-filtered lookup. Completed editions are reused; failures remain
+visible; pause/resume handles unfinished work. Waiting/Ready are internal states.
+One DEMs card contains Stream tabs, maps and optional unbordered metadata details.
+The Study Workspace sidebar is collapsible; main navigation is Geometry,
+Collections, Analysis and Survey Events. There are no output-download/save steps.
+
+Follow FGDB ADR-0025: external GeoTIFF DEMs, GeoPackage vectors/tables and linked
+metadata. Internal edition RDS records do not implement portable folder binding or
+enterprise transfer. See the edition schema, mosaic feature record and article 13
+for lifecycle, evidence and remaining work. Single-target developer options and
+older Reach/portion editions remain supported for bounded diagnostics.

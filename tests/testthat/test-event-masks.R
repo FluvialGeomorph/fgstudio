@@ -13,6 +13,7 @@ test_that("saved Events automatically prepare every Stream and stop stale or can
       kill=function() {killed <<- TRUE;alive <<- FALSE},wait=function(...) TRUE,
       get_result=function() {if(failure) stop("failed verification");list(manifest=list(),path=NULL)})}),{
     session$flushReact();expect_equal(calls,1L)
+    expect_null(output$status)
     alive <<- FALSE;poll();poll();expect_equal(published,2L)
     expect_named(results(),c("a","b"));expect_false(busy())
     alive <<- TRUE;dirty(TRUE);session$flushReact();dirty(FALSE);session$flushReact()
@@ -23,6 +24,7 @@ test_that("saved Events automatically prepare every Stream and stop stale or can
     expect_true(killed);expect_false(busy());expect_equal(published,2L)
     failure <<- TRUE;active(modifyList(ctx,list(group_path="third")));session$flushReact();poll()
     expect_match(message(),"failed verification");expect_equal(published,2L)
+    expect_match(output$status$html,"failed verification")
   })
 })
 test_that("mask storage publishes immutable editions only while saved inputs match", {

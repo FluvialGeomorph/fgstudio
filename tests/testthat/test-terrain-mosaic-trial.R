@@ -1,11 +1,11 @@
 test_that("DEM view is available and renders actual development results when supplied", {
   withr::local_options(list(fgstudio.mosaic_trial = NULL))
-  expect_match(as.character(terrain_mosaic_trial_ui("trial")), "DEM")
+  expect_match(as.character(terrain_mosaic_trial_ui("trial")), "trial-map")
   path <- Sys.getenv("FGSTUDIO_REAL_MOSAIC_RESULT")
   skip_if(!nzchar(path), "Set FGSTUDIO_REAL_MOSAIC_RESULT to a real-window worker result")
   trial <- readRDS(path)
   options(fgstudio.mosaic_trial = path)
-  expect_match(as.character(terrain_mosaic_trial_ui("trial")), "DEM")
+  expect_match(as.character(terrain_mosaic_trial_ui("trial")), "trial-map")
   context <- shiny::reactiveVal(list(group_id = trial$group_id))
   shiny::testServer(terrain_mosaic_trial_server, args = list(id = "trial",
       current = function() list(key = trial$key), event_context = context), {
