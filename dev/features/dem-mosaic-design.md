@@ -1,18 +1,17 @@
-# Stream DEM mosaics and analysis masks
+# Stream DEM mosaic design
 
-Current remediation route: [terrain GIS assessment and plan](terrain-gis-remediation.md).
-The 2026-09-22 audit identifies remaining acquisition restrictions, repeated I/O,
-and a reproduced broken horizontal-warp dependency. Earlier verification claims
-below do not establish readiness of the current source. Implementation remains
-pending the proposed reviewable increments beginning at Source DEM files.
+Current state: FG Studio 9051 / isolated fluvgeo 9056 retains source acquisition,
+viewing, analysis references, Survey Event settings and automatic masks, and adds
+the small real-data mosaic and saved-Reach-mask trial described below.
+Full Stream DEM mosaic execution remains pending. The standalone horizontal-warp
+primitive has no app caller. See the [remediation record](terrain-gis-remediation.md)
+for the completed engineering corrections across steps 06–14 and their limits.
+Tile preview/detail functionality is accepted; further tile-preview features are
+not a prerequisite to assembly.
 
-Status: Event group settings implemented in 9037/9045, read-only grid/source
-preflight in 9038/9046 and hierarchical masks in 9039/9047. Mosaic execution remains pending.
-Owner grid requirements clarified 2026-09-19.
-Supersedes the earlier compatible-source-grid-only proposal. Tile preview/detail
-is accepted and complete. See `study-analysis-crs.md` for implemented CRS behavior.
-Masks are verified with temporary synthetic fixtures. No analyst masks or DEM
-mosaics have been executed by development checks.
+This document owns the intended processing contract. Implemented behavior,
+author requirements and unresolved proposals are distinguished below. Historical
+test counts do not establish scientific approval of a proposed method.
 
 ## Required workflow
 
@@ -22,7 +21,7 @@ mosaics have been executed by development checks.
    provenance. Validate projected coordinates, transformation availability and
    suitability for the Study Area. Do not inherit the basemap CRS or treat an
    existing free-text analysis-reference note as a validated CRS.
-2. Assemble Survey Collections into acquisition groups for Survey Events using
+2. Define Survey Event membership from Survey Collections using
    retained acquisition dates and source evidence. Retain explicit membership.
 3. Require one analyst-selected output cell size per Survey Event, which may differ
    from source resolution. Define that Event grid and create a Study Area
@@ -38,7 +37,7 @@ grid/mask construction, raster processing, validation and provenance. PROJ handl
 coordinate operations, GEOS geometry operations, and GDAL underlies raster warps
 through terra. No ArcGIS runtime is introduced.
 
-## Acquisition grouping and FGDB semantics
+## Survey Event membership and FGDB semantics
 
 Default to **the same calendar month of acquisition**, not publication, download,
 file modification or raster creation month. Current retained evidence in
@@ -49,7 +48,7 @@ can refine a collection interval only when its meaning and tile link are known.
 Implemented settings policy (9037/9045):
 
 - A valid acquisition interval wholly within one calendar month proposes that
-  month's group. Retain original endpoints; a month label is not an exact date.
+  month's Survey Event membership. Retain original endpoints; a month label is not an exact date.
 - Show collections, source identities, date evidence and conflicts for review.
   The project convention groups dates; it does not prove identical acquisition
   conditions or scientific compatibility.
@@ -78,58 +77,25 @@ and accepted derivation), `dev/decisions/adr-0005-governed-foundation-scope.md`,
 `dev/decisions/adr-0012-reach-derivation-and-hierarchical-aggregation.md`.
 No FGDB schema migration is performed here.
 
-The Event setup panel persists one immutable GeoPackage per group revision,
+The Define a Survey Event panel persists one immutable GeoPackage per definition revision,
 retaining UUID identity, reviewed selected-collection and Stream membership,
 source/date evidence, required year, optional month, optional notes and positive output
 cell size in the saved planar CRS's units. Existing Reach Events can be linked by
 ID after parentage/date validation; this increment creates no Reach Events.
 Revisions retain previous snapshots. The local store rejects stale study,
-selection or group state and duplicate Reach Event links across groups.
+selection or definition state and duplicate Reach Event links across definitions.
 The implementation uses a (0, 0) grid-alignment anchor within the saved real-world CRS. The specific alignment convention remains unconfirmed; do not interpret it as an arbitrary CRS or move saved grids automatically.
 See article 10 and sibling fluvgeo's `dev/schemas/survey-acquisition-groups.md`.
 USIEI free-text formats beyond explicit ISO day/date intervals remain unresolved.
 
-Verification (9037/9045): installed app tests passed 789 assertions with zero
-failures/skips. `R CMD build` and `R CMD check --no-manual` completed; the sole
-check warning is the existing non-ASCII text in `mod_survey_collections.R`.
-The direct backend contract run passed 186 assertions with one `gt`-dependent
-report skip; 22 assertions exercise the new grouping contract. It covers proposals,
-immutable read/write, integer/fractional spacing and Reach parentage/date conflicts.
-No live services or `.local-data`
-studies were used. Browser layout and source-set compatibility are not qualified
-by these tests. An expanded backend context test run encountered eight report
-errors and two skips because optional `gt` is unavailable in this runtime; those
-report paths are outside this increment. The full legacy backend suite was not
-run because it contains report scripts writing outside temporary fixture directories.
-The local pkgdown site and paired navigation map were rebuilt: freshness/bridge
-checks passed, with 293 local links across 14 pages and 12 article exports verified.
-The site remains local; the existing missing-public-URL diagnostic is expected.
-
 ## CRS, resolution and shared grid
 
-Implemented preflight: choose one saved Event group and Stream, then explicitly
-check current saved sources in a cancellable worker. It computes snapped Study
-Area/Stream/available Reach envelopes and uncompressed one-byte mask/four-byte
-Float32 DEM estimates without allocating raster cells. The backend also retains
-the optional Float64 estimate. It validates group revisions,
-membership, hierarchy, CRS and receipt-bound selected files, and reports source
-spacing in native units and metres, alignment, and blocking/review issues.
-Changed context or collection revisions require reviewing/resaving group settings.
-Missing acquisitions remain explicit BLOCKED rows. Results are timestamped session
-snapshots, not persisted approval. Article 11 and the backend preflight schema
-define the exact checks. Angular/rotated/anisotropic grids and metadata conflicts
-remain review items. Nominal projected spacing is not ground-resolution proof;
-coverage, pixel readability and source vertical/epoch reconciliation are unresolved.
-
-Verification (9038/9046): 60 focused backend assertions passed, including 38 new
-preflight assertions. The full installed app suite passed 803 assertions with no
-failures/skips. Source build and `R CMD check --no-manual` completed with the same
-pre-existing non-ASCII warning. Tests use synthetic source files and temporary
-receipt stores; analyst studies, live services and the running preview were not
-used. Full legacy backend reporting remains outside this bounded check for the
-runtime/fixture limitations noted above.
-The local site and navigation map were rebuilt; map freshness/bridge checks and
-324 local links across 15 pages and 13 article exports passed. No site was published.
+Preflight remains an internal metadata diagnostic, not a mounted analyst step.
+It reports saved-source evidence, grid envelopes and estimates without creating
+rasters. These reports do not establish coverage or scientific suitability and
+are not approval prerequisites for mask creation. Article 11 and the backend
+preflight schema describe the retained interface. Automatic mask preparation
+validates its own geometry and settings.
 
 Keep original files and source CRS declarations unchanged. Transform analysis
 copies. Changing the selected CRS after products exist requires a new grid/product
@@ -199,8 +165,8 @@ on their template; do not bilinearly resample masks. Combine compatible neighbor
 tiles before warping where needed to prevent artificial interpolation seams.
 
 Owner-approved elevation storage: Float32 (FLT4S) by default for intermediate
-and final DEMs, with explicit NoData and lossless compression. Float64 working
-precision is independent of disk storage. Float64 storage remains explicit
+and final DEMs, with explicit NoData and lossless compression. GDAL selects working
+precision; no fixed Float64 working type is required. Float64 storage remains explicit
 opt-in when higher-precision inputs need preservation; it is not a requirement.
 Masks can be integer. Float storage does not make interpolated values identical
 to source samples. Preserve zero, negative and fractional elevations; correctly
@@ -216,7 +182,7 @@ Existing experimental clipping is not a qualified replacement pipeline (see
 ## Execution, evidence and tests
 
 Manifest: saved Stream/Collection selections, file IDs/receipts/hashes, geometry
-revisions, group/date evidence, CRS WKT/units, grid anchor/resolution/extent, mask
+revisions, Survey Event membership/date evidence, CRS WKT/units, grid anchor/resolution/extent, mask
 hashes/boundary rule, source priority, resampling, datatype/NoData, vertical
 handling and software versions. Preserve originals and previous successful outputs.
 
@@ -233,194 +199,161 @@ Event sizes; date precision/ambiguity; and cancellation/reopening
 without partial publication. Test realistic Float32 storage rounding and optional
 Float64 preservation separately from unintended elevation-unit conversion.
 
-## Next implementation boundary
+Owner-directed development sequence (2026-09-23): use small subsets of the actual
+downloaded DEMs, not synthetic rasters. Exercise the actual mosaic worker on a
+small Reach or part of a Reach for function trials, correctness checks and
+parameter tuning. Use a window spanning relevant source overlap/seams and preserve the
+required interpolation support. Reuse that subset for terra-function experiments
+and parameter changes. Keep trial outputs temporary and separate from published
+Stream DEMs. Whole-Stream validation follows a stable small-area implementation;
+do not process all assigned Streams or the workspace as an iterative test harness.
+Small-area results must be identified as development previews, not complete
+Stream terrain or evidence of full-scale performance.
 
-Owner UI correction (9042): use Define a Survey Event terminology, native choices
-from saved Survey Collections and prefilled known dates/DEM-associated Streams.
-Do not expose legacy acquisition-group API names as a new analyst concept.
-Each development turn must provide an updated UI for owner review. UI feedback
-takes priority over further terrain processing. The DEM file panel now uses the
-existing geometry/collection compatibility check when reopening old choices;
-metadata-only study revisions no longer hide valid saved sources. A read-only
-check of the current local project found 57 TIFFs and compatible receipt sets of
-16, 31 and 10 files; choices were revision 33 while the context was revision 36.
-211 focused assertions passed across files/downloads, Survey Event settings,
-preflight, masks, collections and source review. Original source files were not
-changed or redownloaded. Existing sf/Shiny build-version warnings remain.
-Receipt checksum verification also succeeded for all 57 existing source DEMs.
+## Implemented masks and pending assembly
 
-Persisted CRS, reviewed acquisition-group/output-cell-size setup, grid/source
-preflight and hierarchical masks are implemented. Backend 9048 qualifies a bounded
-static same-reference horizontal warp. Next bind reviewed source references/units,
-receipts, overlap order and masks to the cancellable Stream DEM worker. Datum/epoch
-operations and nonidentity scale/offset remain unqualified. Revalidate all inputs
-and receipt hashes at execution; do not reuse a session preflight PASS as approval.
-Cross-Event grid semantics are resolved.
-No more tile previews or broad documentation pass is required. Article 10 and the
-paired agent route trace this settings increment; update those routes and the
-map/site as processing capabilities are added.
+Previous masking increment (9050 / fluvgeo 9055): `mask_terrain_mosaic()` applies the saved
+Reach mask to the existing small real-data mosaic with native terra crop/mask.
+CRS horizontal components, spacing and cell alignment match the saved Event grid;
+no resampling is needed. The DEM retains its compound NAVD88 CRS and metre unit,
+while the membership mask retains its 2D CRS. terra's warning about the full-CRS
+difference is covered explicitly by the real-data test, not handled by stripping
+or reassigning CRS metadata. The saved Study Area target is NAVD88 international
+feet; increment 9051/9056 now converts the masked result with metres / 0.3048 and records vertical EPSG:8228. Matching study and
+Event identities control display. Original downloads and published masks remain
+unchanged; the result is still a development trial, not published Event terrain.
 
-App 9041 implements the source-review portion of this boundary. After preflight,
-analysts can compare embedded CRS/band-unit evidence with the saved target,
-record per-file assessments and prior conversions, move files earlier/later,
-choose first/last-valid overlap and save an immutable review. Fresh preflight
-reopens matching editions. Changed evidence starts a new review; stale editors
-cannot overwrite a newer edition. Unresolved assessments remain explicit, and
-annotations neither clear grid issues nor authorize processing. Article 14 and
-the app terrain-source-review schema own the UI and persistence contracts.
-The next increment must reconcile this evidence with actual inputs and a verified
-mask before enabling cancellable DEM assembly. Backend 9049 is unchanged.
+The real 192-by-256-cell window retains 30,205 valid elevation cells after masking.
+Worker elapsed time was 8.83 seconds including startup. Nine real-data backend
+assertions and eight UI assertions passed, including wrong-Event display exclusion.
+The existing Shiny build-version warning remains. Input checksums matched and the
+rendered masked plot was inspected. Full Stream processing was not run.
 
-Verification (9041): the full app suite passed 855 assertions. A final tile-title
-display refinement was then checked with 79 focused assertions across source
-review, preflight and Event setup (34 review assertions). Existing sf/Shiny R
-build-version warnings remain. Tests use temporary metadata stores and synthetic
-sources, with no analyst-data writes. Browser attachment failed for the synthetic
-preview, so live browser interaction/layout is not claimed as verified.
-The package installed into the documentation-only library. The local site passed
-431 links across 18 pages and 16 article exports. The regenerated map passed
-freshness/bridge checks (82 nodes, 103 static edges, 23 reviewed bridges). No
-backend runtime was upgraded in this increment and no site was published.
+First real-data mosaic increment (9049 / fluvgeo 9054): the backend now exposes
+`mosaic_terrain_tiles()` for compatible source-grid tiles. FG Studio's
+`launch_terrain_mosaic_trial()` runs it in a separate process. An explicitly
+configured `fgstudio.mosaic_trial` result path enables a read-only development
+preview under Define a Survey Event, after Analysis masks; ordinary sessions do not show it or dispatch
+new terrain work. The result is a small portion of a Reach, not a published
+Stream/Survey Event product. This increment retains native source alignment and
+does not resolve the future analysis-grid convention or vertical reconciliation.
+See article 13 for the trial route and the backend terrain-tile-mosaic contract.
 
-Primary references (reviewed 2026-09-19; qualify installed versions):
+Measured first trial: two original Float32, metre-valued, EPSG:6344 source windows
+across a tile boundary in Spencer Creek mainstem Reach R2 produced a 192-by-256
+cell mosaic at native 1 m spacing. Worker elapsed time was 9.51 seconds including
+startup. Eight opt-in backend assertions passed using real source samples and
+unchanged input checksums; five app assertions passed with an existing Shiny
+R-build-version warning. Original download hashes matched before/after the actual
+worker. The plot and Shiny render were checked. These adjacent windows establish
+joining and sample preservation, not conflicting-overlap policy qualification,
+full-scale performance or scientific acceptance. No saved products were replaced.
+The paired article and generated call map were refreshed; freshness/bridge checks
+and 435 local documentation links passed. This increment used focused real-data
+tests and package installation, not the full legacy backend suite or a new
+full-package check. Existing unrelated working-tree documentation edits were retained.
+
+Saving or reopening Survey Event settings prepares masks for all assigned
+Streams automatically. The optional developer map selector chooses a completed mask to view; normal sessions omit it.
+There is no Stream processing picker, Create masks button, or manual preflight
+approval. Optional notes are not a save requirement.
+
+fluvgeo uses native terra operations and compressed file-backed Byte GeoTIFFs.
+Shared Study Area masks and unchanged geometry/grid/recipe outputs are reused.
+Publication consolidates native summaries and checksums; managed reopening uses
+metadata checks rather than repeated raster scans. Workers prepare cached display
+rasters. Cancellation/failure stops the worker before removing owned staging;
+recorded abandoned jobs are reclaimed only after their owners exit. Older saved
+outputs retain compatibility. No arbitrary cell, row, file-size or duration
+admission rule is introduced. Article 12 and the backend event-masks schema own
+the exact interfaces.
+
+The horizontal-warp primitive uses native summaries and GDAL-selected working
+precision with Float32 default storage. Explicit horizontal-only controls retain
+source vertical evidence and prevent unintended elevation conversion. Affine
+source rotation and unequal spacing are supported. Remaining external
+georeferencing/mask, scale/offset and datum/epoch restrictions are this API's
+scope, not universal GIS limitations. See article 13 and the backend
+horizontal-terrain-warp schema.
+
+Before enabling Stream DEM assembly, resolve source reference/unit compatibility,
+source precedence and the initial grid convention, then bind current sources and
+masks to a cancellable worker. Retained source-review annotations (article 14) are
+not currently exposed and do not authorize a raster operation.
+
+The specific numeric grid anchor is not author-confirmed. Legacy toolbox steps
+snap to an input DEM; that does not identify a canonical first grid for the new
+cross-Event design. Preserve saved grids until the convention is resolved.
+Coordinates such as (0, 0) describe cell alignment inside the real-world CRS,
+not an arbitrary replacement CRS.
+
+Primary API references retained from the design review:
 [sf transformations](https://r-spatial.github.io/sf/reference/st_transform.html),
 [terra projection/templates](https://rspatial.github.io/terra/reference/project.html),
-[terra merge](https://rspatial.github.io/terra/reference/merge.html),
 [terra rasterization](https://rspatial.github.io/terra/reference/rasterize.html),
 [terra raster writing](https://rspatial.github.io/terra/reference/writeRaster.html),
 and [GDAL warp](https://gdal.org/en/stable/programs/gdalwarp.html).
+Use installed help and the R spatial workflow when implementing these operations.
 
-## Current mask implementation (9046/9051)
+Owner UI correction (2026-09-23): review DEM results in Survey Events,
+after Event settings, rather than a top-of-app development panel. The current
+trial renders only for its saved Study Area. Use portable ASCII separators in
+these labels to avoid Windows locale substitutions such as <U+00D7>.
 
-Masks prepare automatically for all Streams assigned to a saved Survey Event.
-The backend uses standard terra rasterize/classify/crop/mask and global summaries.
-Outputs are compressed disk-backed Byte GeoTIFFs with BigTIFF support. There are
-no arbitrary cell-count, row-width, elapsed-time or estimated-space cutoffs.
-Matching saved masks are verified and reused. Current inputs are checked before
-publication; cancelled or failed attempts remain unpublished. The map selector
-chooses a completed output to view, not a Stream to process.
+International-foot increment (9051 / fluvgeo 9056): native terra arithmetic
+converts the existing masked real window using the exact 0.3048 metre/foot
+factor. Horizontal EPSG:6344 coordinates and the 1 m grid remain unchanged;
+vertical CRS becomes EPSG:8228. Elevation range is 669.9174–712.9763 ft.
+Worker time was 11.76 seconds including startup. Eleven backend assertions and
+seven app assertions passed. The bounded sample comparison includes Float32
+rounding and NoData; source hashes remain unchanged. Source-test CRS assignment
+emitted PROJ database warnings despite successful reopened CRS/unit checks.
+The converted plot was visually inspected. Full Stream scale was not exercised.
+Study Workspace now uses bslib's collapsible sidebar; the bordered main tabs are
+Geometry, Collections, Analysis and Survey Events. The result remains an opt-in
+small real-data trial, not a published Survey Event DEM.
 
-Historical verification of the earlier implementation follows; its custom strict-edge
-rule and size restrictions are superseded.
+## Integrated small Reach DEM job (9052)
 
-Verification (9039/9047): 94 focused backend assertions passed, including 34 mask
-assertions for holes, exact edges, narrow polygons, parent subwindows, fractional
-spacing across disk blocks, no-Reach families, resource rejection, interruption,
-immutable editions, changed manifest grid/parent records, count mismatch and
-corruption. Full app and installed-package tests passed 821 assertions with zero
-failures/skips; only the existing sf/Shiny R build-version test warnings remain.
-Source build and R CMD check --no-manual completed with the single pre-existing
-non-ASCII warning in mod_survey_collections.R. The final backend-only reopening
-and count guards were checked with the focused suite after that app check and
-installed into the isolated library. Shared runtimes and analyst data were not
-changed. Browser layout, full-size performance and live source compatibility were
-not qualified. Legacy backend reporting limitations remain as recorded above.
-The local documentation site and navigation map were rebuilt: freshness/bridge
-checks passed (76 nodes, 93 static edges, 22 reviewed bridges), and 357 local links
-across 16 pages and 14 article exports passed. The site is local; the expected
-missing-public-URL diagnostic remains. No site was published.
+Normal sessions hide mask troubleshooting and pass no display-cache directory to
+mask workers. They do not prepare overview rasters, load mask selector labels or
+render mask maps. Compact preparation progress and actionable errors remain.
+Developers may set `options(fgstudio.mask_diagnostics = TRUE)` before startup.
+This temporary UI hook is intended for removal after DEM integration; analytical
+mask generation/reuse remains a backend dependency. The owner verified the native
+bslib sidebar collapse; do not add custom collapse logic or extensive tests.
 
-## Historical horizontal primitive delivery (backend 9048; superseded by 9053)
+With the development options `fgstudio.dem_trial = TRUE`, `fgstudio.mosaic_trial`
+pointing to the existing real fixture, and `fgstudio.dem_trial_cache` naming an
+existing developer-owned directory, selecting the matching saved Event runs one
+background job: native source-grid mosaic, saved Reach mask, then international
+feet. The three existing fluvgeo primitives retain their scientific contracts.
+No additional analyst steps or scientific choices are introduced.
 
-The backend now provides warp_terrain_horizontal for static projected grids that
-share an identified, semantically equivalent 2D geodetic reference. It uses an
-explicit exact grid-free pipeline, a separate horizontal source definition and
--novshift, retaining full original compound evidence. Backend 9049 defaults to
-Float32 storage with Float64 working precision and optional Float64 storage.
-Aligned output is compared with source cells at the chosen storage precision; other grids use
-bilinear interpolation. Original hashes, band units, output grids and pixel
-readability are verified before a manifest is written. This is a backend prerequisite,
-not a new app action or completed Stream DEM pipeline.
+`terrain_dem_trial_job()` manages cancellation, stale context exclusion and
+session shutdown. Each job has a unique directory. A completed result index is
+written only after the worker returns and the saved input snapshot still matches.
+The recipe includes source/mask/context/Event paths, sizes, modification times,
+overlap order, backend version and units. This is a local development cache,
+not a cryptographic integrity check or production Survey Event publication.
+Matching completed outputs are reopened without rerunning raster processing.
+Failed/cancelled staging is removed only after the worker stops. Completed trial
+outputs remain for development review; there is no production cache lifecycle yet.
 
-On the installed GDAL 3.12.1 / PROJ 9.7.1 stack, an unguarded control warp converts
-synthetic compound-source US-survey-foot values to metres. The guarded operation
-preserves Float32 source samples; explicit Float64 output also preserves higher precision. Tests distinguish
-this unwanted unit conversion from intended bilinear interpolation. Compound
-source declarations are retained as evidence rather than erased or assigned to
-unrelated target vertical metadata.
+Verification of increment 9052: 37 mask assertions, 7 preview assertions and 12
+job-lifecycle assertions passed. The actual combined worker took 9.76 seconds;
+64 sampled outputs match the previous real DEM including NoData. Reopening
+reused the completed result with unchanged modification time. Source checksums
+are unchanged. Full Streams and synthetic raster fixtures were not processed.
 
-Limits: projected east/north axes, static 2D base with matching authority identity,
-no datum/epoch operations, no external sidecars, square north-up affine grids,
-identity scale/offset, supported real single-band types, 50 million combined
-source/output cells by default, and 65,536 columns. Space admission is an estimate,
-not a reservation. Projection suitability and source vertical/unit compatibility
-remain unresolved for analyst inputs. No modernized NSRS or geoid operation has
-been qualified. Compatible neighboring tiles must be assembled before this warp
-with interpolation halos; apply masks after assembly. Article 13 and sibling
-fluvgeo's horizontal-terrain-warp schema own the developer and exact contracts.
+## Saved Survey Event DEM editions (9053)
 
-Verification (9039/9048): 139 focused backend assertions passed, including 45
-horizontal-warp assertions and a real stored-coordinate-epoch refusal fixture.
-The full app suite passed 821 assertions with no failures; existing sf/Shiny
-R build-version warnings remain. Backend source build and limited R CMD check
---no-manual --no-vignettes --no-tests --no-examples completed with zero errors,
-one existing non-ASCII warning in survey_collections.R and two existing notes
-(undeclared methods dependency and unrelated globals/imports). Legacy reporting
-tests/examples remain excluded for the fixture-safety and optional-dependency
-reasons above. The final epoch test and help clarification followed that check;
-the focused suite passed and backend 9048 was reinstalled only in the app's
-isolated library. App code remains 9039. No analyst preview was restarted.
-The local documentation build passed 392 local links across 17 pages and 15
-article navigation/text exports. Code-map freshness and reviewed-bridge checks
-passed without regeneration because app code and graph inputs did not change.
-The expected missing public-site URL diagnostic remains; no site was published.
-
-Owner storage correction (9040/9049): Float32 is now the default DEM storage;
-Float64 storage is explicit opt-in and working precision remains Float64.
-The preflight table reports four bytes per DEM cell, retaining eight-byte backend
-estimates for compatibility. Aligned comparisons account for storage rounding;
-Float32 range overflow is refused before output creation. This corrects an
-overly conservative proposal based on hypothetical Float64 inputs, not an owner
-requirement. No assembly action or elevation conversion is introduced.
-Verification: 150 focused backend assertions (55 horizontal) and 822 full app
-assertions passed, including actual stored Float32 precision, optional Float64,
-rounding/range refusal and the displayed preflight estimate. Existing R
-build-version warnings remain. Only the isolated development backend is upgraded.
-Backend source build and limited R CMD check with tests/examples/vignettes/manual
-excluded completed with zero errors and the same one warning and two notes as
-9048; the focused terrain tests above cover this increment separately.
-The local site passed 392 links across 17 pages and 15 article exports. The
-regenerated code map passed freshness/bridge checks (76 nodes, 93 static edges,
-22 bridges); only the app version and changed source hashes differ. The expected
-missing public URL diagnostic remains. No site was published or preview restarted.
-
-Define a Survey Event is now a main Study Area tab immediately after Analysis setup.
-Analysis setup provides a Continue to Define a Survey Event button. The event form
-has no membership/date rationale field or save requirement; provider date evidence
-is retained automatically, and older analyst notes survive edits.
-
-Preflight recovery (9044): worker launch errors show actionable status and expandable
-technical details; completed REVIEW and BLOCKED screens remain distinct. The local
-Windows preview must permit background worker creation. Read-only diagnosis verified
-the same saved-data worker succeeds outside the sandbox. All 94 focused assertions
-passed, including startup failure, completed review/blocker results and cancellation.
-
-Owner simplification (9045): Survey Event UI exposes Create masks and visual output,
-not grid/source preflight reports or source-assessment save/approval controls. The
-mask writer already validates context, geometry, grid and resources automatically.
-No DEM prerequisite is introduced for masks. App display reads the generated raster,
-samples a bounded overview and overlays its saved boundary in the analysis CRS.
-Failures identify correction routes; no backend scientific behavior changed.
-Validation for 9045: 61 focused assertions passed. A real background worker created
-and verified a small temporary Study Area/Stream/Reach mask set with no DEM inputs;
-the generated raster preview was rendered and visually inspected. HTTP verification
-confirmed Create masks and Mask to view are served and both manual panels are absent.
-
-## Current GIS remediation (FG Studio 9048 / fluvgeo 9053)
-
-The current processing contracts supersede the historical constraints above:
-[remediation assessment](terrain-gis-remediation.md), articles 07/12/13 and sibling
-backend inspection/mask/warp schemas. Source viewing uses one cold hash and
-session-owned caches; masks reuse a shared Study Area raster, consolidate native
-checks, cache worker-prepared display rasters and clean stopped job staging.
-Horizontal warping uses native summaries without custom cell traversal or
-application size/disk admission rules. Float32 storage remains the default;
-GDAL chooses working precision. No new mosaic or vertical-transformation feature
-is introduced by this remediation.
-
-The owner has not approved a particular numeric grid anchor. Legacy toolbox
-processing uses the input DEM as `arcpy.env.snapRaster` (tools 02, 07, 08, 09, 10),
-while the new design requires one shared Study Area grid across equal-resolution
-Events. That evidence does not identify a canonical first grid for this new
-workflow. Preserve saved grids; resolve initial-grid selection in project terms
-before changing it. A coordinate alignment convention is not a replacement CRS.
+`study_dem_store()` now adds immutable local editions beneath the Study directory.
+The combined job publishes only while its saved binding remains current. Existing
+verified trial output is copied in a worker; raster computation is not repeated.
+Normal app sessions can reopen, display and download saved GeoTIFFs without the
+trial options or cache. The DEM card clearly labels this result as a Reach portion.
+It does not claim a complete Stream DEM. The exact storage/lifecycle contract is
+in `dev/schemas/survey-event-dem.md`; `tests/testthat/test-study-dem-store.R` covers
+real-file publication, fresh reopening, download equality, staleness and cleanup.
+Full Stream assembly and publication remain the next integration scope.

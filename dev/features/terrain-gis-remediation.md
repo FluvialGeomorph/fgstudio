@@ -5,35 +5,7 @@ the initial-grid convention remains an explicit scientific question. This assess
 [R spatial processing](../workflows/r-spatial.md) to the workflow beginning at
 06 Source DEM files and continuing through source inspection, analysis setup,
 Survey Events, masks, preflight, and the horizontal-warp/source-review additions.
-It does not authorize new scientific defaults or claim remediation is complete.
-
-## Historical increment 1 delivery (9047 / 9052)
-
-FG Studio 9047 / isolated fluvgeo 9052 implements complete source catalog paging,
-removal of download size/healthy-duration caps, stable-source reuse after metadata
-refresh, and saved availability independent of current selection editions.
-Article 06 and the backend receipt/catalog contracts describe current behavior.
-The findings below retain the audit baseline; F1/F2 and the availability/reuse
-portion of F4 are addressed by this increment. Repeated integrity reads (F3)
-remain the next step, followed by mask lifecycle and terrain assembly.
-
-Focused backend discovery/download and app files/download/inspection tests passed.
-The local HTTP transfer test required worker permission; the directory-symlink
-test skipped because this account cannot create directory symlinks. A live query
-through a worker using the previously saved synthetic public fixture returned
-COMPLETE with one matching DEM. The earlier combined collection/discovery smoke
-check returned no USGS fixture collection; it did not test the changed DEM path.
-The actual app saved-history worker also verified the existing synthetic local
-source and retained its original attempt for inspection. No analyst inputs or
-source bytes were changed by these checks.
-
-Preview: http://127.0.0.1:8782/ (HTTP 200; served complete-paging text). Review
-Survey Collections → DEM files → Saved source DEM files and Download location.
-Dynamic table/inspection binding is covered by module tests. Browser automation
-could not attach; a separate headless attempt was also unavailable. Do not claim
-interactive visual acceptance. The old port 8781 session remains running because
-automatic approval review rejected stopping a session with potentially unsaved work.
-No production library upgrade, commit, or deployment occurred.
+It does not authorize new scientific defaults, complete terrain assembly, or claim scientific certification.
 
 ## Current implementation and remaining boundaries (9048 / 9053)
 
@@ -110,7 +82,35 @@ a canonical first grid for the new cross-Event design. No saved grids were moved
 The standalone warp's external georeferencing/mask, scale/offset and datum/epoch
 limitations are documented API scope, not claims about terra/GDAL capability.
 
-## Audit baseline
+## Historical increment 1 delivery (9047 / 9052)
+
+FG Studio 9047 / isolated fluvgeo 9052 implements complete source catalog paging,
+removal of download size/healthy-duration caps, stable-source reuse after metadata
+refresh, and saved availability independent of current selection editions.
+Article 06 and the backend receipt/catalog contracts describe current behavior.
+The findings below retain the audit baseline; F1/F2 and the availability/reuse
+portion of F4 are addressed by this increment. Repeated integrity reads (F3) and mask lifecycle were addressed by the subsequent
+increment; terrain assembly remains future work.
+
+Focused backend discovery/download and app files/download/inspection tests passed.
+The local HTTP transfer test required worker permission; the directory-symlink
+test skipped because this account cannot create directory symlinks. A live query
+through a worker using the previously saved synthetic public fixture returned
+COMPLETE with one matching DEM. The earlier combined collection/discovery smoke
+check returned no USGS fixture collection; it did not test the changed DEM path.
+The actual app saved-history worker also verified the existing synthetic local
+source and retained its original attempt for inspection. No analyst inputs or
+source bytes were changed by these checks.
+
+Preview: http://127.0.0.1:8782/ (HTTP 200; served complete-paging text). Review
+Survey Collections → DEM files → Saved source DEM files and Download location.
+Dynamic table/inspection binding is covered by module tests. Browser automation
+could not attach; a separate headless attempt was also unavailable. Do not claim
+interactive visual acceptance. The old port 8781 session remains running because
+automatic approval review rejected stopping a session with potentially unsaved work.
+No production library upgrade, commit, or deployment occurred.
+
+## Historical audit baseline (before remediation)
 
 The deviations are substantial, but concentrated in application restrictions,
 repeated verification, custom validation, and workflow design around otherwise
@@ -127,7 +127,7 @@ The app does not currently call that primitive, so this does not explain every
 earlier mask/UI failure. It does invalidate claims that the current backend's
 horizontal-warp path is ready for integration.
 
-## Evidence boundary
+## Historical audit evidence boundary
 
 - Reviewed fgstudio `main` at `8f89aef` (0.0.0.9046) and fluvgeo `main` at
   `52669bc` (2026.09.21.9051). Both working trees were clean at audit start.
@@ -146,7 +146,7 @@ horizontal-warp path is ready for integration.
   evidence, not measurements repeated by this audit. This is a focused assessment,
   not certification of all fluvgeo functions or scientific results.
 
-## Findings
+## Historical findings (resolved status is in the current matrix)
 
 ### F1 — Step 06 truncates discovery before collection filtering
 
@@ -353,7 +353,7 @@ source/runtime version of evidence. Reconcile current feature, schema, article,
 and checkpoint status as each increment lands. Preserve historical evidence as
 history. Do not run broad suites repeatedly in place of relevant dependency checks.
 
-## Proposed implementation sequence
+## Historical proposed implementation sequence
 
 The owner authorized remediation across every remaining implemented step, not
 just step 06. Continue independent fixes without waiting for another resume cue.
@@ -395,12 +395,24 @@ These establish package behavior, not the project's scientific choices:
 - [GDAL translate](https://gdal.org/en/stable/programs/gdal_translate.html):
   source windows, output sizing, overview selection, and scale/offset handling.
 
-## Completion condition for the remediation
+## Original acceptance criteria and current boundary
 
 An analyst can reopen source DEMs, finish discovery/download, inspect useful
-previews, define an Event, and review its masks/terrain without unnecessary
+previews, define an Event, and review its masks without unnecessary
 backend approval steps. Large inputs run through native file-backed operations
 without invented admission caps or repeated exhaustive audits. The resulting
 scientific behavior is supported by author methods and independent checks, and
 the delivered UI, source, backend library, and documentation describe the same
 tested increment.
+
+Documentation cleanup, 2026-09-22: current project plan, architecture, analyst
+guide and feature entry points now agree on automatic masks, cached source viewing,
+unmounted diagnostics and the unresolved initial-grid convention. Historical
+findings remain evidence, not a task queue. This pass changes documentation only.
+
+Documentation verification: standard pkgdown::build_site() completed in a fresh
+R process with the isolated backend and Windows worker permission. The local
+link check passed 433 links across 18 pages and 16 article navigation/text exports;
+Git whitespace checks passed. The existing missing-public-URL diagnostic remains.
+No raster or app tests were rerun for these prose-only changes. The rendered
+analyst guide is served locally for review; no public deployment occurred.

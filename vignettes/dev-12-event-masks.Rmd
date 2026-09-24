@@ -21,7 +21,12 @@ no application cell-count, row-width or estimated-space admission limits.
 Actual I/O failures prevent publication. Sources and saved study inputs are unchanged.
 
 Successful results are published only while their input revisions still match.
-The map selector displays already-created outputs; it does not select work to run.
+Normal sessions do not mount the map selector, create a display cache, load
+boundary labels or render mask plots. Only compact progress/errors remain.
+`options(fgstudio.mask_diagnostics = TRUE)` before app startup enables the optional
+development troubleshooting view. This is a temporary development facility;
+remove its UI hook when DEM integration is complete, retaining analytical masks.
+In that optional view, the map selector displays already-created outputs; it does not select work to run.
 The overview reads saved rasters in their analysis CRS and overlays their saved
 boundaries. Display rasters are prepared in the worker and cached for this session,
 so reactive redraws read the bounded display product. Later Streams reuse

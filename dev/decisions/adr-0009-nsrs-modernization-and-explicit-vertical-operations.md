@@ -128,3 +128,8 @@ No elevation transformation or unit conversion is introduced by this increment.
 
 The cited latest PROJ documentation does not establish the capabilities of the
 installed sf/terra bindings. Test each binding and operation before enabling it.
+
+Implementation clarification (2026-09-22): fluvgeo 9053 retains Float32 default
+DEM storage and optional Float64 storage, but leaves working precision to GDAL.
+Earlier Float64 working-precision wording records the previous implementation,
+not a scientific requirement. The explicit vertical-operation decision is unchanged.

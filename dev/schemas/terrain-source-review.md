@@ -1,5 +1,9 @@
 # Analyst terrain source reviews (FGSTUDIO_TERRAIN_REVIEW_1)
 
+Current availability: this retained annotation module is not mounted in the
+analyst workflow. The schema does not introduce a review/save prerequisite for
+masks or authorize DEM processing. Article 14 documents its internal call path.
+
 App-owned review annotations live beside the study context in
 terrain-reviews/<group-and-stream-hash>/review-<six-digit-revision>-<random-id>.json.
 They are immutable editions, independent of source files and scientific products.

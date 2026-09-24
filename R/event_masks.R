@@ -42,8 +42,10 @@ prepare_mask_display <- function(manifest,directory,cache_dir) {
 
 event_masks_ui <- function(id) {
   ns <- shiny::NS(id)
+  if (!isTRUE(getOption("fgstudio.mask_diagnostics", FALSE)))
+    return(shiny::uiOutput(ns("status")))
   shiny::tagList(
-    shiny::h4("Analysis masks"),
+    shiny::h4("Mask troubleshooting (development only)"),
     shiny::p("Masks are prepared automatically for this Survey Event's Streams and Reaches using your saved boundaries and cell size."),
     shiny::conditionalPanel("output.busy",ns=ns,
       shiny::actionButton(ns("cancel"),"Pause mask preparation",class="btn-outline-secondary btn-sm")),
@@ -59,8 +61,8 @@ mask_recovery_message <- function(e) {
   action <- if(grepl("cell size|spacing",detail,ignore.case=TRUE))
     "Open Review / edit Survey Event to correct the invalid cell size." else
     if(grepl("disk|space",detail,ignore.case=TRUE)) "Free disk space on the drive holding the study, then reopen the Survey Event." else
-    if(grepl("CRS|reference",detail,ignore.case=TRUE)) "Open Analysis setup to correct the horizontal CRS, then review and save the Survey Event again." else
-    if(grepl("polygon|geometry|Reach|overlap",detail,ignore.case=TRUE)) "Open Study geometry to review the Stream and Reach boundaries, then review and save the Survey Event again." else
+    if(grepl("CRS|reference",detail,ignore.case=TRUE)) "Open Analysis to correct the horizontal CRS, then review and save the Survey Event again." else
+    if(grepl("polygon|geometry|Reach|overlap",detail,ignore.case=TRUE)) "Open Geometry to review the Stream and Reach boundaries, then review and save the Survey Event again." else
     if(grepl("changed|stale|selection|pending",detail,ignore.case=TRUE)) "Save or cancel pending edits, then use Review / edit Survey Event to save it against the current setup." else
     if(grepl("processx|pipe|Access is denied",detail,ignore.case=TRUE)) "The local app needs to be restarted with permission to run background workers. Ask the developer to restart the preview." else
       "Share this message with the developer; the saved inputs have been retained."
@@ -79,7 +81,9 @@ draw_event_mask <- function(path,boundary) {
 
 event_masks_server <- function(id,context,store,pending,launch=launch_event_masks) {
   shiny::moduleServer(id,function(input,output,session) {
-    cache_dir <- tempfile("mask-display-session-");dir.create(cache_dir)
+    diagnostics <- isTRUE(getOption("fgstudio.mask_diagnostics", FALSE))
+    cache_dir <- if (diagnostics) tempfile("mask-display-session-") else NULL
+    if (diagnostics) dir.create(cache_dir)
     results <- shiny::reactiveVal(list()); busy <- shiny::reactiveVal(FALSE)
     message <- shiny::reactiveVal("Save a Survey Event to prepare its masks automatically.")
     job <- NULL; request <- NULL; directory <- NULL; owner <- NULL; queue <- character()
@@ -146,17 +150,22 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
       }
       rows
     })
-    output$status <- shiny::renderUI(shiny::div(role="status",message(),if(busy()) shiny::tags$progress(style="width:100%")))
+    output$status <- shiny::renderUI({
+      if (!diagnostics && !busy() && !startsWith(message(), "Masks could not be created.")) return(NULL)
+      shiny::div(role="status", if (busy() && !diagnostics) "Preparing DEM boundaries..." else message(),
+        if(busy()) shiny::tags$progress(style="width:100%"))
+    })
     output$result <- shiny::renderUI({
       rows <- products();if(!length(rows)) return(NULL)
       if(any(vapply(rows,function(p) p$valid_cells==0,logical(1))))
-        shiny::p("Some masks have no included cells. Review their boundaries in Study geometry and the Survey Event cell size. Saving corrections updates the masks automatically.")
+        shiny::p("Some masks have no included cells. Review their boundaries in Geometry and the Survey Event cell size. Saving corrections updates the masks automatically.")
     })
     output$has_masks <- shiny::reactive(length(products())>0)
     output$busy <- shiny::reactive(busy())
     shiny::outputOptions(output,"has_masks",suspendWhenHidden=FALSE)
     shiny::outputOptions(output,"busy",suspendWhenHidden=FALSE)
     shiny::observeEvent(products(),{
+      if (!diagnostics) return()
       rows <- products();if(!length(rows)) return()
       ctx <- fluvgeo::read_study_context(owner$path)
       labels <- vapply(rows,function(p) {
@@ -172,13 +181,14 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
       shiny::updateSelectInput(session,"product",choices=stats::setNames(names(rows),labels),selected=chosen)
     })
     output$map <- shiny::renderPlot({
+      shiny::req(diagnostics)
       shiny::req(input$product);p <- products()[[input$product]];shiny::req(p)
       ctx <- fluvgeo::read_study_context(owner$path)
       area <- switch(p$level,"Study Area"=ctx$study_area,"Stream"=ctx$streams[ctx$streams$stream_id==p$id,,drop=FALSE],
         "Reach"=ctx$reaches[ctx$reaches$reach_id==p$id,,drop=FALSE])
       draw_event_mask(p$path,area)
     })
-    session$onSessionEnded(function() try({stop_job();unlink(cache_dir,recursive=TRUE)},silent=TRUE))
+    session$onSessionEnded(function() try({stop_job();if(!is.null(cache_dir)) unlink(cache_dir,recursive=TRUE)},silent=TRUE))
     list(result=results,busy=busy,poll=poll,message=message)
   })
 }

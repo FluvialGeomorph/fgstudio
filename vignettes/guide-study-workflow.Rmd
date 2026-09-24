@@ -234,20 +234,20 @@ Reach from one already defined.
 
 ## Survey acquisition and analysis references
 
-In **Analysis setup**, search projected EPSG systems applicable to the saved Study
+In **Analysis**, search projected EPSG systems applicable to the saved Study
 Area. Filter horizontal units, inspect datum/frame and coverage, and open the
 SpatialReference.org explorer or selected definition. Check the CRS, then save it;
 validation and catalog evidence are recorded automatically. Advanced EPSG/WKT entry remains
 available. Selecting a horizontal CRS does not change elevations; epoch-dependent
 frames require a future qualified coordinate-epoch workflow for processing.
 
-In **Analysis setup > Vertical reference**, choose a vertical height CRS, a 3D
+In **Analysis > Vertical Reference**, choose a vertical height CRS, a 3D
 geographic CRS for ellipsoidal heights, or an explicit declared/local/unknown
 reference. Set the target elevation unit independently. Optional epoch/model
 fields preserve those details without guessing from survey dates. Check and save
 the specification; this creates metadata only and does not change source DEMs.
 Incomplete and epoch-dependent targets remain explicitly unqualified for processing.
-Survey Event settings are available in Survey Collections. Source-reference
+Survey Event settings are available in Survey Events. Source-reference
 reconciliation and mosaicking remain future work.
 
 Both CRS editors show validation errors and save confirmation beside their buttons.
@@ -255,7 +255,7 @@ A saved definition reappears as its EPSG identifier (or authoritative WKT) when
 the study is reopened. **Check** validates the current form; **Save** writes a new
 local revision. Checking alone does not persist edits.
 
-The **Survey Collections** tab discovers reported lidar acquisitions for a saved
+The **Collections** tab discovers reported lidar acquisitions for a saved
 Study Area, displays metadata/footprints and saves checkbox selection intent.
 Reopening restores selections offline. Planned collections are selectable; saving
 does not download data or create Survey Events. Query results distinguish failures
@@ -293,14 +293,21 @@ to review the destination. Downloads stream one file at a time without size or
 total-duration caps;
 **Cancel download** retains completed files. Per-file outcomes distinguish success,
 failure and unfinished work. Start again to retry: matching completed files are
-rehashed before reuse. Reopening checks local integrity in a background worker.
+rehashed before reuse. Reopening lists recorded local availability without rehashing every file.
 Downloads verify transfer lengths, TIFF signature and SHA-256 content identity;
 terrain suitability remains unreviewed. Previous selections and files are retained.
 The **Saved source DEM files** table remains available when choices are refreshed;
 **Saved previously** distinguishes local files outside the current saved choices.
 
-After **Analysis setup**, use **Continue to Define a Survey Event** or open the
-adjacent **Define a Survey Event** main tab. Select from **Saved Survey Collections for this Survey
+To view a saved file, expand **View downloaded DEM** and select it. The preview
+starts automatically. Expand **File metadata and integrity** for details;
+**Recheck file integrity** explicitly repeats verification. Unchanged views reuse
+the session cache. Drag a rectangle and choose **Inspect selected area** for
+source-window detail; **Preview elevations** returns to the whole tile. These
+display samples do not change the original DEM.
+
+After **Analysis**, use **Continue to Survey Events** or open the
+adjacent **Survey Events** main tab. Select from **Saved Survey Collections for this Survey
 Event**, then click **Define a Survey Event**. The form starts with those saved
 collections, known dates and Streams associated with saved DEM selections. A suggested month includes only complete acquisition intervals within that
 month; **Use suggested collections** can apply another saved date suggestion. Review
@@ -312,21 +319,22 @@ unknown. Existing Reach Events can be linked explicitly when available.
 
 **Save Survey Event** retains an immutable definition revision. **Review / edit Survey Event**
 reopens it; **Cancel** discards the editor. Definitions have stable IDs separate from
-their date labels and Reach Event IDs. The same Study Area CRS and (0, 0) anchor
-apply across Survey Events; equal cell sizes align. Changed selection/CRS evidence is
-flagged for review. This step creates no masks, DEMs or new Reach Events.
+their date labels and Reach Event IDs. Masks use the saved Study Area CRS and
+Survey Event cell size. The initial grid-alignment convention remains under
+project review; existing saved grids are unchanged. Changed selection/CRS evidence
+is flagged for review. Saving starts automatic mask preparation; it does not
+create a terrain DEM or a new Reach Event.
 
 Masks are prepared automatically when you save or open a Survey Event, for all
 Streams already assigned to it. There is no processing Stream picker or start
 button. Progress appears while masks are generated; matching saved masks are
-verified and reused when you reopen the Event.
+checked against the current inputs and reused when you reopen the Event.
 
-Use **Mask to view** to inspect the completed Study Area, Stream and Reach masks.
-Blue shows included cells and orange shows the saved boundary. The overview is
-sampled for display; saved masks retain the full cell size. To correct boundaries,
-use **Study geometry**; to change spacing, use **Review / edit Survey Event**.
-Saving corrections updates masks automatically. **Pause mask preparation** stops
-background work without discarding published masks. Reopening the Event resumes.
+Masks are internal DEM inputs. Normal sessions do not build mask display rasters
+or show mask maps. To correct boundaries, use **Geometry**; to change spacing,
+use **Review / edit Survey Event**. Failures still provide recovery guidance.
+Mask troubleshooting is an optional developer view scheduled for removal from
+the analyst workflow once DEM integration is complete.
 
 FG Studio supports local Study Area, Stream and Reach definition, including
 saved-Reach splitting and combining. It is not yet an L1 execution app: terrain
@@ -390,3 +398,12 @@ and metadata links; the current context holds Study Area identity and Purpose,
 boundary, Streams and Reaches. Companion GeoPackages retain selected source
 geometry, buffer settings and, after splitting, versioned piece assignments.
 Move or back up the entire study folder, not only its latest context file.
+
+The Study Workspace sidebar can be collapsed with its edge toggle and reopened
+when you need another study. The bordered main tab set is **Geometry**,
+**Collections**, **Analysis**, and **Survey Events**.
+
+When a DEM has been saved for the selected Survey Event settings, its **DEM** card
+shows the result and **Download DEM (GeoTIFF)**. Reopening uses the saved file
+without processing it again. Current development output covers a labeled portion
+of a Reach; it is not yet a complete Stream DEM. Mask troubleshooting stays hidden.

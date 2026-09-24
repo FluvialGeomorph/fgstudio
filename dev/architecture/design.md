@@ -22,69 +22,65 @@ ArcGIS toolbox intact. Backend capabilities belong to fluvgeo and should also
 serve QGIS. Begin with local storage; ultimately support approved FGDB read/write
 access on USACE ArcGIS Enterprise. Enterprise transport/authentication are unknown.
 
-## Acquisition and inspection (9031)
+## Terrain workflow (9048 / fluvgeo 9053)
 
-App 9041 adds source-review annotations after preflight. The review module owns
-draft assessments and order; the store checks current metadata revisions and saves
-immutable JSON editions. Source fingerprints prevent applying old annotations to
-changed preflight snapshots. These records authorize no raster operation. Article
-14 and the app terrain-source-review schema define the boundary.
+Increment 9050 / fluvgeo 9055 reuses the saved Reach mask for the small real-data
+mosaic through `launch_terrain_mask_trial()` and `mask_terrain_mosaic()`. The
+trial display is bound to its Study Area and Survey Event. Horizontal grid
+compatibility is checked separately from the DEM's vertical CRS; full source CRS
+and units survive masking. Source metres versus saved target international feet
+are shown explicitly. No target-unit product is published by this increment.
 
-Backend horizontal raster qualification (fluvgeo 9049) adds a processing primitive
-for static projected CRSs sharing an identified geodetic reference. Float32 is
-the default storage; Float64 working precision and optional storage are separate.
-App 9040 preflight estimates Float32 DEM payloads. The primitive has no
-current app caller. Article 13 explains the future worker boundary; existing
-preflight never dispatches this operation. No app call-map bridge is recorded
-until an actual assembly worker exists.
+Increment 9049 / fluvgeo 9054 adds an opt-in real-data mosaic development preview
+through `R/terrain_mosaic_trial.R`. Its worker calls `mosaic_terrain_tiles()` on
+small source windows; its read-only display is mounted by `survey_event_settings.R` only when the
+local launcher supplies a completed trial result. There is no full Stream
+dispatch, Study Area mutation or Survey Event publication in this increment.
+Article 13 and the mosaic design distinguish this source-grid path from future
+analysis-grid assembly.
 
-Hierarchical masks (9039/9047) run in a separate cancellable worker under Event
-setup. The store pins current inputs and publishes verified staging directories
-by rename into immutable editions. fluvgeo owns shared grid validation, strict
-cell-center membership, parent intersection, block I/O and output verification.
-Article 12 and the backend event-masks schema define this boundary. Masks require
-no DEM receipt or vertical operation.
+Articles 06–14 and the [agent routes](agent-routes.md) trace the implemented
+boundaries. The [remediation record](../features/terrain-gis-remediation.md)
+retains qualification evidence; the [mosaic design](../features/dem-mosaic-design.md)
+owns scientific choices and pending assembly work.
 
-Grid/source preflight (9038/9046) is a cancellable, read-only worker under Event
-setup. `dem_preflight_request` resolves current saved sources; fluvgeo validates
-group and receipt evidence and computes grid envelopes/estimates without allocating
-rasters. Article 11 covers request freshness, failure and cancellation. Results
-are session snapshots, not execution authorization or scientific acceptance.
+- Source acquisition uses cancellable workers, complete catalog paging, streamed
+  original downloads and immutable receipts. Reopening saved availability reads
+  records and metadata without hashing every DEM.
+- Source viewing starts on file selection. A worker opens paths, verifies a cold
+  source once and creates a bounded source-window preview. Session-owned metadata
+  and display caches reuse unchanged inputs; explicit integrity refresh is
+  available. Metadata stamps are change indicators, not cryptographic guarantees.
+- Analysis setup persists the Study Area's horizontal and vertical target
+  definitions through fluvgeo context writers. It does not transform terrain.
+  Tab-local reload restores saved study revisions and discards transient edits.
+- Define a Survey Event is a main Study Area tab after Analysis setup. It records
+  Collection/Stream membership, retained date evidence, output cell size and
+  optional existing Reach Event links. Legacy acquisition-group sidecars are an
+  internal persistence contract, not a new FGDB entity. The initial numeric grid
+  alignment convention is unresolved; existing saved grids remain unchanged.
+- Saving/reopening a Survey Event automatically prepares or reuses masks for
+  assigned Streams in a background worker. fluvgeo uses native terra
+  rasterize/classify/crop/mask, shared Study Area raster reuse, native publication
+  summaries and geometry/grid/recipe keys. Reopening avoids repeated value scans.
+  Masks require no source DEM receipt or vertical operation.
+- The store publishes complete mask staging directories as immutable editions.
+  Only the optional developer troubleshooting mode prepares bounded mask display rasters in session caches. Cancellation stops
+  and joins workers before cleanup; recorded abandoned staging is reclaimed only
+  after owning app and worker processes have exited. Unknown staging is retained.
+- Preflight diagnostics and source-review annotations are not mounted in the
+  analyst workflow. Their retained controllers/store contracts are documented in
+  articles 11/14. Neither is an analyst approval gate for masks.
+- The standalone horizontal-warp primitive uses native GDAL processing and terra
+  summaries, Float32 default storage and GDAL-selected working precision. Explicit
+  horizontal-only controls prevent unintended elevation changes. It has no app
+  caller; Stream DEM assembly and vertical transformations remain unimplemented.
 
-Event setup (9037/9045) adds `survey_event_settings_server` under Survey Collections.
-The local store publishes immutable acquisition-group sidecars through fluvgeo,
-retaining collection evidence, Stream membership, required spacing in saved CRS
-units, a fixed (0, 0) anchor and optional existing Reach Event links. Article 10
-and the paired route document save/reopen/stale-write behavior. No new Reach
-Events, masks or mosaics are created by this metadata-only increment.
-
-The 9036 lifecycle refinement restores the current tab's saved study from an
-opaque URL query key through the validated store read path. There is no shared
-last-opened study. New clears that key; reload discards unsaved work. CRS feedback
-is local to each editor and save confirmation is revision-bound. Articles 01,
-08 and 09 and test-study-reload.R cover persistence versus transient UI state.
-
-Vertical target specification (9035/9044) is a separate Analysis setup tab.
-The app records one checked target through set_study_vertical_reference; backend
-context schema 7 owns definition/unit/epoch/model validation and immutable storage.
-Source reference reconciliation and coordinate operations remain separate future
-work. Article 09 and the paired route trace the writer boundary and shared CRS
-dropdown overlay behavior.
-
-Analysis setup (9034) provides a compact local PROJ/EPSG picker and required Study Area projected CRS definition through
-fluvgeo validation and immutable analysis_reference recording. Article 08 traces
-the editor/store/writer boundary. Survey Event output cell size and grid/mask
-execution follow vertical reference/epoch specification; see ADR 0008 and the
-mosaic and vertical-reference designs. Selection evidence is generated automatically.
-
-Saved Stream-scoped source choices and original DEM downloads are implemented.
-`R/stream_dem_files.R` and `R/stream_dem_download.R` orchestrate selection,
-receipt-backed acquisition and verification through the local study store.
-`R/stream_dem_inspection.R` provides cancellable metadata and source-grid detail
-inspection through fluvgeo workers. Developer articles 06/07 and agent routes
-describe these call paths. Tile previewing is owner-accepted; mosaic design is
-next (`dev/features/dem-mosaic-design.md`). No mosaic or accepted terrain product
-is currently implemented by this workflow.
+Backend functions own scientific raster operations. App modules own session
+state, dispatch, progress and presentation; the local store owns durable paths,
+input revisions and publication. Pass paths/settings across process boundaries,
+not live SpatRaster pointers. No shared runtime or Enterprise deployment follows
+from local development.
 
 ## Reach editing foundation (9022)
 
@@ -386,3 +382,24 @@ carries into creation. Remove the redundant Start another study button and raw
 Saved record details / Map and coordinate information sections from the UI.
 Evidence remains in GeoPackages; source/CRS/storage guidance remains in README,
 attribution/search tooltip and the compact public-service disclosure.
+
+Current increment (9051 / isolated fluvgeo 9056) converts the masked real Reach
+window from NAVD88 metres to international feet using native terra arithmetic,
+metres / 0.3048. The horizontal grid stays EPSG:6344 at 1 metre; no resampling or
+datum transformation occurs. The new compound CRS carries vertical EPSG:8228.
+The opt-in preview appears after Event settings in Survey Events, bound to the
+matching Study Area/Event. The Study Workspace uses bslib's collapsible sidebar;
+a bordered main navigation group contains Geometry, Collections, Analysis and
+Survey Events. This result is a small development trial, not published Event DEM.
+
+Increment 9052 integrates the three qualified small real-window DEM operations
+into one cancellable worker with completed-result reuse. The normal Event view
+omits mask troubleshooting and all mask-display cache generation. The optional
+development flag and local trial cache contract are maintained in the mosaic
+design and articles 12/13. Full Stream/Event publication remains future work.
+
+Increment 9053 adds app-owned immutable local DEM editions through
+`study_dem_store()` (see `dev/schemas/survey-event-dem.md`). The existing worker
+can save its verified Reach portion while current input bindings still match.
+Ordinary sessions reopen and download the edition without development options.
+Full Stream coverage is not implied by storage publication.

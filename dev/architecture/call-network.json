@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "fgstudio",
-  "package_version": "0.0.0.9045",
+  "package_version": "0.0.0.9052",
   "generator": {
     "pkgnet": "0.6.1",
     "flow": "0.2.0"
@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "f1e3d98308f8b2c960daeb109126cc6f3dcf7e16ad0e55eee4432b167435ddc6"
+      "sha256": "3e146596dc7118dc55d6f2fce0ab58279590cd737267ba830331007dc3a077b3"
     },
     {
       "file": "NAMESPACE",
@@ -38,7 +38,7 @@
     },
     {
       "file": "R/event_masks.R",
-      "sha256": "b7daad1beb49cb063721ed1b8c963d586f4cf537affa3a6900777613921b0775"
+      "sha256": "ad86e677406af3789fd89091cf9e29438315db642ad750295df8a1611be4315c"
     },
     {
       "file": "R/map_search.R",
@@ -54,7 +54,7 @@
     },
     {
       "file": "R/mod_study.R",
-      "sha256": "065b9cb6009a614e6087e19bd4dd3171afcda386e9d3206146533111420443bb"
+      "sha256": "c7adcbd1e24cf271ae5f406a8289572fddfd2444bd11c9871b453c948357c3d4"
     },
     {
       "file": "R/mod_survey_collections.R",
@@ -94,15 +94,15 @@
     },
     {
       "file": "R/stream_dem_download.R",
-      "sha256": "4b3780eb9b1d5f032526bda883c55a2bf6e8151e534c7c405dd753b39edef0a5"
+      "sha256": "5023a151275d2027958fd2d5cbfb41fbb66878de7e0392e67e99e068eb8e0960"
     },
     {
       "file": "R/stream_dem_files.R",
-      "sha256": "1d563bb59d89068d8390510dbd5c1228d7f2da9eb9c6186195c4bb07f233a373"
+      "sha256": "a21245651c9ce128561630ee14128333cf48ff0c4d148926206e42ad31cba686"
     },
     {
       "file": "R/stream_dem_inspection.R",
-      "sha256": "693bb4bb5e2d9cbae89270f60eca0fa3715f1d9d0d53339fbe97ed7312f3dc4c"
+      "sha256": "5e46948362cfdf23e36456864dc785b038bd3116f837b29595075b6916515d5c"
     },
     {
       "file": "R/stream_dem_preflight.R",
@@ -122,7 +122,7 @@
     },
     {
       "file": "R/study_store.R",
-      "sha256": "c645312e107161177cc05577e5d4d68a62ca53c41da1946d0702e4730c3a3fca"
+      "sha256": "591f46b0b1798a9b9ec68e3a8d84ef7332e217a8e675159ba3ef0b4dd52cc4e2"
     },
     {
       "file": "R/study_vertical_reference.R",
@@ -130,7 +130,15 @@
     },
     {
       "file": "R/survey_event_settings.R",
-      "sha256": "944c409c5b2838c4e494a8918b9723c29ca3a5ed0ef474da6c43efeb7554a2ab"
+      "sha256": "2b10652f13b1dd25ddeb7670c33cca95bb4f6ffc366995c92d6d26b40fbe8360"
+    },
+    {
+      "file": "R/terrain_dem_trial.R",
+      "sha256": "d9aaeb1107fc4056d103df743e196336035f84944728025907311e69d2033c44"
+    },
+    {
+      "file": "R/terrain_mosaic_trial.R",
+      "sha256": "00126a7aafe90ca2d25885ab8bee6ff11148814ec24b590e1cc3ffac5245d39b"
     },
     {
       "file": "R/terrain_source_review.R",
@@ -138,7 +146,7 @@
     },
     {
       "file": "dev/architecture/reviewed-call-bridges.json",
-      "sha256": "33d77e86c845c0b410ef7528958ead00822bf1afdcf991ffbb7d4009fa21b43a"
+      "sha256": "22352462e4e5abbc3748efaee88d392cc0a6287c3bad5a2b6d342183da5fecb1"
     }
   ],
   "nodes": [
@@ -238,7 +246,7 @@
       "locations": [
         {
           "file": "R/stream_dem_inspection.R",
-          "line": 125
+          "line": 129
         }
       ]
     },
@@ -308,7 +316,7 @@
       "locations": [
         {
           "file": "R/stream_dem_inspection.R",
-          "line": 141
+          "line": 145
         }
       ]
     },
@@ -318,7 +326,17 @@
       "locations": [
         {
           "file": "R/event_masks.R",
-          "line": 35
+          "line": 72
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::draw_terrain_mosaic_trial",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_mosaic_trial.R",
+          "line": 75
         }
       ]
     },
@@ -338,7 +356,7 @@
       "locations": [
         {
           "file": "R/event_masks.R",
-          "line": 45
+          "line": 82
         }
       ]
     },
@@ -348,7 +366,7 @@
       "locations": [
         {
           "file": "R/event_masks.R",
-          "line": 7
+          "line": 43
         }
       ]
     },
@@ -408,7 +426,7 @@
       "locations": [
         {
           "file": "R/stream_dem_download.R",
-          "line": 1
+          "line": 18
         }
       ]
     },
@@ -453,6 +471,46 @@
       ]
     },
     {
+      "id": "fgstudio::launch_terrain_dem_trial",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_dem_trial.R",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_terrain_feet_trial",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_mosaic_trial.R",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_terrain_mask_trial",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_mosaic_trial.R",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_terrain_mosaic_trial",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_mosaic_trial.R",
+          "line": 3
+        }
+      ]
+    },
+    {
       "id": "fgstudio::local_study_store",
       "exported": false,
       "locations": [
@@ -468,7 +526,7 @@
       "locations": [
         {
           "file": "R/event_masks.R",
-          "line": 22
+          "line": 59
         }
       ]
     },
@@ -518,7 +576,7 @@
       "locations": [
         {
           "file": "R/mod_study.R",
-          "line": 37
+          "line": 38
         }
       ]
     },
@@ -593,6 +651,16 @@
       ]
     },
     {
+      "id": "fgstudio::prepare_mask_display",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/event_masks.R",
+          "line": 25
+        }
+      ]
+    },
+    {
       "id": "fgstudio::reach_merge_server",
       "exported": false,
       "locations": [
@@ -648,6 +716,16 @@
       "locations": [
         {
           "file": "R/reach_split.R",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::read_saved_dem_history",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_dem_download.R",
           "line": 1
         }
       ]
@@ -733,7 +811,7 @@
       "locations": [
         {
           "file": "R/stream_dem_download.R",
-          "line": 18
+          "line": 35
         }
       ]
     },
@@ -743,7 +821,7 @@
       "locations": [
         {
           "file": "R/stream_dem_download.R",
-          "line": 8
+          "line": 25
         }
       ]
     },
@@ -893,7 +971,7 @@
       "locations": [
         {
           "file": "R/survey_event_settings.R",
-          "line": 16
+          "line": 17
         }
       ]
     },
@@ -904,6 +982,46 @@
         {
           "file": "R/survey_event_settings.R",
           "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_dem_trial_job",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_dem_trial.R",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_dem_trial_recipe",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_dem_trial.R",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_mosaic_trial_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_mosaic_trial.R",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_mosaic_trial_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_mosaic_trial.R",
+          "line": 27
         }
       ]
     },
@@ -1066,6 +1184,18 @@
     {
       "from": "fgstudio::launch_drainage_job",
       "to": "fgstudio::drainage_request",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::launch_event_masks",
+      "to": "fgstudio::prepare_mask_display",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::launch_stream_dem_download_job",
+      "to": "fgstudio::read_saved_dem_history",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1419,6 +1549,12 @@
     },
     {
       "from": "fgstudio::stream_dem_download_server",
+      "to": "fgstudio::read_saved_dem_history",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::stream_dem_download_server",
       "to": "fgstudio::stream_dem_inspection_server",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
@@ -1550,8 +1686,38 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::survey_event_settings_server",
+      "to": "fgstudio::terrain_mosaic_trial_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::survey_event_settings_ui",
       "to": "fgstudio::event_masks_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::survey_event_settings_ui",
+      "to": "fgstudio::terrain_mosaic_trial_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_dem_trial_job",
+      "to": "fgstudio::terrain_dem_trial_recipe",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_mosaic_trial_server",
+      "to": "fgstudio::draw_terrain_mosaic_trial",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_mosaic_trial_server",
+      "to": "fgstudio::terrain_dem_trial_job",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1592,6 +1758,60 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::launch_terrain_dem_trial",
+      "to": "fluvgeo::mosaic_terrain_tiles",
+      "kind": "background-worker",
+      "file": "R/terrain_dem_trial.R",
+      "anchor": "trial$unmasked_result <- fluvgeo::mosaic_terrain_tiles(trial$sources,",
+      "line": 15,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_terrain_dem_trial",
+      "to": "fluvgeo::mask_terrain_mosaic",
+      "kind": "background-worker",
+      "file": "R/terrain_dem_trial.R",
+      "anchor": "trial$masked_result <- fluvgeo::mask_terrain_mosaic(trial$unmasked_result$path,",
+      "line": 17,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_terrain_dem_trial",
+      "to": "fluvgeo::terrain_to_international_feet",
+      "kind": "background-worker",
+      "file": "R/terrain_dem_trial.R",
+      "anchor": "trial$result <- fluvgeo::terrain_to_international_feet(trial$masked_result$path,",
+      "line": 19,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_terrain_feet_trial",
+      "to": "fluvgeo::terrain_to_international_feet",
+      "kind": "background-worker",
+      "file": "R/terrain_mosaic_trial.R",
+      "anchor": "fluvgeo::terrain_to_international_feet(source, filename)",
+      "line": 21,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_terrain_mask_trial",
+      "to": "fluvgeo::mask_terrain_mosaic",
+      "kind": "background-worker",
+      "file": "R/terrain_mosaic_trial.R",
+      "anchor": "fluvgeo::mask_terrain_mosaic(source, mask, filename)",
+      "line": 13,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
+      "from": "fgstudio::launch_terrain_mosaic_trial",
+      "to": "fluvgeo::mosaic_terrain_tiles",
+      "kind": "background-worker",
+      "file": "R/terrain_mosaic_trial.R",
+      "anchor": "fluvgeo::mosaic_terrain_tiles(sources, filename, overlap)",
+      "line": 5,
+      "evidence": "reviewed-source-bridge"
+    },
+    {
       "from": "fgstudio::terrain_source_review_server",
       "to": "fgstudio::local_study_store/save_terrain_review",
       "kind": "adapter-call",
@@ -1605,8 +1825,8 @@
       "to": "fluvgeo::write_event_masks",
       "kind": "background-worker",
       "file": "R/event_masks.R",
-      "anchor": "callr::r_bg(function(request,directory) do.call(fluvgeo::write_event_masks,c(request,list(directory=directory))),",
-      "line": 2,
+      "anchor": "m <- do.call(fluvgeo::write_event_masks,c(request,list(directory=directory,study_mask_source=study_mask_source)))",
+      "line": 18,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1641,7 +1861,7 @@
       "to": "fluvgeo::preview_stream_dem_download",
       "kind": "background-worker",
       "file": "R/stream_dem_inspection.R",
-      "anchor": "if(preview) fluvgeo::preview_stream_dem_download(attempt,file_id,window=window)",
+      "anchor": "if(preview) fluvgeo::preview_stream_dem_download(attempt,file_id,window=window,cache_dir=cache_dir)",
       "line": 3,
       "evidence": "reviewed-source-bridge"
     },
@@ -1650,7 +1870,7 @@
       "to": "fluvgeo::inspect_stream_dem_download",
       "kind": "background-worker",
       "file": "R/stream_dem_inspection.R",
-      "anchor": "else fluvgeo::inspect_stream_dem_download(attempt,file_id)",
+      "anchor": "else fluvgeo::inspect_stream_dem_download(attempt,file_id,cache_dir=cache_dir,refresh=TRUE)",
       "line": 3,
       "evidence": "reviewed-source-bridge"
     },
@@ -1669,16 +1889,16 @@
       "kind": "background-worker",
       "file": "R/stream_dem_download.R",
       "anchor": "else fluvgeo::run_stream_dem_download(attempt)",
-      "line": 3,
+      "line": 20,
       "evidence": "reviewed-source-bridge"
     },
     {
-      "from": "fgstudio::launch_stream_dem_download_job",
+      "from": "fgstudio::read_saved_dem_history",
       "to": "fluvgeo::read_stream_dem_download",
-      "kind": "background-worker",
+      "kind": "adapter-call",
       "file": "R/stream_dem_download.R",
-      "anchor": "if(verify_only) fluvgeo::read_stream_dem_download(attempt)",
-      "line": 3,
+      "anchor": "x <- fluvgeo::read_stream_dem_download(path,verify=verify)$files",
+      "line": 5,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1800,9 +2020,9 @@
     }
   ],
   "evaluation": {
-    "static_nodes": 84,
-    "static_edges": 102,
-    "reviewed_bridges": 23,
+    "static_nodes": 95,
+    "static_edges": 110,
+    "reviewed_bridges": 29,
     "storage_closure_detected": false,
     "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]
   }

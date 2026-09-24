@@ -10,6 +10,7 @@ survey_event_settings_ui <- function(id) {
     shiny::tableOutput(ns("inventory")),
     shiny::conditionalPanel("input.group != null && input.group !== ''",ns=ns,
       event_masks_ui(ns("masks"))),
+    terrain_mosaic_trial_ui(ns("mosaic_trial")),
     shiny::tags$details(shiny::tags$summary("Acquisition date evidence"),shiny::tableOutput(ns("evidence"))))
 }
 
@@ -27,6 +28,10 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
         vertical_reference=x$vertical_reference,
         streams=x$stream_inventory[x$stream_inventory$stream_id %in% g$streams$stream_id,,drop=FALSE])
     })
+    terrain_mosaic_trial_server("mosaic_trial", current, shiny::reactive({
+      if (isTRUE(editing()) || selection_pending()) return(NULL)
+      preflight_context()
+    }), store=store)
     masks <- event_masks_server("masks",preflight_context,store,
       pending=function() isTRUE(editing()) || selection_pending())
     reload <- function() {

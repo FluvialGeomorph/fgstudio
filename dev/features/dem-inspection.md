@@ -5,6 +5,20 @@ tile-preview functionality is requested. Close this feature increment and move
 to [Stream mosaic design](dem-mosaic-design.md). Acceptance covers the app's
 functionality, not an automatic suitability decision for every downloaded tile.
 
+## Current viewing behavior (9048 / fluvgeo 9053)
+
+Selecting a saved DEM starts its preview automatically under View downloaded DEM.
+Metadata is collapsed below the image; Recheck file integrity is optional.
+A cold view computes one source checksum; session metadata/display caches reuse
+unchanged inputs using receipt identity and file/sidecar change indicators.
+Explicit refresh repeats verification. Source-window detail and the bounded
+512-by-512 display remain; there is no healthy-work timeout or source-size limit.
+This is a performance and workflow correction, not a new tile-preview feature.
+See [the remediation record](terrain-gis-remediation.md) and article 07 for
+verification and the current call path.
+
+The following sections retain historical acceptance and test evidence.
+
 ## Accepted implementation: source-window detail (9031 / 9041)
 
 The owner directed the next step after the overview. Drag a rectangle on a

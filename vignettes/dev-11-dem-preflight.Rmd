@@ -8,8 +8,8 @@ vignette: >
 ---
 
 Current UI status: this diagnostic/review module is not mounted in the analyst
-workflow. Create masks runs its necessary backend checks automatically and shows
-mask outputs. The implementation below is retained for internal development;
+workflow. Saving or reopening a Survey Event prepares masks automatically and
+validates the geometry and settings needed by that operation. The implementation below is retained for internal development;
 it does not require analyst review, approval or manual saving.
 
 
@@ -53,7 +53,7 @@ the sibling fluvgeo `test_preflight_stream_dem.R` for snapping, units, real GeoT
 receipts, corrupt assets, stale selections and preservation. The exact backend
 report is documented in `fluvgeo/dev/schemas/stream-dem-preflight.md`.
 
-After a successful source check, Review DEM sources opens the durable analyst
-review and priority workflow described in [article 14](dev-14-source-review.html).
-The review records evidence and decisions; it does not clear preflight issues or
-start processing.
+The retained diagnostic's Review DEM sources action connects to the annotation
+controller described in [article 14](dev-14-source-review.html). Neither module
+is mounted in the current analyst workflow. These records do not clear source
+issues or authorize processing.

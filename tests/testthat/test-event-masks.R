@@ -9,7 +9,7 @@ test_that("saved Events automatically prepare every Stream and stop stale or can
     publish_masks=function(key,group,request,...) {published <<- published+1L;list(path="edition",manifest=list(products=list(
       list(level="Stream",id=request$stream_id,plan=list(cells=25),valid_cells=20,file="mask.tif"))))})
   shiny::testServer(event_masks_server,args=list(context=active,store=store,pending=dirty,
-    launch=function(...) {calls <<- calls+1L;list(is_alive=function() alive,
+    launch=function(...,cache_dir) {expect_null(cache_dir);calls <<- calls+1L;list(is_alive=function() alive,
       kill=function() {killed <<- TRUE;alive <<- FALSE},wait=function(...) TRUE,
       get_result=function() {if(failure) stop("failed verification");list(manifest=list(),path=NULL)})}),{
     session$flushReact();expect_equal(calls,1L)
@@ -59,12 +59,11 @@ test_that("mask storage publishes immutable editions only while saved inputs mat
 })
 
 test_that("mask review maps display generated rasters and boundaries without changing files", {
-  path <- tempfile(fileext=".tif"); withr::defer(unlink(path))
-  r <- terra::rast(nrows=501,ncols=501,xmin=500000,xmax=500501,ymin=4500000,ymax=4500501,crs="EPSG:26915")
-  terra::values(r) <- rep(c(1,NA),length.out=terra::ncell(r))
-  terra::writeRaster(r,path,datatype="INT1U",NAflag=255)
+  fixture <- Sys.getenv("FGSTUDIO_REAL_MOSAIC_RESULT")
+  skip_if(!nzchar(fixture), "Provide the small real Reach fixture")
+  trial <- readRDS(fixture); path <- trial$mask_file
   before <- tools::md5sum(path)
-  area <- sf::st_sf(geometry=sf::st_as_sfc(sf::st_bbox(c(xmin=500000,ymin=4500000,xmax=500501,ymax=4500501),crs=26915)))
+  area <- trial$reach
   image <- tempfile(fileext=".png"); withr::defer(unlink(image))
   grDevices::png(image,width=700,height=500)
   expect_no_error(draw_event_mask(path,area))
@@ -72,9 +71,11 @@ test_that("mask review maps display generated rasters and boundaries without cha
   expect_gt(file.info(image)$size,0)
   expect_identical(tools::md5sum(path),before)
   expect_match(mask_recovery_message(simpleError("Invalid cell size")),"invalid cell size")
-  expect_match(mask_recovery_message(simpleError("Missing Reach polygons")),"Study geometry")
+  expect_match(mask_recovery_message(simpleError("Missing Reach polygons")),"Geometry")
   html <- as.character(survey_event_settings_ui("event"))
-  expect_match(html,"Masks are prepared automatically")
+  expect_false(grepl("Mask to view|Analysis masks|Mask troubleshooting",html))
+  withr::local_options(list(fgstudio.mask_diagnostics=TRUE))
+  expect_match(as.character(event_masks_ui("masks")),"Mask troubleshooting")
   expect_false(grepl("Stream to mask|Create masks",html))
   expect_false(grepl("Grid and source preflight|Check grid and saved sources|Review DEM sources",html))
 })

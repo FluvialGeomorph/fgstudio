@@ -251,6 +251,18 @@ failures justify it; do not repeatedly run unrelated suites, package builds, or
 documentation builds without a reason. Keep large integration data out of routine
 unit tests and repositories unless explicitly approved.
 
+Owner direction, 2026-09-23: develop floating-point DEM mosaics on small spatial
+extents. For this mosaic development work, use small subsets of the actual
+downloaded DEMs covering a small Reach or portion of a Reach, not synthetic
+rasters, for function trials, correctness checks and parameter tuning.
+Choose a window that exercises the behavior under investigation, such as tile
+overlap or a seam, retaining required interpolation support and the intended
+resolution. Reuse prepared test inputs. Do not dispatch the whole workspace or
+whole Streams on each development iteration. Run a representative full-Stream
+integration check only after the small-area path is stable and a specific scale
+or integration question warrants it. These are development test extents, not
+production processing limits or changes to saved study geometry.
+
 ## 11. Present analyst decisions and results
 
 Use established FluvialGeomorph terminology. Reuse known study and Survey Event

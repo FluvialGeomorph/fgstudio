@@ -1,0 +1,51 @@
+test_that('real Reach DEM editions reopen, exclude stale settings and protect published files', {
+  fixture <- Sys.getenv('FGSTUDIO_REAL_MOSAIC_RESULT')
+  skip_if(!nzchar(fixture),'Provide the real Reach fixture')
+  trial <- readRDS(fixture)
+  root <- tempfile();dir.create(root);withr::defer(unlink(root,recursive=TRUE))
+  context <- file.path(root,'context.gpkg');file.copy(trial$context_path,context)
+  groups <- stats::setNames(list(list(path=trial$group_path)),trial$group_id)
+  selection <- 'selection-one'
+  make_store <- function() study_dem_store(function(key) context,function(key) list(groups=groups),
+    function(key) list(path=selection))
+  s <- make_store();binding <- s$dem_request(trial$key,trial$group_id,context,trial$group_path)
+  recipe <- terrain_dem_trial_recipe(trial)
+  stage <- s$prepare_dem(trial$key)
+  file.copy(trial$result$path,file.path(stage,'dem-international-feet.tif'))
+  staged <- trial;staged$result$path <- file.path(stage,'dem-international-feet.tif')
+  result <- s$publish_dem(binding,recipe,stage,staged)
+  expect_false(dir.exists(stage));expect_true(file.exists(result$result$path))
+  expect_equal(unname(tools::md5sum(result$result$path)),unname(tools::md5sum(trial$result$path)))
+  reopened <- make_store()$find_dem(binding,recipe)
+  expect_identical(reopened$result$path,result$result$path)
+  expect_identical(reopened$saved_dem$scope,'reach_portion')
+  expect_error(s$discard_dem(trial$key,dirname(result$result$path)),'Invalid DEM staging')
+  expect_null(s$find_dem(modifyList(binding,list(group_id='other'))))
+  next_stage <- s$prepare_dem(trial$key)
+  file.copy(trial$result$path,file.path(next_stage,'dem-international-feet.tif'))
+  staged$result$path <- file.path(next_stage,'dem-international-feet.tif')
+  selection <- 'selection-two'
+  expect_error(s$publish_dem(binding,recipe,next_stage,staged),'changed')
+  expect_true(file.exists(result$result$path));s$discard_dem(trial$key,next_stage)
+  expect_false(dir.exists(next_stage))
+  orphan <- s$prepare_dem(trial$key)
+  jsonlite::write_json(list(schema='FGSTUDIO_DEM_JOB_1',app_pid=999998L,worker_pid=999999L),
+    file.path(orphan,'owner.json'),auto_unbox=TRUE)
+  with_mocked_bindings({
+    stage <- s$prepare_dem(trial$key)
+    expect_false(dir.exists(orphan));expect_true(file.exists(result$result$path))
+    s$discard_dem(trial$key,stage)
+  },ps_pids=function() integer(),.package='ps')
+  selection <- 'selection-one'
+  withr::local_options(list(fgstudio.mosaic_trial=NULL,fgstudio.dem_trial=FALSE))
+  ctx <- shiny::reactiveVal(list(group_id=trial$group_id,path=context,group_path=trial$group_path))
+  shiny::testServer(terrain_mosaic_trial_server,args=list(current=function() list(key=trial$key),
+      event_context=ctx,store=s),{
+    expect_match(output$summary$html,'Saved with this Survey Event')
+    expect_match(output$download_ui$html,'Download DEM')
+    expect_identical(output$has_dem,"true")
+    expect_equal(unname(tools::md5sum(output$download_dem)),unname(tools::md5sum(trial$result$path)))
+    ctx(modifyList(ctx(),list(group_id='other')));session$flushReact()
+    expect_error(output$download_ui)
+  })
+})

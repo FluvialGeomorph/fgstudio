@@ -501,7 +501,7 @@ local_study_store <- function(data_dir) {
     discard_masks(key,directory)
     list(path=path,manifest=manifest)
   }
-  list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
+  c(list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
     dem_destination=dem_destination,prepare_dem_download=prepare_dem_download,dem_download=dem_download,
     dem_files=dem_files,save_dem_files=save_dem_files,check_dem_files=check_dem_files,
     survey_collections=survey_collections,save_survey_collections=save_survey_collections,
@@ -516,5 +516,6 @@ local_study_store <- function(data_dir) {
     save_selected_boundary = save_selected_boundary, save_stream = save_stream,
     stream_segments = stream_segments, preview_reach = preview_reach, save_reach = save_reach,
     preview_reach_merge = preview_reach_merge, merge_reaches = merge_reaches,
-    rename_feature = rename_feature,preview_reach_split=preview_reach_split,split_reach=split_reach)
+    rename_feature = rename_feature,preview_reach_split=preview_reach_split,split_reach=split_reach),
+    study_dem_store(context_path,acquisition_groups,survey_collections))
 }

@@ -7,6 +7,11 @@ Hierarchical masks use standard terra rasterization and raster masking. The earl
 agent-introduced strict-edge rule and custom per-cell testing were not owner
 requirements and are superseded. No arbitrary processing-size limits apply.
 
+Current implementation clarification (2026-09-22): masks prepare automatically
+from saved Survey Event settings. Preflight/source-review panels are not mounted.
+The shared-alignment requirement does not approve a particular numeric anchor;
+the initial-grid convention remains unresolved. Existing grids are unchanged.
+
 ## Context
 
 The owner accepted tile inspection and supplied raster hygiene requirements for

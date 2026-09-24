@@ -1,6 +1,6 @@
 # Stream-scoped source DEM file discovery
 
-## Current remediation (9047 / fluvgeo 9052)
+## Current acquisition behavior (9048 / fluvgeo 9053)
 
 Source DEM discovery reads all catalog pages. Download size and healthy-transfer
 duration caps are removed, including legacy request restrictions. Connection/idle
@@ -8,15 +8,13 @@ recovery and cancellation remain. Saved availability is read across attempt hist
 independently of selection refresh; each preview retains its receipt's attempt.
 Explicit refreshed selections can reuse matching verified source bytes.
 
-Focused backend discovery/download tests passed, including the local HTTP transfer
-fixture; the directory-symlink case remains skipped on this account. App download,
-file-selection and inspection tests passed. Only the isolated development backend
-was installed. See article 06 and the current checkpoint for preview verification.
-The real app saved-history worker passed against an existing synthetic local tile;
-a live DEM query through a worker returned COMPLETE using the saved synthetic
-public fixture. Preview 9047 runs on port 8782, leaving the old browser session
-untouched. Interactive visual acceptance remains owner review.
-Earlier verification below is historical and does not reinstate retired limits.
+Saved-history reopening reads records and local metadata without hashing every
+DEM. A file's cold inspection verifies its checksum; explicit integrity refresh
+remains available. These availability records are not scientific acceptance.
+See [the remediation record](terrain-gis-remediation.md) for measured worker
+checks, verification limits and the current implementation.
+
+Earlier increments below are historical evidence, not current execution limits.
 
 ## Source download increment (9028 / fluvgeo 9038)
 
