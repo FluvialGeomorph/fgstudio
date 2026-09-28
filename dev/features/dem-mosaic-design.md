@@ -1,13 +1,9 @@
 # Stream DEM mosaic design
 
-Current state: FG Studio 9062 / isolated fluvgeo 9057 assembles and reuses
-assigned Stream DEMs serially from saved Event settings. All three 2019-12
-Streams are saved. The owner accepted this increment and UI polish. Mixed-grid
-integration and portable folder binding remain unfinished.
-See the [remediation record](terrain-gis-remediation.md)
-for the completed engineering corrections across steps 06–14 and their limits.
-Tile preview/detail functionality is accepted; further tile-preview features are
-not a prerequisite to assembly.
+The app assembles and reuses assigned Stream DEMs serially from saved Event
+settings. The supported path uses aligned grids and NAVD88 metre sources with an
+international-foot target. Differing-grid integration and portable folder binding
+remain separate work.
 
 This document owns the intended processing contract. Implemented behavior,
 author requirements and unresolved proposals are distinguished below. Historical
@@ -45,7 +41,7 @@ file modification or raster creation month. Current retained evidence in
 `collectiondate`, provider IDs and raw metadata. Tile-local acquisition evidence
 can refine a collection interval only when its meaning and tile link are known.
 
-Implemented settings policy (9037/9045):
+Membership policy:
 
 - A valid acquisition interval wholly within one calendar month proposes that
   month's Survey Event membership. Retain original endpoints; a month label is not an exact date.
@@ -81,7 +77,7 @@ The Define a Survey Event panel persists one immutable GeoPackage per definition
 retaining UUID identity, reviewed selected-collection and Stream membership,
 source/date evidence, required year, optional month, optional notes and positive output
 cell size in the saved planar CRS's units. Existing Reach Events can be linked by
-ID after parentage/date validation; this increment creates no Reach Events.
+ID after parentage/date validation; the definition writer creates no Reach Events.
 Revisions retain previous snapshots. The local store rejects stale study,
 selection or definition state and duplicate Reach Event links across definitions.
 The implementation uses a (0, 0) grid-alignment anchor within the saved real-world CRS. The specific alignment convention remains unconfirmed; do not interpret it as an arbitrary CRS or move saved grids automatically.
@@ -255,7 +251,7 @@ preparation does not show transient boundary-progress screens.
 
 ## Verification evidence
 
-These are recorded real-data runs, not benchmarks rerun during consolidation.
+The following measurements characterize the exercised real-data workload.
 Inputs are actual downloaded Spencer Creek DEMs; diagnostic records remain under
 ignored `dev/check-output/real-reach-mosaic/` and are not shipped fixtures.
 
@@ -292,13 +288,21 @@ qualification. Continue parameter development on small actual DEM windows.
   need explicit methods and provenance under ADR 0009.
 - Implement FGDB portable folder metadata binding, relocation qualification and
   enterprise transfer separately from the completed local GeoTIFF edition path.
-- Broader downstream L1 analysis remains outside this increment.
+- Broader downstream L1 analysis remains outside the DEM assembly scope.
 
-Human implementation route: [article 13](../../vignettes/dev-13-horizontal-warp.Rmd).
+Human implementation route: [article 13](../../vignettes/dev-13-stream-dems.Rmd).
 Analyst procedure: [Study workflow](../../vignettes/guide-study-workflow.Rmd).
 
-Documentation consolidation verification: the full local pkgdown site rebuilt
-successfully after this increment. Code-map freshness/bridge checks passed;
-439 local links across 18 pages and 16 article navigation/text exports passed.
-No public site URL is configured. No raster processing or app behavior changed
-as part of consolidation.
+## Shared Stream terrain direction
+
+Process the DEM at Stream scale and let Reach analyses reference its applicable
+edition and use their own spatial domains. Do not require independent DEM creation
+or persistent raster copies solely because there are multiple Reaches. Temporary
+windowed reads/crops are execution choices, not new governed terrain identities.
+
+The app implements Stream assembly/reuse. Hydro-modification, explicit downstream
+Reach/Event asset associations and portable delivery remain to be integrated.
+FGDB's existing Reach-Survey-Event hydro DEM ownership rule needs a corresponding
+revision; exact relationship tables/keys are not defined here. Preserve Reach
+ownership of other derived features while separating shared raster identity and
+extent from the identity of its consumers. See the storage-model article.

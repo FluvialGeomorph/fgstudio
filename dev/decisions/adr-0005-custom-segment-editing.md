@@ -61,18 +61,18 @@ and Stream-editing entry points below remain approved design, not delivered UI.
   source intervals; reject endpoint/zero-length cuts and ambiguous selected
   multipart branches. No invented gap fillers or geographic raw-coordinate cuts.
 
-## Tooling and next increment
+## Implementation scope
 
-9021 implements the owner's requested post-assembly entry point first: Add new,
+The implemented post-assembly entry points are: Add new,
 Split existing, Combine existing. Choose an existing Reach, click its line,
 review the snapped cut and two buffered portions, name the new Reach, save.
 The downstream portion retains the original identity by default; the analyst
 can choose upstream instead. An unbranched connected Reach without dependent
 Survey Events/network/terrain references is the current supported boundary.
-Source pieces, assignments and cut lineage now have versioned evidence; original
+Source pieces, assignments and cut lineage have versioned evidence; original
 whole-COMID contexts remain read-only until an explicit split save.
 Pre-assembly candidate cutting, Stream splitting and child/event reconciliation
-remain later entry points to this design, not implemented by this increment.
+remain later entry points to this design, not implemented.
 
 Use mature CRS-aware sf/lwgeom or sfnetworks operations in fluvgeo, with Leaflet
 only supplying a user-selected location and explicit source identity.
@@ -88,4 +88,4 @@ accepted saved-Reach splitting first. The earlier suggestion to start with an
 unassigned segment is superseded. Pre-assembly cuts and Stream splitting remain
 future entry points; their implementation order needs the owner's next decision.
 Exact UI for child/event reconciliation and final FGDB transport remain unknown.
-Renaming and list-order changes are the independently testable 9020 increment.
+Renaming and list ordering are independent of geometry editing.

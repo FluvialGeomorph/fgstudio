@@ -5,6 +5,10 @@ operations, `vignettes/guide-study-workflow.Rmd`. These orient the task without
 replacing the implementation routes below. Article 01 explains the context-routing
 pilot and its limits; the dated governance record retains experimental evidence.
 
+For domain object ownership and physical data representation, start with
+vignettes/storage-model.Rmd and dev/architecture/storage.md; each workflow
+article pairs function flow with Data objects and storage.
+
 Start with the matching row and the named source/test. Read its article when
 intent, callbacks or persistence need explanation; it is not a mandatory full
 read for every lookup. Do not load every feature history or the entire generated
@@ -14,13 +18,13 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 | Task | Article | App source | First tests | Backend boundary |
 | --- | --- | --- | --- | --- |
 | Stream DEM queue / saved-source assembly / international-foot conversion | 13 | survey_event_dems.R, terrain_dem_request.R, terrain_dem_sources.R, terrain_dem_trial.R | test-survey-event-dems.R, test-terrain-dem-request.R, test-terrain-dem-sources.R, test-terrain-dem-trial.R | mosaic_terrain_tiles, mask_terrain_mosaic, terrain_to_international_feet |
-| Saved DEM publication / Stream-tab maps / bounded real-data diagnostics | 13 | study_dem_store.R, terrain_mosaic_trial.R | test-study-dem-store.R, test-terrain-mosaic-trial.R | External GeoTIFF editions; backend scientific checks remain in fluvgeo |
+| Saved DEM publication / Stream-tab maps / bounded real-data diagnostics | 14; tools | study_dem_store.R, terrain_mosaic_trial.R | test-study-dem-store.R, test-terrain-mosaic-trial.R | External GeoTIFF editions; backend scientific checks remain in fluvgeo |
 | Complete source DEM paging / uncapped transfers / saved availability across refresh | 06 | stream_dem_files.R, stream_dem_download.R, study_store.R | test-stream-dem-files.R, test-stream-dem-download.R | discover_stream_dem_files; run_stream_dem_download; immutable receipts retained; history is not analysis binding |
 | Saved DEMs hidden after metadata revision; Survey Event terminology and suggested choices | 06, 10 | stream_dem_files.R, survey_event_settings.R, study_store.R | test-stream-dem-files.R, test-survey-event-settings.R | Existing Stream geometry/collection compatibility; legacy group API stays internal |
-| Unmounted source-review annotations, priority and overlap rule | 14 | terrain_source_review.R, stream_dem_preflight.R, study_store.R | test-terrain-source-review.R | App-owned annotations; terrain-source-review schema; no processing authorization |
-| Horizontal raster operation qualification and Float32 storage for differing-grid integration | 13 | No app caller yet; sibling fluvgeo/R/warp_terrain_horizontal.R | sibling test_warp_terrain_horizontal.R | warp_terrain_horizontal; horizontal-terrain-warp schema |
+| Unmounted source-review annotations, priority and overlap rule | tools | terrain_source_review.R, stream_dem_preflight.R, study_store.R | test-terrain-source-review.R | App-owned annotations; terrain-source-review schema; no processing authorization |
+| Horizontal raster operation qualification and Float32 storage for differing-grid integration | tools | No app caller yet; sibling fluvgeo/R/warp_terrain_horizontal.R | sibling test_warp_terrain_horizontal.R | warp_terrain_horizontal; horizontal-terrain-warp schema |
 | Automatic Event masks / all assigned Streams / native terra raster operations / saved-output reuse | 12 | event_masks.R, survey_event_settings.R, study_store.R | test-event-masks.R | event_mask_key, write_event_masks, read_event_masks; recipe reuse, worker display cache and owned staging cleanup; event-masks schema |
-| Internal preflight diagnostics (not mounted in analyst UI) | 11 | stream_dem_preflight.R, survey_event_settings.R, study_store.R | test-stream-dem-preflight.R | preflight_stream_dem; inspect_stream_dem_download |
+| Internal preflight diagnostics (not mounted in analyst UI) | tools | stream_dem_preflight.R, survey_event_settings.R, study_store.R | test-stream-dem-preflight.R | preflight_stream_dem; inspect_stream_dem_download |
 | Survey Event navigation / optional notes / required cell size | 10 | survey_event_settings.R, mod_study.R, study_store.R | test-survey-event-settings.R | propose_survey_acquisition_groups, write_survey_acquisition_group, read_survey_acquisition_group |
 | JavaScript runtime contracts / verification entry points | 01 | map_search.R, study_analysis_crs.R, inst/www/network-reference.js | test-javascript.R; javascript/ fixtures; dev/scripts/check-tests.R | Existing isolated backend; no implicit installation |
 | CRS save feedback / restored definitions / reload to saved study | 02, 08, 09 | mod_study.R, study_analysis_crs.R, study_vertical_reference.R | test-study-reload.R, test-study-module.R, test-study-analysis-crs.R, test-study-vertical-reference.R | read_study_context; existing immutable CRS writers |
@@ -36,6 +40,8 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 | Reach Add/Combine | 04 | reach_selection.R, reach_merge.R, study_store.R | test-reach-selection.R | read_study_stream_segments, add_study_reach_corridor, merge_study_reaches |
 | Reach Split | 04 | reach_split.R, study_store.R | test-reach-split.R | preview_study_reach_split, split_study_reach |
 | Names, identification, selection zoom | 01, 02 | study_feature_names.R, saved_feature_display.R, mod_boundary.R | test-feature-names.R, test-saved-feature-display.R | rename_study_feature |
+
+The tools reference is `vignettes/terrain-developer-tools.Rmd`. Input binding is article 11; processing is 13; persistence is 14.
 
 Articles live in `vignettes/`, app sources in `R/`, tests in `tests/testthat/`.
 Backend symbols are in sibling **fluvgeo**, not this package. Read its AGENTS.md

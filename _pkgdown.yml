@@ -18,6 +18,8 @@ navbar:
     articles:
       text: Developer guide
       menu:
+        - text: Data objects and local storage
+          href: articles/storage-model.html
         - text: "01. Code maps and context routing"
           href: articles/dev-01-code-navigation.html
         - text: "02. Application lifecycle"
@@ -38,14 +40,16 @@ navbar:
           href: articles/dev-09-vertical-reference.html
         - text: "10. Survey Event settings"
           href: articles/dev-10-event-settings.html
-        - text: "11. Stream DEM preflight"
-          href: articles/dev-11-dem-preflight.html
-        - text: "12. Hierarchical analysis masks"
+        - text: "11. DEM inputs"
+          href: articles/dev-11-dem-inputs.html
+        - text: "12. Analysis masks"
           href: articles/dev-12-event-masks.html
-        - text: "13. Horizontal raster qualification"
-          href: articles/dev-13-horizontal-warp.html
-        - text: "14. DEM source review and priority"
-          href: articles/dev-14-source-review.html
+        - text: "13. Stream DEM processing"
+          href: articles/dev-13-stream-dems.html
+        - text: "14. Saved DEM editions"
+          href: articles/dev-14-dem-editions.html
+        - text: Terrain developer tools
+          href: articles/terrain-developer-tools.html
 reference:
   - title: Local application entry points
     desc: Internal modules and callback paths are explained in the developer articles.
@@ -72,7 +76,13 @@ articles:
       - dev-08-analysis-crs
       - dev-09-vertical-reference
       - dev-10-event-settings
-      - dev-11-dem-preflight
+      - dev-11-dem-inputs
       - dev-12-event-masks
-      - dev-13-horizontal-warp
-      - dev-14-source-review
+      - dev-13-stream-dems
+      - dev-14-dem-editions
+
+  - title: Developer reference
+    desc: Diagnostic and standalone tools outside the application workflow.
+    contents:
+      - storage-model
+      - terrain-developer-tools

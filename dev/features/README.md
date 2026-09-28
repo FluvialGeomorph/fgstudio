@@ -16,6 +16,9 @@ Describe cohesive user-visible or cross-cutting capabilities here when their beh
 - [Drainage exploration](drainage-exploration.md): snap to a nearby mapped stream and compare reference areas/channels before deciding project geometry.
 
 - [Study Area draft](study-area-draft.md): create and reopen the first local definition.
-- [Initial Streams](study-streams.md): historical names-only foundation; current spatial Stream workflow is in drainage exploration and README.
+- [Initial Streams](study-streams.md): names-only and spatial inventory boundaries.
 - [Hierarchy names and ordering](hierarchy-editing.md): rename saved records, Stream-first Reach name lists, downstream-to-upstream candidates, map identification and nested inventory.
 - [Reach splitting](reach-splitting.md): map-selected snapped cuts, inherited extents and versioned piece assignments.
+
+- [Stream DEM processing](dem-mosaic-design.md): input, grid, method and output contract.
+- [Terrain execution qualification](terrain-gis-remediation.md): bounded workload measurements and verification limits.

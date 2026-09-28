@@ -1,7 +1,7 @@
-# Split an existing Reach (9021 / fluvgeo 9032)
+# Split an existing Reach
 
-Owner approved ADR 0005 and requested the concrete Reaches action sequence:
-**Add new**, **Split existing**, **Combine existing**. Add new's name input now
+ADR 0005 defines the Reaches action sequence:
+**Add new**, **Split existing**, **Combine existing**. Add new's name input
 precedes guidance and the scrollable segment list. When all segments are already
 assigned, creating another Reach requires Split existing, not assigning a segment
 twice. Rename and Combine remain separate supported actions.
@@ -54,15 +54,3 @@ length conservation, containment, inherited feet, dependent-event refusal and
 unchanged prior files. App tests cover mode labels, visible name placement,
 map-click preview, retained-side invalidation and explicit save. These are not
 a substitute for owner browser acceptance.
-
-## Verification, 2026-09-17
-
-FG Studio 9021 package check **OK**, 507 app assertions passed; existing sf/Shiny
-build-version warnings remain (4.6.1-built packages on runtime 4.6.0). The full
-runtime-isolation check also passed. All nine retained user Reaches passed
-read-only midpoint split previews; before/after file hashes confirmed no study
-changes. Both repository context validators passed. The computer-use visual
-check could not proceed because desktop approval timed out. The owner subsequently
-reported that split functionality works great; this is direct user acceptance,
-not automated browser verification. Full fluvgeo
-package checks were not rerun; focused backend suites cover this increment.

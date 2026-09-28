@@ -1,7 +1,8 @@
 # Developer documentation: paired human and agent maintenance
 
-Trigger: a capability, call path, adapter, state transition or backend boundary
-changes. Apply ADR 0006 with reproducibleai's narrow-artifact/proportionality rules.
+Trigger: a capability, call path, adapter, state transition, backend boundary,
+data entity, input/output contract, ownership relationship or physical storage
+representation changes. Apply ADR 0006 with reproducibleai's narrow-artifact/proportionality rules.
 
 ## Maintained inputs
 
@@ -17,6 +18,59 @@ changes. Apply ADR 0006 with reproducibleai's narrow-artifact/proportionality ru
 - `dev/architecture/reviewed-call-bridges.json`: only important indirect connections
   missed by package-local static analysis, with verifiable source anchors.
 - `R/`, tests and backend contracts: evidence of actual behavior, not generated prose.
+
+## Describe the system, not the development session
+
+After an implementation settles, rewrite its standing documentation in present
+tense around behavior, ownership, contracts, failure handling and verification
+routes. Organize numbered articles by the functioning workflow. Put unmounted
+diagnostics and standalone tools in a separate reference, not between workflow
+steps. Update titles, filenames, navigation and links together.
+
+Remove superseded proposals, per-turn test counts, old preview URLs, debugging
+narratives and repeated "now/next/formerly" updates. Do not preserve a transcript
+by moving it wholesale into an archive. Retain necessary compatibility rules,
+accepted decision rationale and compact reproducible measurement evidence in
+their owning documents. Keep unresolved scientific choices explicit; hindsight
+must not turn an implementation assumption into author approval. Checkpoints hold
+only information needed to resume unfinished work.
+
+## Function and data documentation
+
+Pair function flow with domain data flow: name the FGDB object or local preparation
+asset read/created/modified, its ownership link, and its GeoPackage layer/table or
+GeoTIFF representation. Use storage-model.Rmd for the common crosswalk and concise
+operation tables in the workflow articles. Keep internal staging/revision details
+in schemas. Do not promote draft adapters or local artifacts to governed FGDB
+objects. Verify mappings against FGDB contracts and actual readers/writers.
+
+### Completion check
+
+For an affected operation, a developer must be able to answer from the maintained
+article and crosswalk:
+
+- Which domain object or preparation asset does the function read, create or modify?
+- Which stable identity, parent or shared-asset association connects it to consumers?
+- Is its representation a GeoPackage feature layer/table, external GeoTIFF, or
+  transient output, and which reader/writer implements that boundary?
+- What is implemented, what is intended, and which FGDB binding remains unresolved?
+- Does the change preserve applicable legacy representations and provenance?
+
+Update `vignettes/storage-model.Rmd` when a shared mapping changes and the affected
+article's Data objects and storage table when its operation changes. Maintain
+exact structural contracts in the owning schema. Record material app/specification
+differences explicitly and route the needed decision to the owning FGDB contract;
+do not silently promote a local implementation to an accepted FGDB rule.
+
+For terrain, account for both shared Stream DEMs used by Reach analyses and
+archived Reach-Survey-Event hydro DEMs retained at their actual extent. Legacy
+compatibility must not depend on reconstructing an unavailable Stream DEM.
+
+Check the mapping against source and governing schemas, rebuild changed published
+documentation with pkgdown, and verify local links. State any remaining mismatch
+in the task result. Unaffected mappings need no edits, new report or redundant
+raster processing. The check is part of completing the change, not a separate
+analyst approval gate.
 
 ## Procedure
 

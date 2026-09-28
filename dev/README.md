@@ -18,6 +18,6 @@ Developer entry points: [human articles](../vignettes/dev-01-code-navigation.Rmd
 [agent routes](architecture/agent-routes.md), and the
 [paired documentation workflow](workflows/developer-documentation.md).
 
-Start with [the current project plan](goals/project-plan.md). The
-[2026-09-18 documentation review](governance/documentation-review-2026-09-18.md)
-records the local hierarchy milestone, corrected drift and evidence limits.
+Start with [the current project plan](goals/project-plan.md). Standing documents
+describe the system in present tense. Optional verification records establish
+bounded evidence; they are not a development transcript or prerequisite reading.

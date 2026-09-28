@@ -40,8 +40,7 @@ and NoData domain, while source tiles can have different CRSs and resolutions.
 
 ## Consequences
 
-The earlier design-only restriction to compatible source grids is superseded;
-horizontal reprojection/alignment belongs in this increment. Detailed defaults,
+The accepted design includes explicit horizontal reprojection/alignment. The integrated pipeline currently handles aligned grids; differing-grid integration remains open. Detailed defaults,
 questions and qualification requirements are maintained in
 [the mosaic design](../features/dem-mosaic-design.md), with proposed defaults
 distinguished from owner requirements.

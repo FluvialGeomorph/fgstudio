@@ -10,8 +10,8 @@ consolidated; no new processing feature is selected by this handoff.
 - `dev/features/dem-mosaic-design.md`: scientific contract, implementation limits,
   consolidated real-data measurements and remaining grid/vertical choices.
 - `vignettes/guide-study-workflow.Rmd`: current analyst procedure.
-- `vignettes/dev-13-horizontal-warp.Rmd` and `dev/architecture/agent-routes.md`:
-  Event queue, source request, worker, persistence and display call paths.
+- `vignettes/dev-13-stream-dems.Rmd` and `dev/architecture/agent-routes.md`:
+  processing call paths. Articles 11/12/14 cover inputs, masks and editions; terrain-developer-tools.Rmd covers standalone diagnostics.
 - `dev/schemas/survey-event-dem.md`: local edition format and lifecycle.
 
 ## Local review setup

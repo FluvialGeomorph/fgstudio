@@ -86,3 +86,18 @@ the Shiny layer; start at `fluvgeo/tests/testthat/test_study_reach_split.R` for
 split behavior. Read-only local preview scripts supplement synthetic tests but
 do not publish changes to analyst studies. No absence of graph edges or successful
 preview establishes scientific network acceptance.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| `read_study_stream_segments()` and previews | Read parent Stream and source/piece evidence | GeoPackage `streams`, linked line/piece layers; previews have no durable output |
+| `add_study_reach_corridor()` | Creates a Reach under one Stream | GeoPackage `reaches` plus `retained_line`/`reach_area` or piece evidence |
+| `merge_study_reaches()` | Retains one Reach identity and reconciles supported Event parent references | GeoPackage `reaches`/`survey_events` and linked geometry evidence |
+| `split_study_reach()` | Retains one Reach identity, creates another and records lineage | GeoPackage `reaches`; `pieces`, `reach_areas`, `cut`, `cut_parent` evidence |
+| `rename_study_feature()` | Changes a Stream/Reach name, not its identity | Name attribute in the applicable GeoPackage hierarchy table |
+
+Survey Events remain Reach-owned. Dependent terrain/network content requires
+explicit reconciliation; geometry editing does not fabricate replacement products.

@@ -62,3 +62,17 @@ The current top panel includes both existing Event selection and the collapsed
 creation section, so first-time setup starts at the top of the page. After selection,
 `survey_event_dems_server()` (article 13) presents the assigned Stream queue and
 result tabs. The earlier single-DEM development panel is no longer the normal flow.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| Propose/read Event definition | Reads acquisition dates, hierarchy and selected sources | GeoPackage context and Survey Collection records |
+| `write_survey_acquisition_group()` | Saves app acquisition membership, Stream assignments, grid settings and existing Event links | GeoPackage `settings`, `members`, `streams` ID list and `event_links` |
+| Context Event reader | Reads existing Reach Survey Events | GeoPackage `survey_events`, keyed by Event ID and Reach parent ID |
+
+The app definition coordinates source preparation across Streams. It is not a new
+FGDB hierarchy level and does not create the linked Reach Survey Event rows.
+The governing Event identity/date contract remains FGDB's Reach-owned Survey Event.

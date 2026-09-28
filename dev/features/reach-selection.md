@@ -1,23 +1,20 @@
 # Reaches from saved Stream segments
 
-Current status: the owner accepted checkbox creation and saved-Reach combining,
-then accepted the later saved-Reach split interaction. Dated verification below
-records each original slice, not an outstanding request to repeat those trials.
-After the first split, Add/Combine operate on local selection/piece IDs using
+After a split, Add/Combine operate on local selection/piece IDs using
 [versioned evidence](../../../fluvgeo/dev/schemas/reach-pieces.md); the whole-segment
 note mappings described below remain the compatibility path for unsplit contexts.
 
-9019 implements [ADR 0004](../decisions/adr-0004-multi-segment-reach-selection.md):
+The workflow implements [ADR 0004](../decisions/adr-0004-multi-segment-reach-selection.md):
 choose Reaches in the existing map, choose a saved Stream, check one or more
 retained NHDPlus segments, review/edit the name, preview, then explicitly save.
 Repeat without reopening. All checked segments create one Reach. The separate
-Combine existing handles already-saved identities. The subsequent 9021
+Combine existing handles already-saved identities. The
 [Split existing action](reach-splitting.md) adds reviewed saved-Reach cuts.
 Map clicks toggle checkboxes. Selection changes invalidate preview and preserve
 the typed name. Selected segment and preview-part counts are shown; disconnected
 polygon parts remain visible, not silently connected.
 
-The buffer distance and units are read-only inherited settings. fluvgeo 9030
+The buffer distance and units are read-only inherited settings. fluvgeo
 reuses the parent's retained processing CRS, GEOS buffer parameters and clipped
 line evidence, then clips the Reach area to its parent Stream. Overlap at segment
 ends is retained, not converted to non-overlapping partitions. Purple polygons
@@ -66,22 +63,3 @@ Only FG Studio's isolated backend is upgraded. Existing ArcGIS/QGIS clients,
 ohwm2, terrain processing, arbitrary Reach geometry editing/deletion and Enterprise loading remain
 unchanged. No complete drainage-network or scientific segmentation acceptance
 is inferred from a successful save.
-
-2026-09-16 verification: 17 new backend assertions and 69 existing Stream
-corridor assertions passed. The full app regression suite and runtime-isolation
-check passed. Read-only previews succeeded for all three retained local Streams;
-before/after hashes confirmed no study-file changes. These checks do not replace
-owner acceptance of the browser interaction.
-
-FG Studio 9018 package check: **OK**, 447 assertions passed. Two test warnings
-report installed sf/Shiny packages built under R 4.6.1 while checking with R 4.6.0.
-
-2026-09-17 / 9019: package check **OK**, all 472 app assertions passed; the
-same two installed-package build-version warnings remain. Backend checks passed
-46 Reach assertions and 69 Stream assertions, including multi-segment creation,
-event reassignment, repeated merges, preserved prior file hashes and edited-area
-rejection. Read-only checks against the retained studies previewed two Streams'
-available segments and one saved-Reach combination; all study-file hashes were
-unchanged. Both repository contexts validated. Browser acceptance of the new
-checkbox/merge controls remains with the owner; no saved user Reach was merged
-by these checks. Full fluvgeo package checks were not rerun for this bounded slice.

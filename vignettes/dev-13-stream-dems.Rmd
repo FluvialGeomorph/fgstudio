@@ -1,0 +1,87 @@
+---
+title: "13. Stream DEM processing"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{13. Stream DEM processing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+The Survey Events page builds and reuses a DEM for each assigned Stream. One
+DEMs card contains Stream-named tabs and maps. Selecting a tab changes the viewed
+result; the saved Event inputs determine which work runs.
+
+## Event queue
+
+`survey_event_settings_server()` supplies saved context to
+`survey_event_dems_server()`. The latter runs one `terrain_dem_trial_job()` at a
+time, using the [input request](dev-11-dem-inputs.html) for the active Stream.
+[Mask readiness](dev-12-event-masks.html) is a dependency. Matching saved editions
+are reused. Completion or failure advances the queue to the next Stream.
+
+Processing messages identify the Stream being built. Failures retain their
+explanation. Pause stops unfinished work while retaining completed results;
+Resume retries unfinished Streams. Waiting and Ready are internal queue states.
+The analyst guide describes the controls; this chapter describes their execution.
+
+## Raster calculation
+
+`launch_terrain_dem_trial()` runs these fluvgeo operations in one background worker:
+
+| Operation | Function | Result |
+| --- | --- | --- |
+| Crop source windows and merge in saved order | `mosaic_terrain_tiles()` | First-valid elevation mosaic |
+| Apply the saved Stream domain | `mask_terrain_mosaic()` | DEM on the saved mask grid |
+| Convert NAVD88 metres to international feet | `terrain_to_international_feet()` | Float32 DEM with vertical EPSG:8228 |
+
+The worker opens input paths as file-backed terra rasters. Crops restrict work to
+the requested extent, merge preserves first-valid precedence, and masking retains
+NoData outside the analysis domain. Unit conversion divides metre elevations by
+0.3048 and preserves the horizontal grid and NoData. Outputs use filesystem
+GeoTIFFs. Original sources are retained.
+
+The integrated pipeline requires compatible aligned source/Event grids and NAVD88
+metre source elevations. It performs no resampling or datum transformation.
+Differing-grid and other vertical operations need explicit integration; the
+standalone warp API is described under
+[terrain developer tools](terrain-developer-tools.html#horizontal-warp-api).
+
+## Completion and display
+
+The job checks the current input binding and recipe before publishing; full
+Stream output dimensions/alignment must match the saved mask. Edits, a changed
+Event or session closure stop pending work before owned staging cleanup.
+[Saved DEM editions](dev-14-dem-editions.html) explains publication and reuse.
+
+Each tab mounts `terrain_mosaic_trial_server(process=FALSE)` as a display-only
+module. Lookup is filtered by Stream and scope. The plot uses a bounded display
+sample while the analytical GeoTIFF retains its full resolution. The map shows
+elevation units, analysis boundary, source tile boundaries and NoData. Optional
+DEM details group grid, source, storage, method and timing metadata.
+
+## Implementation and tests
+
+Trace `R/survey_event_dems.R`, `R/terrain_dem_trial.R` and
+`R/terrain_mosaic_trial.R`. The queue/job tests cover serial dispatch, reuse,
+failure retention, cancellation and resume; display tests cover Event-bound
+results. Scientific raster tests belong to fluvgeo's terrain-tile-mosaic contract.
+
+Use small actual downloaded DEM windows for development. The mosaic feature record
+contains representative full-Stream verification evidence and remaining design
+questions. Developer targets and diagnostic fixtures are described in the separate
+tools reference rather than used as inputs to the analyst workflow.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| `mosaic_terrain_tiles()` | Combines selected source terrain | Reads original GeoTIFFs; writes elevation mosaic GeoTIFF |
+| `mask_terrain_mosaic()` | Restricts the mosaic to the saved analysis domain | Reads mosaic/mask GeoTIFFs; writes masked DEM GeoTIFF |
+| `terrain_to_international_feet()` | Converts supported elevation units | Writes Float32 GeoTIFF with vertical reference evidence |
+| Stream result display | Reads assembled terrain associated with the selected Stream and acquisition definition | External GeoTIFF; no governed feature-class update |
+
+The intended design keeps DEM processing at Stream scale; Reaches reference the applicable edition and apply their analysis domains. This pipeline does not perform
+hydro-modification or create the governed Reach Survey Event hydro DEM. Shared
+Stream terrain can support several later Reach/Event products through explicit
+asset associations; it must not be assigned a fictitious single Event owner.

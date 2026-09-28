@@ -1,52 +1,74 @@
 ---
-title: "12. Hierarchical analysis masks"
+title: "12. Analysis masks"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{12. Hierarchical analysis masks}
+  %\VignetteIndexEntry{12. Analysis masks}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-Saving or opening a Survey Event starts mask preparation automatically for all
-assigned Streams, in sequence. No Stream picker or Create masks button is needed.
-`event_masks_server()` queues the saved Streams, obtains current requests from
-`store$mask_request()` and looks for matching published editions with `find_masks()`.
-The worker checks matching editions' metadata before reuse; otherwise it writes new masks.
-Input changes and cancellation stop the worker. There is no processing timeout.
+Analysis masks define the cells included in each Study Area, Stream and Reach for
+a Survey Event. They supply the common grid and spatial domain used by DEM
+processing. Saving or opening an Event prepares or reuses its masks automatically.
 
-`fluvgeo::write_event_masks()` uses standard terra rasterize (touches=FALSE),
-classify (zero to NoData), crop and mask operations. Outputs are compressed Byte
-GeoTIFFs with BigTIFF support, using the saved CRS, spacing and shared grid anchor.
-No per-cell geometry tests or special edge correction are performed. There are
-no application cell-count, row-width or estimated-space admission limits.
-Actual I/O failures prevent publication. Sources and saved study inputs are unchanged.
+## Grid and raster values
 
-Successful results are published only while their input revisions still match.
-Normal sessions do not mount the map selector, create a display cache, load
-boundary labels or render mask plots. Only actionable errors remain in normal sessions.
-Normal sessions hide routine boundary preparation progress and show actionable
-failures. There is no analyst decision at this intermediate backend stage.
-`options(fgstudio.mask_diagnostics = TRUE)` before app startup enables the optional
-development troubleshooting view. This is a temporary development facility;
-remove its UI hook when DEM integration is complete, retaining analytical masks.
-In that optional view, the map selector displays already-created outputs; it does not select work to run.
-The overview reads saved rasters in their analysis CRS and overlays their saved
-boundaries. Display rasters are prepared in the worker and cached for this session,
-so reactive redraws read the bounded display product. Later Streams reuse
-the existing Study Area mask through a native hard link where available,
-with a copy fallback. Reopening does not rerun rasterization or pixel audits.
-Explicit backend checksum verification remains available. Cancellation, failure
-and session close stop workers before cleaning owned staging/cache directories;
-published editions are retained.
+The saved Study analysis CRS and Event cell size define the grid. Study Area
+bounds are snapped outward to the shared anchor. Stream and Reach masks occupy
+aligned subwindows and intersect their parent masks. A value of 1 denotes the
+analysis domain; cells outside it, including polygon holes, are NoData.
 
-For new outputs, `fluvgeo::event_mask_key()` identifies geometry, grid and native
-processing dependencies so unrelated metadata changes do not regenerate rasters.
-Older outputs without this key still require exact input matches. Staging owner
-records allow later cleanup after both app and worker have exited; the app never
-guesses that a job is abandoned merely because it is old.
+`fluvgeo::write_event_masks()` uses terra `rasterize(touches=FALSE)`, `classify`,
+`crop` and `mask`. Outputs are compressed, file-backed Byte GeoTIFFs with BigTIFF
+support. A mask defines spatial membership; source DEM NoData remains NoData
+when the mask is applied.
 
-Trace `R/event_masks.R`, `R/study_store.R`, `R/survey_event_settings.R` and
-`tests/testthat/test-event-masks.R`. The backend contract and tests are
-`fluvgeo/dev/schemas/event-masks.md` and `test_event_masks.R`.
+Grid coordinates belong to the saved real-world CRS. The implementation uses a
+shared numeric anchor; confirmation of its initial-placement convention remains
+an open design decision in `dev/features/dem-mosaic-design.md`. Saved grids are
+preserved until that decision is resolved.
 
-Reference: [terra rasterization](https://rspatial.github.io/terra/reference/rasterize.html)
-and [raster masking](https://rspatial.github.io/terra/reference/mask.html).
+## Preparation and reuse
+
+`event_masks_server()` queues assigned Streams and obtains requests through
+`store$mask_request()`. It searches published editions with `find_masks()` and
+runs a background worker to verify a reusable edition or write the required masks.
+`fluvgeo::event_mask_key()` identifies geometry, grid and processing dependencies.
+Records without a dependency key use exact input matching.
+
+Streams share the Study Area mask through a filesystem hard link when available,
+with copying as a fallback. Reopening uses metadata checks; explicit backend
+checksum verification is available for integrity investigations. Large outputs
+use terra's file-backed processing. Resource failures are reported by the worker.
+
+## Publication and session lifecycle
+
+A completed mask edition is published only while its saved input revisions still
+match. Input changes, cancellation and session closure stop workers before owned
+staging is cleaned. Published editions remain available. Staging-owner records
+permit recovery after both the app and worker have exited; unknown ownership
+prevents automatic cleanup.
+
+The DEM queue waits for mask readiness. Routine mask preparation has no analyst
+controls or progress display; actionable failures identify the relevant settings.
+An optional diagnostic view is documented separately in
+[terrain developer tools](terrain-developer-tools.html).
+
+## Implementation and tests
+
+Trace `R/event_masks.R`, `R/study_store.R` and `R/survey_event_settings.R`.
+`test-event-masks.R` covers orchestration, reuse, stale inputs and cleanup. The
+scientific contract and raster tests belong to fluvgeo:
+`dev/schemas/event-masks.md` and `test_event_masks.R`.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| `write_event_masks()` | Reads Study/Stream/Reach polygons and Event grid settings | GeoPackage hierarchy geometry, reference and settings tables |
+| Mask publication / `read_event_masks()` | Creates/reads processing-domain rasters and their input associations | External Byte GeoTIFFs and mask manifest |
+| `mask_terrain_mosaic()` | Uses the domain to constrain terrain cells | Reads mask and elevation GeoTIFFs; produces masked elevation GeoTIFF |
+
+Masks represent analysis membership, not a governed FGDB terrain observation or
+feature class. Their parent IDs and grid association relate them to domain objects.

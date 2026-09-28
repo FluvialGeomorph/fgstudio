@@ -117,3 +117,16 @@ Additional sources: `R/stream_dem_download.R`, sibling
 Tests: `test-stream-dem-download.R`, `test-stream-dem-files.R` in Studio and
 `test_stream_dem_download.R` in fluvgeo. Transport tests use synthetic bytes and
 a loopback HTTP server, never the analyst's saved tile choices.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| File discovery | Reads Stream AOI and selected acquisition | GeoPackage Stream polygon and Collection records; candidate file inventory |
+| `write_stream_dem_selection()` | Saves source file choices and spatial/catalog evidence | GeoPackage `stream`, `collection`, `files`, `metadata` |
+| Download prepare/run/read APIs | Acquire and resolve original source DEM assets | External GeoTIFFs linked to file selections by transfer receipts |
+
+These are local preparation inputs. Their retention supports provenance; it does
+not put source DEMs into FGDB's governed feature catalog or the hydro DEM dataset.

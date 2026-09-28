@@ -90,3 +90,17 @@ is recorded separately and does not dictate the chosen output resolution.
 Source: `R/study_analysis_crs.R`, `R/mod_study.R`, `R/study_store.R`, and sibling
 fluvgeo `R/study_analysis_crs.R`. Focused tests: `test-study-analysis-crs.R`,
 `test-stream-dem-files.R`, and backend `test_study_analysis_crs.R`.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| CRS candidate/validation functions | Read Study Area geometry and candidate definitions | GeoPackage `study_area`; installed CRS catalog |
+| `set_study_analysis_crs()` | Records the Study analysis reference | GeoPackage `analysis_reference` horizontal record with canonical WKT and evidence |
+| Grid/DEM request functions | Consume the saved reference | Read reference table; resulting raster carries its own grid/CRS |
+
+Saving a specification does not reproject feature geometry or raster cells. Native
+analysis coordinates and FGDB enterprise publication coordinates are distinct
+physical representations requiring a qualified transformation when exchanged.

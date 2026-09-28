@@ -1,0 +1,73 @@
+---
+title: "Terrain developer tools"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Terrain developer tools}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+These facilities support diagnostics and isolated backend development. They are
+separate from the numbered analyst-workflow implementation chapters. The normal
+Event pipeline uses saved inputs, automatic masks, Stream processing and local
+editions as described in articles 11-14.
+
+## Preflight report
+
+`stream_dem_preflight_server()` is an unmounted diagnostic controller. It obtains
+a saved request through `store$dem_preflight_request()` and dispatches
+`launch_stream_dem_preflight()` to call `fluvgeo::preflight_stream_dem()`.
+The report contains grid envelopes, dimensions, storage estimates and source
+metadata screening. It allocates no rasters or product files.
+
+The controller distinguishes REVIEW and BLOCKED results, rejects results when
+saved requests change, and stops/joins workers on cancellation. Reports are
+session snapshots and are not processing approval. See
+`fluvgeo/dev/schemas/stream-dem-preflight.md`, `test-stream-dem-preflight.R` and
+the backend `test_preflight_stream_dem.R` for the exact diagnostic contract.
+Workstation-specific worker setup belongs in the R package development workflow.
+
+## Source annotations
+
+`terrain_source_review_server()` accepts a preflight snapshot and records source
+assessment, prior-operation evidence, order and first/last-valid overlap in
+immutable JSON annotations. It is not mounted by the analyst app, and the normal
+DEM request does not consume these annotations.
+
+`terrain_review_binding`, `terrain_review_write` and `terrain_review_latest` bind
+records to checked inputs, validate rows/order and protect concurrent saves with
+an exclusive lock and rename. Changed snapshots invalidate drafts. The store
+adapters are `terrain_review` and `save_terrain_review`. Notes neither change
+rasters nor clear grid/reference incompatibilities. The schema is
+`dev/schemas/terrain-source-review.md`; tests are `test-terrain-source-review.R`.
+
+## Horizontal warp API
+
+`fluvgeo::warp_terrain_horizontal()` takes a source GeoTIFF, an output-grid template
+and a new output directory. It has no FG Studio pipeline caller. Template values
+are not an analysis mask. The API uses GDAL with an explicit horizontal pipeline
+and `-novshift` to preserve elevation units and source vertical evidence.
+
+Aligned grids use nearest sampling; other grids use bilinear interpolation.
+Float32 is the default storage type, with explicit Float64 support. GDAL manages
+working precision; terra supplies native summaries. Analytical warping uses base
+pixels. The operation supports north-up targets and static east/north projected
+CRSs with the same identified geodetic base. Datum/epoch changes, nonidentity
+scale/offset and external georeferencing/mask sidecars are outside this API's
+supported profile.
+
+See fluvgeo `R/warp_terrain_horizontal.R`, `test_warp_terrain_horizontal.R` and
+`dev/schemas/horizontal-terrain-warp.md`. These define the API independently of
+whether it is integrated into the Stream DEM workflow.
+
+## Bounded development targets
+
+`fgstudio.dem_reach` or `fgstudio.dem_stream` targets one saved record for isolated
+processing. `fgstudio.mosaic_trial` supplies a real-window diagnostic fixture.
+These options are not needed by normal sessions. Use small subsets of actual
+downloaded DEMs for function trials and parameter checks, following
+`dev/workflows/r-spatial.md`.
+
+`fgstudio.mask_diagnostics=TRUE` enables optional mask inspection. Display products
+are prepared in the worker and cached for the session; the selector changes only
+the viewed result. This development facility is disabled by default. Analytical
+mask generation is independent of its display.

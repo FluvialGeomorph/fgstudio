@@ -63,3 +63,17 @@ contract is sibling fluvgeo/dev/schemas/study-vertical-reference.md.
 Source-reference reconciliation and transformation qualification are still needed
 before mosaicking mixed inputs. Metadata assignment, unit conversion, datum/epoch
 transformation and raster resampling remain separate explicit operations.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| Vertical reference validation | Reads the target definition and Study context | GeoPackage context and installed definition catalog |
+| `set_study_vertical_reference()` | Records intended vertical reference, units and applicable epoch/model evidence | GeoPackage `vertical_reference` plus related `analysis_reference` entries |
+| `terrain_to_international_feet()` | Converts supported source elevations for the DEM pipeline | Writes an external GeoTIFF; provenance must retain the exact unit operation |
+
+The saved target is metadata, not a claim that source terrain already conforms.
+FGDB product interpretation requires vertical reference/units independently of
+horizontal CRS and independently of a display label.

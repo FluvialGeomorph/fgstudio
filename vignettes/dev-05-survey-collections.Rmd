@@ -75,3 +75,16 @@ Event assembly remain future implementations, not actions performed by Save.
 - App tests: `tests/testthat/test-survey-collections.R`.
 - Shared provider/spatial/IO methods: sibling `fluvgeo/R/survey_collections.R`;
   backend tests: `fluvgeo/tests/testthat/test_survey_collections.R`.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| Collection discovery | Reads Study Area and provider catalog evidence | Study polygon from GeoPackage; candidate footprints/metadata in memory |
+| `write_survey_collection_selection()` | Saves acquisition evidence and product intent | GeoPackage `survey_collections`, `study_area`, `searches`, `acquisition_plan`, `selection_metadata` |
+| `read_survey_collection_selection()` | Supplies selected source acquisitions to file and Event workflows | Same GeoPackage records, linked through provider/candidate identity |
+
+A Survey Collection is local source evidence, not FGDB's top-level Collection.
+Saving it does not create a Reach Survey Event or a governed terrain product.

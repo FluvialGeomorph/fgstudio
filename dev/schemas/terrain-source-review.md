@@ -2,7 +2,7 @@
 
 Current availability: this retained annotation module is not mounted in the
 analyst workflow. The schema does not introduce a review/save prerequisite for
-masks or authorize DEM processing. Article 14 documents its internal call path.
+masks or authorize DEM processing. The terrain developer tools reference documents its internal call path.
 
 App-owned review annotations live beside the study context in
 terrain-reviews/<group-and-stream-hash>/review-<six-digit-revision>-<random-id>.json.
@@ -35,4 +35,4 @@ unit conversion, resampling, masking, product publication or scientific acceptan
 No backend schema or FGDB identity changes are introduced.
 
 Routes: R/terrain_source_review.R, R/stream_dem_preflight.R, R/study_store.R and
-tests/testthat/test-terrain-source-review.R. Article 14 explains the user flow.
+tests/testthat/test-terrain-source-review.R. See vignettes/terrain-developer-tools.Rmd for controller ownership.

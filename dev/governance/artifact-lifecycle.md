@@ -8,7 +8,10 @@
 6. Remove superseded scaffolding after its relevant content is adapted and Git records its history.
 
 For function-call documentation, update the human article and compact agent route
-in the same capability increment. Regenerate derived graphs from the reviewed
+in the same capability increment. Function-to-data mappings are part of that
+contract: maintain the affected domain objects, ownership, physical representations
+and compatibility boundaries using the developer-documentation workflow. Update
+the existing crosswalk and article, not a parallel change diary. Regenerate derived graphs from the reviewed
 source; never hand-edit generated edges. Mark indirect reviewed connections and
 unknown coverage explicitly. Test a few concrete navigation questions before
 promoting a routing technique as more efficient. See ADR 0006 and the developer

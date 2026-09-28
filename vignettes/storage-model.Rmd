@@ -1,0 +1,172 @@
+---
+title: "Data objects and local storage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data objects and local storage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+FluvialGeomorph is local-first: its feature classes and related tables are held
+in a local geodatabase, with analytical rasters stored as external GeoTIFFs. In
+the open-source workflow the vector/table container is OGC GeoPackage. FGDB defines
+the enduring data objects, ownership and acceptance contracts; functions create,
+use and revise representations of those objects.
+
+Read this article alongside the function-flow chapters. Their **Data objects and
+storage** tables identify each operation's domain inputs, outputs and physical
+representation. Exact internal revision filenames and worker files belong to
+implementation schemas, rather than defining the data model.
+
+## Stream terrain shared by Reaches
+
+The intended application design processes a DEM at Stream scale and lets Reaches
+use that same terrain asset. Reach-based analysis supplies its spatial domain and
+references the applicable Stream DEM edition; a Reach boundary alone is not a
+reason to rebuild, copy or permanently clip the DEM. A bounded read or temporary
+crop may support an operation without becoming a duplicate terrain product.
+
+Terrain extent, raster identity and the identity of a consuming Reach Survey Event
+are separate concerns. Associations must identify the exact terrain edition and
+applicable acquisition period so results remain reproducible when terrain changes.
+The physical design direction is an external Stream GeoTIFF referenced by the
+applicable Reach/Event records, with relationships and metadata in the local
+GeoPackage/delivery binding. Exact relationship tables and keys require FGDB
+schema definition; this article does not invent their physical names.
+
+The current app implements Stream assembly and reuse. Hydro-modification and
+binding shared terrain to downstream Reach analyses are not yet integrated. The
+owner's direction is to retain Stream-scale processing as these capabilities
+mature. FGDB's existing Reach-Survey-Event hydro DEM ownership rule must be revised
+to express that sharing; it must not force independent DEM production per Reach.
+Other Reach-owned features and Survey Event relationships are not changed by this
+terrain-sharing direction.
+
+Archived legacy projects may retain only a Reach-Survey-Event hydro DEM. Preserve
+that GeoTIFF at its actual extent and retain its original Event association and
+provenance. It remains usable without reconstructing a Stream DEM. The storage
+model therefore accommodates both new shared Stream terrain and legacy
+Reach-scoped terrain: an asset's extent and identity are separate from the Reach
+Events that consume it. Do not mosaic legacy rasters merely to conform to the new
+processing pattern.
+
+## Existing FGDB ownership contract
+
+```text
+FGDB Collection
+  Study Area
+    Stream
+      Reach
+        Survey Event
+          governed feature datasets and raster products
+```
+
+Stable identifiers and explicit parent relationships establish ownership. Display
+names, dates, filenames and spatial containment do not establish parentage.
+A Survey Event belongs to one Reach. Reprocessing changes its derived content,
+not its position in the hierarchy. Stream/Study summaries traverse that ownership
+rather than duplicating Reach-owned products.
+
+The Study Area has a governed polygon; Stream, Reach and Survey Event geometry
+are optional in FGDB. The current terrain-processing functions require the
+polygons needed for their masks. That algorithmic input requirement does not make
+optional geometry mandatory throughout the FGDB model.
+
+FGDB also governs Study-Area-owned Stream Network Configurations and time-specific
+Network Observations. Reference hydrography used to choose app Stream geometry
+is not automatically a governed terrain-derived network observation.
+
+## Objects, physical structure and function responsibilities
+
+Physical names below identify existing local representations where implemented.
+They are not declarations of final enterprise feature-class names. The FGDB kernel
+relational model remains a design-review draft; exact local delivery bindings are
+pending where indicated.
+
+| Object | Local physical representation | Function relationship | FGDB relationship |
+| --- | --- | --- | --- |
+| Collection | No FGDB Collection binding in the app yet | Study creation does not assign enterprise Collection membership | Top-level ownership/governance partition; required for governed Study Areas |
+| Study Area | GeoPackage `study_area` polygon/table and stable ID | `start_study_context()` creates; `revise_study_context()` updates; readers supply geometry and identity | Maps conceptually to Study Area; district/name, extent type, collection and enterprise spatial binding require FGDB conformance |
+| Stream | GeoPackage `streams`, with Study Area parent ID and optional polygon | `define_study_streams()` or `add_study_stream_corridor()` creates; `rename_study_feature()` updates; Reach and terrain functions consume | Mandatory child entity of Study Area; selected national hydrography is provenance, not its governed ID |
+| Reach | GeoPackage `reaches`, with Stream parent ID and optional polygon | `add_study_reach_corridor()`, `merge_study_reaches()`, `split_study_reach()` create/revise; downstream analysis uses Reach identity | Normative spatial owner of Survey Events and unit of derivation |
+| Survey Event | GeoPackage `survey_events`, when supplied, with Reach parent ID and year/optional month/day | Context readers preserve records; app Event definitions can link existing IDs but do not create these Reach Event rows | Governs a terrain condition/acquisition period and its derived content |
+| Analysis reference | GeoPackage `analysis_reference` and `vertical_reference` tables; CRS also attached to geometry/rasters | `set_study_analysis_crs()` and `set_study_vertical_reference()` record specifications; processing reads them | Supplies spatial/scientific provenance; selecting a target is not transforming a product |
+| Hydro-modified DEM | External numerical GeoTIFF, associated with consuming Reach Survey Events through delivery metadata | No producer integrated in the current app pipeline | Governed terrain product; existing Reach ownership requires reconciliation with shared Stream terrain |
+| Other governed FG features/products | GeoPackage feature layers/attribute tables; external GeoTIFFs for raster products | Downstream producers are not integrated by the current DEM assembly | Feature catalog governs object meaning, ownership, attributes and edition acceptance |
+
+The app's local hierarchy can be incomplete during study definition. It is not
+therefore a fully qualified FGDB delivery. FGDB requires complete governed
+parentage and its own spatial/attribute contract at the relevant boundary.
+
+## Preparation assets and their relation to governed objects
+
+Local preparation is durable when needed for reproducibility without becoming a
+new FGDB domain entity. Preserve the distinction in both code and documentation.
+
+| Preparation asset | Physical structure | Producer/consumer | Relationship to governed content |
+| --- | --- | --- | --- |
+| Survey Collection selection | GeoPackage collection footprints, acquisition plan and provider metadata | `write_survey_collection_selection()` writes; source selection and Event definition read | Acquisition evidence; not FGDB Collection |
+| Source DEM selection and acquisition | GeoPackage file-selection tables plus original external GeoTIFFs and transfer receipts | `write_stream_dem_selection()` and download APIs produce; inspection and mosaic functions read | Sources/provenance; outside governed FGDB feature persistence |
+| App Survey Event definition | GeoPackage `settings`, `members`, Stream ID list and `event_links` | `write_survey_acquisition_group()` writes; mask/DEM request functions read | Coordinates shared acquisition inputs and links to Reach Survey Events; not an added hierarchy level |
+| Geometry source/piece evidence | GeoPackage line, polygon and cut layers linked to hierarchy IDs | Corridor and Reach-editing functions write/read | Reproducible construction evidence; source COMIDs and piece IDs do not replace FGDB entity IDs |
+| Study/Stream/Reach masks | External Byte GeoTIFFs linked to geometry and Event grid | `write_event_masks()` produces; `mask_terrain_mosaic()` consumes | Processing domain, not a governed feature class or observed terrain product |
+| Assembled Stream DEM | External Float32 GeoTIFF in international feet | `mosaic_terrain_tiles()` -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain; hydro-modification and downstream Reach binding are not yet integrated |
+
+Study/Stream terrain may support several Reach Events. FGDB's folder requirements
+allow explicitly associated shared project assets; they do not require copying
+or clipping a raster merely to fit a folder hierarchy. Subsequent Reach/Event
+products must retain their own identities, methods and source associations.
+
+## Physical delivery boundary
+
+The existing FGDB delivery contract describes a Reach-Survey-Event folder containing:
+
+- **GeoPackage feature classes and tables:** geometry, attributes, identities and
+  relationships governed by the applicable object contracts.
+- **External GeoTIFF rasters:** numerical terrain/analysis values with their grid,
+  CRS, elevation reference/unit and NoData representation.
+- **Linked machine-readable metadata:** owning/context IDs, product role and
+  edition, relative asset location, layer or band, integrity and provenance.
+- **Related reports and declared shared dependencies.**
+
+This is the accepted structure under FGDB ADR-0025. Exact manifest serialization,
+filenames and adapters remain to be bound; the app's internal RDS edition index
+is not that manifest. A GeoPackage by itself is not a complete raster-containing
+delivery, and a file path is not a durable domain identifier.
+
+Local analysis uses the selected appropriate projected CRS. FGDB's enterprise
+contract specifies EPSG:3857 for governed spatial content while retaining native
+analysis and vertical-reference evidence. Enterprise publication therefore needs
+an explicit qualified boundary transform; the documentation does not imply that
+the app's native-grid products are already transformed or accepted.
+
+## Reading function-flow documentation through the data model
+
+For each operation, ask: **Which object is read? Which object is created or
+changed? In which feature layer, table or raster does that representation live?
+Which identity links it to its parent and inputs?** Preview-only functions have
+no durable output. A renamed object retains identity. A processing intermediate
+is not promoted to a governed product by being written to disk.
+
+The numbered chapters provide these mappings at the operation boundary. Readers
+who need exact working-file resolution can follow `R/study_store.R`,
+`R/study_dem_store.R` and the persistence schemas. Internal staging, cache and
+revision naming are implementation details, not additions to FGDB's ontology.
+
+## Governing sources
+
+The sibling FGDB repository owns these contracts:
+
+- `dev/schemas/conceptual-data-model.md`: accepted hierarchy and ownership.
+- `dev/schemas/feature-catalog.md`: governed objects and exclusions, including
+  local source terrain versus the hydro-modified DEM.
+- `dev/schemas/kernel-relational-model.md`: proposed identity/edition relations.
+- `dev/schemas/platform-type-crosswalk.md`: logical versus physical binding.
+- `dev/decisions/adr-0025-folder-deliverables-and-geotiff-terrain.md` and
+  `dev/schemas/local-project-folder-requirements.md`: accepted delivery structure
+  and unresolved physical binding.
+
+Local context representation is specified in fluvgeo's
+`dev/schemas/study-context.md`; app DEM persistence is specified in fgstudio's
+`dev/schemas/survey-event-dem.md`. These implementations support the data model
+without claiming to complete FGDB conformance or enterprise transport.

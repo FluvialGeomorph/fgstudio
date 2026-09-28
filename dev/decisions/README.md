@@ -10,7 +10,7 @@ Use architectural decision records for consequential choices that should remain 
 
 - [NSRS modernization and explicit elevation operations](adr-0009-nsrs-modernization-and-explicit-vertical-operations.md): modernization readiness, epochs, exact units and analyst-controlled vertical changes.
 
-- [Study Area analysis CRS and terrain masks](adr-0008-study-analysis-crs-and-terrain-masks.md): CRS selection implemented; Event output cell size, snapping and hierarchical masks specified for subsequent implementation.
+- [Study Area analysis CRS and terrain masks](adr-0008-study-analysis-crs-and-terrain-masks.md): analysis CRS, Event output cell size, shared grid and hierarchical-mask requirements.
 
 - [Iterative terrain acquisition](adr-0007-iterative-terrain-acquisition.md): shared coverage map, resolution versus suitability, and multiple source collections per Survey Event.
 

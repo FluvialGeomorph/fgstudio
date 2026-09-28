@@ -1,0 +1,85 @@
+---
+title: "14. Saved DEM editions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{14. Saved DEM editions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+Each completed Stream DEM is saved automatically as an immutable local edition.
+The app reuses an edition while its input binding and processing recipe still
+match. Saving outputs is part of processing, not a separate analyst action.
+
+## Storage contract
+
+`local_study_store()` delegates DEM persistence to `study_dem_store()`. Editions
+live under `<study>/event-dems/editions/<id>/` and contain
+`dem-international-feet.tif` plus an internal `edition.rds` record. Available
+mosaic/masked intermediates can also be retained. Raster paths resolve within the
+managed edition; source paths remain provenance.
+
+FGDB ADR-0025 requires external filesystem GeoTIFF DEMs with GeoPackage vectors,
+tables and linked metadata. The RDS record serializes the app's local edition
+index; it is not the portable FGDB folder manifest. Portable folder binding,
+relocation qualification and enterprise transfer remain separate work. The
+accepted storage references are linked from `dev/schemas/survey-event-dem.md`.
+
+## Identity and publication
+
+The binding identifies the Study context, Event definition and Collection
+selection revisions. The recipe records target identity/scope, source and mask
+file identity, source selection/order, extent, units and backend version.
+Supported scopes are Stream, Reach and bounded portions of either.
+
+Workers write into unique Study-owned staging directories. Before publication,
+the controller rechecks saved binding and input recipe. A completed record and
+directory rename publish the edition on the same volume. A new run never
+overwrites an existing edition. An already verified cached DEM may be copied in
+a worker rather than calculated again.
+
+Cancellation, failure and session closure stop workers before deleting owned
+staging. Cleanup rejects published edition paths and paths outside the managed
+root. Recorded app/worker ownership supports abandoned-stage recovery only when
+both processes have exited.
+
+## Reopening and reuse
+
+`find_dem(binding, recipe=NULL, stream_id=NULL, scope=NULL)` selects an eligible
+edition. Normal Event tabs request their own Stream and full-Stream scope. The
+reader checks the small record, raster presence and byte size. Saved-source
+identity checks exclude changed selections. It does not scan all raster values
+or repeat transfer hashes on every view.
+
+Missing or corrupt editions are skipped. Strict revision binding excludes outputs
+from earlier settings revisions; metadata-only reuse across revisions is not
+implemented. Older Reach/portion records remain readable. Available intermediate
+paths are resolved within their actual edition; absent intermediates are not
+required to display a saved final DEM.
+
+## Implementation and tests
+
+Trace `R/study_dem_store.R`, its adapters in `R/study_store.R`, publication in
+`R/terrain_dem_trial.R` and display in `R/terrain_mosaic_trial.R`.
+`test-study-dem-store.R` covers exact-file publication, fresh reopening, stale
+binding exclusion and cleanup protection. Source and queue tests cover selection
+changes and independent Stream lookup. The exact record contract is
+`dev/schemas/survey-event-dem.md`.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| `publish_dem` | Publishes a complete local terrain edition with input associations | External GeoTIFF and internal edition metadata |
+| `find_dem` / result reader | Resolves the eligible terrain for Stream/context inputs | Reads local edition metadata and GeoTIFF; no domain identity change |
+| FGDB delivery adapter | Would bind governed Reach/Event products and shared sources to delivery metadata | GeoPackage vectors/tables plus external GeoTIFFs and portable manifest; adapter not implemented |
+
+Local output editions are not automatically FGDB accepted dataset editions. The
+internal RDS index is not a geodatabase feature class or the long-term delivery
+manifest. Governed product identity, ownership and acceptance follow FGDB contracts.
+
+Stream terrain editions are intended to be shared by consuming Reach analyses.
+A Reach/Event association should identify the selected edition rather than require
+a duplicate raster. FGDB relationship and delivery bindings need to express this
+direction; the current internal edition index does not implement them.

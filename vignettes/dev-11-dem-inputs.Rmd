@@ -1,0 +1,83 @@
+---
+title: "11. DEM inputs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{11. DEM inputs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+A Stream DEM is derived from a saved Survey Event, its assigned Stream geometry,
+selected source files and analysis references. These saved records supply the
+processing request automatically when the Event is opened. This chapter describes
+how the app identifies inputs; [analysis masks](dev-12-event-masks.html) define the
+target grid, and [Stream DEM processing](dev-13-stream-dems.html) consumes both.
+
+## Saved input binding
+
+| Input | Source | Purpose |
+| --- | --- | --- |
+| Study revision | Saved Study context | Geometry and horizontal/vertical references |
+| Survey Event revision | Saved Event definition | Collection membership, Stream assignments and cell size |
+| Source selection | Selected files for each member Collection and Stream | Ordered raster inputs |
+| Acquisition receipt | Compatible download attempt | Asset identity, availability and transfer evidence |
+| Analysis mask | Published mask for this Event and Stream | Output extent, alignment and analysis domain |
+
+`terrain_dem_sources()` reads the Event's member Collections through
+`store$dem_preflight_request()`. Despite its internal name, this store adapter
+supplies saved records; it does not run the preflight diagnostic. The resolver
+reads file choices with `fluvgeo::read_stream_dem_selection()` and receipts with
+`fluvgeo::read_stream_dem_download(verify=FALSE)`. It checks that the acquisition
+belongs to the requested Stream and Collection and that every selected file has
+an available recorded outcome. Receipt reopening checks asset existence and size
+against prior transfer evidence.
+
+The resolver retains member/file order and returns candidate ID, file ID, asset
+path, selection revision and acquisition attempt. The processing request uses
+that order for first-valid source precedence. Internal source-review annotations
+are not an input to the normal DEM pipeline.
+
+## Processing request
+
+`terrain_dem_request()` combines the resolved sources with the selected Stream,
+saved vertical target and corresponding mask. It verifies Stream membership and
+mask spacing against the Event definition. The request contains file paths,
+revision identities, source order, extent, target reference and output scope.
+A missing mask leaves the request pending while automatic preparation runs.
+
+The supported production path uses aligned source/Event grids and a saved NAVD88
+international-foot target (EPSG:8228). The backend verifies raster compatibility
+before calculation. A saved target describes the requested result; it does not
+perform a coordinate or elevation transformation by itself.
+
+## Changes and recovery
+
+Missing selections or acquired files direct the analyst to **Collections > DEM
+files**. Event membership/spacing problems identify **Event Settings**; an
+unsupported vertical target identifies **Analysis**. The job snapshots inputs,
+then rechecks their binding and selection identity before publishing. Reopening
+also excludes editions whose saved-source selection has changed.
+
+Source resolution reads records and metadata, not full raster arrays. The app
+passes paths and settings to the worker, which opens rasters in its own process.
+
+## Implementation and tests
+
+Trace `R/terrain_dem_sources.R`, `R/terrain_dem_request.R` and the corresponding
+store adapters in `R/study_store.R`. Tests are `test-terrain-dem-sources.R` and
+`test-terrain-dem-request.R`; they cover missing/mismatched selections, request
+identity and saved-source reuse. Publication bindings are specified in
+`dev/schemas/survey-event-dem.md` and explained in
+[saved DEM editions](dev-14-dem-editions.html).
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| `terrain_dem_sources()` | Resolves acquisition evidence and chosen source assets | GeoPackage Event/Collection/file selections plus receipt-linked GeoTIFFs |
+| `terrain_dem_request()` | Reads Stream identity/geometry, analysis reference and mask | GeoPackage hierarchy/reference records; external mask GeoTIFF |
+| Request construction | Assembles processing parameters | No new governed data object or feature class |
+
+The resulting Stream DEM remains preparation terrain. Its source/context links
+must be available to later Reach Survey Event product derivation.

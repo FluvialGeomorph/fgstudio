@@ -73,3 +73,15 @@ Source: `R/stream_dem_inspection.R`, `R/stream_dem_download.R`; tests:
 `tests/testthat/test-stream-dem-inspection.R`. Backend contract:
 `fluvgeo/dev/schemas/stream-dem-inspection.md`; backend tests:
 `test_stream_dem_download.R` and `test_inspect_terrain_vertical_reference.R`.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| Inspection/preview worker | Reads a receipt-backed source DEM and its reference metadata | External GeoTIFF plus acquisition evidence |
+| Window inspection / integrity refresh | Reads source cells or verifies source bytes | No feature-class or analytical-raster update; bounded display/cache only |
+
+Inspection creates no new FGDB object and changes neither source values nor
+Survey Event ownership. Display products are disposable, not deliverable terrain.

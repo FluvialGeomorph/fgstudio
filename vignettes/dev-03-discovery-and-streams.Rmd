@@ -81,3 +81,17 @@ this editor.
 
 These are code-navigation routes, not proof that every runtime path was exercised.
 Next: **04. Reach creation, combination and splitting**.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| Discovery and corridor preview | Reads candidate hydrography and Study Area; computes proposed geometry | Transient sf objects; no governed object is published |
+| Boundary save / `revise_study_context()` | Updates Study Area geometry | GeoPackage `study_area`; selected polygon evidence retained separately |
+| `add_study_stream_corridor()` | Creates/updates a Stream with its Study Area parent | GeoPackage `streams`; source `selected_lines`/`clipped_lines` evidence in GeoPackage |
+
+Reference flowlines are construction evidence. They are not automatically FGDB
+Flowline products or Stream Network Observations; Stream UUIDs remain distinct
+from provider identifiers.

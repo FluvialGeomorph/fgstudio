@@ -1,14 +1,12 @@
-# Source DEM download increment
+# Source DEM acquisition contract
 
-Status: owner approved this proposal on 2026-09-19; implemented in fgstudio 9028
-and fluvgeo 9038. Verification evidence is recorded in `stream-dem-files.md`.
-The exact backend contract is `fluvgeo/dev/schemas/stream-dem-downloads.md`.
-See ADR 0007 for accepted scientific boundaries.
+The implemented acquisition contract follows ADR 0007 and fluvgeo's
+stream-dem-downloads schema. Article 06 describes the application workflow.
 
 ## User workflow
 
 Within DEM files, save tile choices, review the destination and reported size,
-then explicitly select Download saved files. Download only the selected IDs in
+then explicitly select Acquire Source DEMs. Download only the selected IDs in
 that immutable selection snapshot. Unsaved checkbox changes, empty selections,
 stale context/source evidence or unsaved DEM product intent block start with an
 actionable message. PARTIAL discovery remains visible and does not imply complete
@@ -27,7 +25,7 @@ active job. Session closure also cancels it. Completed assets remain available.
 Use the configured local study directory, with a study-owned `source-dem/`
 subdirectory. This is a local-preview storage choice, not an Enterprise layout.
 The UI displays the resolved destination before start. No folder picker or second
-storage root in this increment. The owner approved this storage choice.
+storage root in this workflow. The owner approved this storage choice.
 
 Separate completed assets, attempt records and incomplete transfers. Generate
 internal paths from application-controlled identities; preserve the provider's
@@ -44,8 +42,7 @@ requires a new attempt and retains the earlier source-to-content association.
 
 ## Transfer and verification
 
-Use one background worker and sequential streaming files. The owner's large-data
-guidance supersedes the former size/duration ceilings: do not reject a large plan
+Use one background worker and sequential streaming files. Large-data processing requirements apply: do not reject a large plan
 or stop a healthy transfer because of its size or elapsed time. Connection and
 stalled-transfer recovery default to 30 and 120 seconds respectively. Cancellation
 and actual transfer failures preserve completed files and report remaining work.
@@ -53,7 +50,7 @@ and actual transfer failures preserve completed files and report remaining work.
 Accept only HTTPS object URLs under the supported public USGS source-directory
 prefix validated against the saved collection. Reject userinfo, ambiguous paths
 and unsupported hosts. Do not follow redirects automatically; report a redirect
-as unsupported in this first adapter. Provider metadata must not expand the allowed
+as unsupported in this adapter. Provider metadata must not expand the allowed
 destination or source scope. Implementation must verify the transport library's
 timeout, streaming and cancellation behavior with focused tests.
 
@@ -62,7 +59,7 @@ HTTP transfer, a nonempty body and agreement with a valid HTTP Content-Length wh
 present. Require agreement with the saved catalog size when known; a mismatch is
 a verification failure requiring review/refreshed discovery, not silent acceptance
 of revised bytes. Missing lengths are explicitly recorded. Reject obvious error
-payloads and require a supported TIFF/BigTIFF signature for this initial GeoTIFF
+payloads and require a supported TIFF/BigTIFF signature for the GeoTIFF
 adapter; archives and other formats return unsupported.
 
 Calculate SHA-256 from the completed local bytes. A local hash establishes content
@@ -110,6 +107,4 @@ preview in a fresh R process. Any live transfer qualification uses a small synth
 case explicitly separated from the owner's saved selections. Existing study tiles
 are downloaded only through the owner's explicit start action in the app.
 
-This increment ends at original source files and verified transfer receipts.
-Raster inspection, terrain processing and Survey Event assignment remain the
-subsequent owner-reviewed steps described in ADR 0007.
+This contract covers original source acquisition and verified transfer receipts. Inspection, Event membership and DEM processing have separate feature contracts.

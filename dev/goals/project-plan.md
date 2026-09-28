@@ -17,9 +17,9 @@ Ask before introducing an unfamiliar domain concept; do not expose internal
 "acquisition group" implementation names as a new analyst concept. Review the UI
 backlog before adding further terrain-processing functionality.
 
-## Accomplished: local study hierarchy (9022)
+## Implemented local hierarchy
 
-As reviewed on 2026-09-18, the working tree implements:
+The application supports:
 
 - Durable Study Area creation/reopening, editable name and Purpose; drawn or
   selected watershed boundaries with explicit save and child-area checks.
@@ -34,19 +34,12 @@ As reviewed on 2026-09-18, the working tree implements:
   labels/popups, selection zoom and a nested saved inventory. Reach rename lists
   display Stream / Reach and sort by Stream first, then Reach.
 
-The owner explicitly accepted the Stream, Reach creation/combination, rename and
-split interactions and now describes the app as very functional. This is user
-acceptance, not a claim of comprehensive browser automation or production readiness.
-See [the documentation review](../governance/documentation-review-2026-09-18.md)
-for evidence, test-version boundaries and the current uncommitted-work caveat.
+## Terrain workflow and remaining scope
 
-## Current terrain workflow and next decision
-
-FG Studio 9062 with isolated fluvgeo 9057 completes the aligned-grid DEM increment:
+The aligned-grid DEM workflow includes:
 source acquisition/viewing, saved Study analysis references, Survey Event settings,
 automatic masks, serial Stream assembly, NAVD88 international-foot conversion,
-immutable local GeoTIFF publication and reuse, and per-Stream map review. The owner
-accepted the increment and considers the UI polished enough for now.
+immutable local GeoTIFF publication and reuse, and per-Stream map review.
 
 Survey Events follows saved inputs. One DEMs card contains Stream tabs and optional
 technical details; messages appear for processing, failure or pause. No backend
@@ -91,7 +84,7 @@ not scientific authority. Keep local diagnostics opt-in.
 - Preserve prior contexts and evidence; explicit reopening discards transient work,
   not saved records. Unsupported/missing evidence must not be guessed.
 - Start the analyst preview in a fresh R process, never a test process. This
-  preserves the lesson from the 9015 leaked-test-double containment failure.
+  prevents test bindings from entering the analyst runtime.
 - Keep user-facing methods deterministic; development AI assistance does not
   authorize a deployed agentic service.
 - The app remains a trusted, single-analyst local preview. No production client,

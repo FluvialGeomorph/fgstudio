@@ -98,3 +98,16 @@ Stream/Reach rename lists display names for selection but submit stable IDs.
 Test files live under `tests/testthat`. Never start the analyst preview in an R
 process that ran mocked tests. Use `dev/scripts/run-dev.ps1` for a fresh process.
 Next: **03. Discovery and Stream construction**.
+
+## Data objects and storage
+
+See [Data objects and local storage](storage-model.html) for the FGDB ownership and physical representation crosswalk.
+
+| Operation | Data object read or changed | Physical representation |
+| --- | --- | --- |
+| Store `create` -> `start_study_context()` | Creates local Study Area identity/name/Purpose | GeoPackage `study_area` and context metadata; geometry can be added during definition |
+| Store `read` -> `read_study_context()` | Reads Study Area, Streams, Reaches and available reference/Event records | GeoPackage hierarchy feature layers/tables with explicit parent IDs |
+| Store `revise` -> context writer | Updates the selected object while retaining identity and other context | New local GeoPackage context revision; this is the implementation of a logical update, not a new FGDB entity |
+
+FGDB Collection membership and full delivery conformance are separate from local
+Study creation. Session state and map previews are not geodatabase objects.

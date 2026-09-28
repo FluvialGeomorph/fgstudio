@@ -1,12 +1,10 @@
 # Vertical reference and epoch specification
 
-Owner direction, 2026-09-20: specify vertical references next, before Event settings.
-Study Area target specification is implemented in fgstudio 9036 / fluvgeo 9044.
-This adds context schema 7, not a transformation. Retain ADR 0009 and the existing
-backend vertical-observation evidence. Source-level reconciliation and export
-qualification described below remain future work.
+The Study Area vertical specification records a target reference and epoch evidence.
+It is distinct from processing source elevations. ADR 0009 owns the scientific
+requirements; the DEM pipeline's supported unit conversion is described separately.
 
-## Implemented slice
+## Reference specification
 
 Analysis setup has Horizontal CRS and Vertical reference tabs. The latter provides
 local area-screened vertical EPSG candidates, authoritative-definition entry,
@@ -22,45 +20,10 @@ Later revisions retain the specification. Existing processing records block targ
 changes. Older contexts remain readable; older software rejects schema 7.
 Exact contract: sibling fluvgeo/dev/schemas/study-vertical-reference.md.
 
-9036 fixes the missing vertical message renderer: validation and save failures
-are visible beside the buttons, as is revision-bound success after persisted
-reread. Both CRS forms restore saved identifiers/WKT. The tab's opaque study URL
-key reopens the latest saved revision on reload; unsaved inputs are discarded.
-This changes app lifecycle/feedback only, not the backend schema or conversions.
-
-Current 9036 verification: full app suite passes 756 assertions, including visible
-vertical errors/success and reload restoration of both references. Nine articles
-and code-map checks pass; package check has no errors and its existing non-ASCII
-warning. See the [documentation review](../governance/documentation-review-2026-09-20.md).
-The 9035 evidence below is historical; the owner subsequently accepted the UI.
-
-Both CRS menus attach to the page body instead of clipped card containers.
-They use bounded scrollable heights, upward opening near the viewport bottom,
-and refresh placement after asynchronous loading. External scrolling closes the
-menu; internal scrolling remains active. Destroy removes the scroll listener.
-
-9035 verification: 174 backend assertions pass across vertical/context/analysis/
-purpose tests; two report tests skip because optional gt is unavailable. All 24
-new app assertions pass. The JavaScript dropdown callback fixture passes.
-
-Full app regression: 739 assertions pass and backend-function isolation checks
-pass. Final targeted tests cover subsequent UI wording/visibility and definition
-serialization-preservation refinements; no additional scientific operation is added.
-
-Final focused app checks pass (24 assertions) against the final 9044 installation;
-backend regression again passes 174 assertions with the same two optional gt skips.
-All nine developer articles/site rebuilt. Code map: 68 nodes, 85 static edges,
-19 reviewed bridges; freshness, anchor and lookup checks pass. The dropdown
-fixture covers asynchronous loading and resize/listener cleanup as well as
-viewport placement and scrolling. Fresh 9035 preview responds HTTP 200 with the
-new controls. Browser automation still times out attaching, so no visual browser
-acceptance is claimed. Logs are under dev/check-output/vertical-*.
-
-Both package builds/checks complete without errors: app has its existing non-ASCII
-warning; backend has its existing non-ASCII warning and methods/global-binding
-notes. Optional fluvgeodata/gt are unavailable. Tests ran separately; unsafe legacy
-backend tests/examples were excluded from package checking. Shared/production
-libraries and user study contents were not changed by verification.
+Validation/save feedback is revision-bound and displayed beside the controls.
+Reload restores saved definitions; unsaved inputs are discarded. Catalog dropdowns
+use viewport-aware placement and bounded scrolling. Article 09 traces the editor
+and tests; ADR 0009 owns reference and epoch requirements.
 
 ## Storage recommendation
 

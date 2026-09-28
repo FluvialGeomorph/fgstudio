@@ -10,7 +10,7 @@ A requested repository change is ready to implement.
 2. Confirm the requested scope and current Git evidence.
 3. Implement the smallest coherent change while preserving unrelated work.
 4. Run checks proportionate to risk.
-5. Edit the existing artifact that owns the changed requirement or procedure; remove conflicting guidance rather than appending a completion narrative.
+5. Edit the existing artifact that owns the changed requirement or procedure; remove conflicting guidance rather than appending a completion narrative. For changed data inputs/outputs, ownership or persistence, apply the function/data completion check in `developer-documentation.md` and update the affected mappings in the same task.
 6. Review the final status and diff. Verify that the task route reaches current instructions without a historical report, and remove duplicate or superseded machinery.
 7. Create a checkpoint only if useful unfinished state remains.
 

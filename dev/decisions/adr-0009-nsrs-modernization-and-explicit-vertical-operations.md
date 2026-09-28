@@ -101,11 +101,7 @@ support, with links to authoritative NGS modernization resources as well as
 SpatialReference.org. A name match is not a qualified operation. Legacy sources
 remain usable through supported, explicit workflows; no bulk migration is implied.
 
-The current 9032/9042 implementation validates and records a projected 2D CRS and
-does not perform vertical conversion. It has no structured coordinate-epoch or
-modernization capability registry and is not yet a complete NSRS-ready workflow.
-Extend the data contract with implementation; do not hide these fields only in
-free-text rationale or mistake the current WKT record for complete epoch support.
+The context records horizontal/vertical definitions and vertical epoch/planning metadata. This does not qualify epoch-dependent operations or complete NSRS modernization. Implementation scope is maintained in the reference feature records.
 
 Follow sibling FGDB ADR-0026 for vertical-reference recovery and preservation.
 No FGDB schema changes or production upgrades are authorized by this design record.
@@ -113,11 +109,7 @@ Maintain the established Event grid/mask rules independently of datum migration.
 
 ## Primary references (checked 2026-09-20)
 
-Implementation update (9033/9043): guided selection now reads the installed PROJ
-catalog, reports local versions and provides area/definition reference links.
-Dynamic/2022 reference-frame choices are exploration-only and fail validation
-until the structured coordinate-epoch workflow is implemented and qualified.
-No elevation transformation or unit conversion is introduced by this increment.
+
 
 - [NGS implementation-planning bulletin, May 28, 2026](https://content.govdelivery.com/accounts/USNOAANOS/bulletins/4193400)
 - [NGS modernization progress](https://www.ngs.noaa.gov/datums/newdatums/TrackOurProgress.shtml)
@@ -129,7 +121,4 @@ No elevation transformation or unit conversion is introduced by this increment.
 The cited latest PROJ documentation does not establish the capabilities of the
 installed sf/terra bindings. Test each binding and operation before enabling it.
 
-Implementation clarification (2026-09-22): fluvgeo 9053 retains Float32 default
-DEM storage and optional Float64 storage, but leaves working precision to GDAL.
-Earlier Float64 working-precision wording records the previous implementation,
-not a scientific requirement. The explicit vertical-operation decision is unchanged.
+Float32 is the default DEM storage type; Float64 is explicit opt-in. GDAL manages working precision. The explicit vertical-operation decision applies independently of storage precision.

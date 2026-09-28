@@ -20,6 +20,7 @@
 - Function-call navigation: `dev/architecture/agent-routes.md`; human orientation: `vignettes/dev-01-code-navigation.Rmd`, followed by the workflow articles.
 - Developer-documentation changes: `dev/workflows/developer-documentation.md` and `dev/decisions/adr-0006-dual-mode-developer-documentation.md`.
 - Shiny/session/storage boundaries: `dev/architecture/design.md`
+- Data entities, ownership, persistence or function inputs/outputs: `dev/architecture/storage.md` and the function/data maintenance requirements in `dev/workflows/developer-documentation.md`.
 - Raster processing design, implementation, review, or testing: read `dev/workflows/r-spatial.md` for scientific authority, native GIS operations, large-data execution, and Shiny integration.
 - Architecture, dependencies, or ownership boundaries: `dev/architecture/`
 - Consequential and durable choices: `dev/decisions/`
@@ -37,7 +38,9 @@ Full session transcripts are not normal context sources. Use maintained durable 
 Before declaring meaningful work complete, update the existing artifact that owns the changed goal, design, contract, workflow or behavior. Keep current instructions there; remove conflicting or superseded guidance. Dated records may retain necessary evidence, but must not be required reading for standing instructions. Check that the task route leads directly to the current procedure. Create a checkpoint only when useful unfinished state remains; do not add a completion report by default.
 
 Maintain human developer articles and agent routes together when call paths or
-capabilities change. Generated graphs are navigation aids, not authority; inspect
+capabilities change. Include the affected function-to-data mappings when entities,
+ownership, inputs/outputs or physical storage change; follow the developer-documentation
+workflow's completion check. Generated graphs are navigation aids, not authority; inspect
 source and verify freshness before relying on them. Human-only maintenance must
 remain practical without recovering intent from chat history.
 
