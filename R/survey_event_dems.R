@@ -2,8 +2,9 @@ survey_event_dems_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::card(
     bslib::card_header("DEMs"),
-    shiny::uiOutput(ns("overview")),shiny::uiOutput(ns("queue_controls")),
-    shiny::uiOutput(ns("streams")))
+    bslib::card_body(class="pt-0",fillable=FALSE,
+      shiny::div(shiny::uiOutput(ns("overview")),shiny::uiOutput(ns("queue_controls")),
+        shiny::uiOutput(ns("streams")))))
 }
 
 survey_event_dems_server <- function(id,current,context,store,ready,launch=launch_terrain_dem_trial) {

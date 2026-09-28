@@ -10,8 +10,12 @@ ArcGIS toolbox are migration test targets. The owner reviews working increments
 and chooses the next functional step. Do not infer authorization for new terrain
 or scientific operations from this roadmap.
 
-Owner clarification: deliver a reviewable UI update every development turn, with
-the preview refreshed and the changed controls identified. Use established
+Owner clarification: deliver cohesive, usable functionality per implementation
+turn, including the necessary backend integration and focused verification;
+do not hand back routine intermediate steps for repeated "proceed" messages.
+Follow [task completion and delivery cadence](../workflows/complete-development-task.md).
+For app behavior changes, refresh the whole-app preview and identify the changed
+controls. Documentation-only tasks need no app restart. Use established
 FluvialGeomorph terminology (Survey Event, Survey Collection, Stream, Reach).
 Ask before introducing an unfamiliar domain concept; do not expose internal
 "acquisition group" implementation names as a new analyst concept. Review the UI

@@ -2,6 +2,9 @@
 
 Document repeatable, repository-relevant procedures here. A workflow should state its trigger, inputs, ordered actions, verification, and durable outputs.
 
+- [Complete a development task](complete-development-task.md): required delivery
+  cadence, usable outcomes, proportional verification and handoff boundaries.
+
 - [R package development](r-package-development.md): standard R tools, test
   placement, criteria for exceptions and local execution constraints.
 - [R spatial processing](r-spatial.md): draft guidance for authoritative methods,

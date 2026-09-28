@@ -110,10 +110,10 @@ terrain_mosaic_trial_server <- function(id, current, event_context = function() 
             item("Storage", paste(trial$result$datatype, "GeoTIFF", if(!is.null(trial$saved_dem)) "in the Study folder")),
             item("Sources", if(!is.null(trial$source_selection)) paste(nrow(trial$source_selection),
               "DEM files selected automatically from saved Survey Event and Stream assignments.") else paste(length(trial$sources), "source DEM files")),
-            item("Processing", if(identical(trial$stage, "international_feet"))
-              "Metres / 0.3048. Saved Event grid and analysis mask retained. No datum transformation." else
-              "Source elevation units retained; no elevation conversion."),
-            item("Processing time", sprintf("%.2f seconds", trial$seconds)))))
+            item("Processing", if(!is.null(trial$result$method)) trial$result$method else
+              "Processing method was not recorded by this producer."),
+            item("Processing time", sprintf("%.2f seconds", trial$seconds))),
+          terrain_dem_provenance_ui(trial)))
     })
     output$map <- shiny::renderPlot({
       shiny::req(matching_study(), matching_event())

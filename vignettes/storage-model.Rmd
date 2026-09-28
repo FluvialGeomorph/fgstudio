@@ -111,6 +111,7 @@ new FGDB domain entity. Preserve the distinction in both code and documentation.
 | Geometry source/piece evidence | GeoPackage line, polygon and cut layers linked to hierarchy IDs | Corridor and Reach-editing functions write/read | Reproducible construction evidence; source COMIDs and piece IDs do not replace FGDB entity IDs |
 | Study/Stream/Reach masks | External Byte GeoTIFFs linked to geometry and Event grid | `write_event_masks()` produces; `mask_terrain_mosaic()` consumes | Processing domain, not a governed feature class or observed terrain product |
 | Assembled Stream DEM | External Float32 GeoTIFF in international feet on the Event grid | `mosaic_terrain_tiles(template=...)` (same-CRS bilinear resampling) -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain; hydro-modification and downstream Reach binding are not yet integrated |
+| Local DEM execution evidence | Additive `execution` record inside the edition's `edition.rds`; retained backend result metadata for older editions | `launch_terrain_dem_trial()` captures methods, WKT and software; `study_dem_store()` persists; `terrain_dem_provenance_ui()` reads | Bound to the displayed Stream/Event edition; separate from planned operations and not yet portable FGDB delivery metadata |
 
 Study/Stream terrain may support several Reach Events. FGDB's folder requirements
 allow explicitly associated shared project assets; they do not require copying

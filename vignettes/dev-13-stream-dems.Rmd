@@ -25,6 +25,22 @@ The analyst guide describes the controls; this chapter describes their execution
 
 ## Transformation planning
 
+The DEMs card groups status, queue controls and Stream tabs in one card body with
+no top padding. A single block wrapper keeps empty status/control outputs from creating flex gaps.
+Active processing and recovery messages still appear above the tabs.
+
+Stream **DEM details > Coordinate-operation provenance** reads execution evidence
+from the displayed edition. `terrain_dem_provenance_ui()` shows retained input and
+output references, methods, datum declaration and producer version; missing
+historical fields remain unknown. Current Study settings and transformation plans
+are not substituted for execution evidence. New native same-CRS calculations add
+`FGSTUDIO_DEM_EXECUTION_1` inside the trial before publication, including full WKT,
+methods and software versions. Cached copies retain the original record. This
+adds no raster computation and does not rewrite earlier editions.
+The nested **Software used** disclosure reads the saved package and linked
+geospatial versions, including GDAL and PROJ, rather than the current session's
+versions. Missing historical software information stays unknown.
+
 The bounded execution qualification in fluvgeo's
 `test_terrain_selected_operation_execution.R` verifies an exact catalog
 unit-conversion pipeline on a small real DEM window. Direct GDAL output can
@@ -32,6 +48,21 @@ retain the source band-unit label after changing elevations. A file-backed
 warped VRT followed by explicit target CRS/unit metadata at final GeoTIFF
 materialization resolves that mismatch. This does not qualify datum-shift or
 coupled-operation execution; saved plans are not yet connected to DEM workers.
+
+`test_terrain_projected_operation_execution.R` extends that qualification to a
+2 m output grid in NAD83(2011) / UTM zone 16N, bilinear interpolation and NAVD88
+international-foot samples. Its exact catalog pipeline is compared with terra's
+ordinary horizontal-only projection followed by arithmetic unit conversion.
+The bounded real-window check requires matching NoData, output grid, reference
+metadata, units and values within 0.0001 ft. Both routes use the installed GDAL
+stack; this is a configuration comparison, not independent datum validation.
+
+`test_terrain_datum_operation_execution.R` adds an opt-in NADCON5 horizontal datum
+shift check with four official, checksummed grids in isolated development storage.
+Forward/inverse point checks and inverse-coordinate raster sampling verify the
+explicit pipeline, while a fresh process verifies missing-grid rejection. PROJ
+may retain loaded resources after a path change. The NAVD88 datum remains unchanged;
+vertical datum shifts and Stream-worker integration are still unqualified.
 
 Survey Events automatically checks datum compatibility and displays **Datum
 transformations** only for pairs requiring a choice. Matching horizontal and

@@ -413,6 +413,12 @@ when you need another study. The bordered main tab set is **Geometry**,
 
 ## Survey Events: top-to-bottom workflow
 
+For a saved Stream DEM, expand **DEM details**, then **Coordinate-operation
+provenance** to see the coordinate systems, conversion method and datum-operation
+evidence retained when it was produced. Missing historical evidence is labeled
+**Not recorded**. A transformation plan does not establish that an operation ran.
+The **Software used** disclosure shows the processing versions saved with that DEM.
+
 Saved source references are checked automatically against the Study target.
 **Datum transformations** appears only when a datum choice is needed. Matching
 horizontal and vertical datums need no choice, even if projection or units differ.

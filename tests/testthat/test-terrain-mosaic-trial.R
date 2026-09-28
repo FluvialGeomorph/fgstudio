@@ -12,6 +12,8 @@ test_that("DEM view is available and renders actual development results when sup
     expect_match(output$summary$html, "portion of Reach")
     expect_match(output$summary$html, if (identical(trial$stage, "international_feet")) "NAVD88 international feet" else "Source elevation unit")
     expect_true(length(output$map) > 0)
+    expect_match(output$details$html,"Coordinate-operation provenance")
+    expect_match(output$details$html,"not evidence that an operation ran")
     if (!is.null(trial$group_id)) {
       if (identical(trial$stage, "reach_masked")) expect_match(output$summary$html, "Unit conversion is pending")
       context(list(group_id = "another-event")); session$flushReact()

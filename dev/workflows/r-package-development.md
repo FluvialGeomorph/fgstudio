@@ -55,9 +55,12 @@ do not create a routine completion narrative. Review generated changes separatel
   context. Do not substitute a standalone component/example screen unless the
   owner specifically requests one. Explain where the changed controls belong in
   the workflow.
-  Keep increments small enough for owner feedback before proceeding. Do not build
-  a backlog of backend functionality without UI review; if a backend-only step is
-  necessary, clarify the intended reviewable outcome with the owner first.
+  Use the delivery cadence in `complete-development-task.md`: integrate necessary
+  backend work into a usable feature before handoff, without a separate approval
+  for routine internal steps. Keep scope bounded by the authorized outcome, not
+  by a requirement to pause after each technical milestone. Documentation-only
+  and explicitly requested investigation tasks do not require a UI change or
+  preview restart.
 
 - Scientific methods and their tests belong to fluvgeo. Use the existing isolated
   `dev/local-library` for app development; never replace the shared backend as a

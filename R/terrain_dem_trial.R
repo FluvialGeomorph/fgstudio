@@ -67,6 +67,15 @@ launch_terrain_dem_trial <- function(trial, directory, cached = NULL) {
           crs=FALSE,stopOnError=FALSE))
       stop("Source coverage does not span the saved analysis grid. The DEM was not published.")
     trial$stage <- "international_feet"
+    trial$execution <- list(schema="FGSTUDIO_DEM_EXECUTION_1",
+      implementation="native_same_crs",completed_at=format(Sys.time(),"%Y-%m-%dT%H:%M:%OSZ",tz="UTC"),
+      source_crs=trial$unmasked_result$crs,target_crs=trial$result$crs,
+      horizontal_method=trial$unmasked_result$method,
+      vertical_method=trial$result$method,datum_operation=trial$result$datum_operation,
+      selected_plan=NULL,proj_pipeline=NULL,
+      software=list(fluvgeo=as.character(utils::packageVersion("fluvgeo")),
+        terra=as.character(utils::packageVersion("terra")),sf=as.character(utils::packageVersion("sf")),
+        geospatial=as.list(sf::sf_extSoftVersion())))
     trial$seconds <- proc.time()[["elapsed"]] - started
     trial
   }, args = list(trial = trial, directory = directory, cached = cached), libpath = .libPaths(),

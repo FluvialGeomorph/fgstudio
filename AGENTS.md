@@ -11,6 +11,7 @@
 - Preserve unrelated user changes and keep work within the requested repository scope.
 - Distinguish verified evidence, reasonable inference, and unknowns.
 - Before implementation, read the workflow named by the matching route and use it to choose the change; finding or linking it is not sufficient.
+- For every development task, read `dev/workflows/complete-development-task.md`. Deliver a usable outcome within the authorized scope; routine implementation, integration and verification steps are not separate owner handoffs.
 
 ## Conditional context routes
 

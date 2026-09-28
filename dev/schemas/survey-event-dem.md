@@ -28,6 +28,24 @@ and source-index runs with their original alignment and interpolation halo.
 Single-grid metadata retains its existing spacing/halo fields. Source paths remain provenance; a saved
 DEM can be displayed without development fixture options.
 
+Newly calculated trials retain `execution` with schema `FGSTUDIO_DEM_EXECUTION_1`:
+completion time, `native_same_crs` implementation, source/output WKT, horizontal
+and elevation-conversion methods, datum-operation declaration, and fluvgeo,
+terra, sf and linked geospatial versions. `selected_plan` and `proj_pipeline`
+are NULL for this native same-CRS producer; no PROJ operation is fabricated.
+Publication preserves this record verbatim in `edition.rds`. Cached copies retain
+the original evidence rather than claiming a new calculation. This additive
+metadata does not change the raster recipe or force existing DEMs to rebuild.
+
+Reopening exposes the original recipe's backend version with `saved_dem`.
+`terrain_dem_provenance_ui()` displays retained conversion-input/output references,
+methods, datum declaration and backend version. Missing historical information is
+shown as not recorded. Existing editions are not rewritten or supplemented from
+current Study settings or transformation plans. Full WKT is available in a nested
+disclosure; opening it reads saved metadata without scanning pixels.
+The Software used disclosure lists only the execution record's package and linked
+geospatial versions. It never fills historical gaps from the current runtime.
+
 Workers write only into unique managed staging directories. An already verified
 cached DEM can be copied and metadata-checked in a worker instead of recomputed.
 Completion rechecks the current binding and trial input recipe. Publication writes

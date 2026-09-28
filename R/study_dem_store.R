@@ -61,7 +61,8 @@ study_dem_store <- function(context_path, acquisition_groups, survey_collections
       name <- if(entry == "unmasked_result") "mosaic.tif" else "masked.tif"
       if(file.exists(file.path(path,name))) record$trial[[entry]]$path <- file.path(path,name)
     }
-    record$trial$saved_dem <- list(id=basename(path),scope=record$scope,created=record$created)
+    record$trial$saved_dem <- list(id=basename(path),scope=record$scope,created=record$created,
+      backend=record$recipe$backend)
     record
   }
   find <- function(binding, recipe=NULL, stream_id=NULL, scope=NULL) {
