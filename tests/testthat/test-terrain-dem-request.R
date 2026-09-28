@@ -27,5 +27,5 @@ test_that('Reach DEM requests use saved grid, mask, sources and vertical target'
  expect_error(terrain_dem_request(s,x,ctx,t$reach$reach_id,stream_id=t$reach$stream_id),'one Reach or Stream')
  expect_error(terrain_dem_request(s,x,ctx,'missing'),'not in this Study')
  x$vertical_reference$crs_authority<-'EPSG:5703'
- expect_error(terrain_dem_request(s,x,ctx,t$reach$reach_id),'Review Analysis')
+ expect_error(terrain_dem_request(s,x,ctx,t$reach$reach_id),'Review CRS')
 })

@@ -18,6 +18,11 @@ it does not yet run L1 analysis or connect to Enterprise.
 
 ## Entry and ownership
 
+`fgstudio_app()` applies Bootstrap 5 with the Bootswatch **Flatly** theme through
+bslib. All tabsets use the theme's standard tab style, including New/Open in the
+Study Workspace sidebar, the main Study tabs, CRS, Collections and Stream DEMs.
+Do not add module-specific tab colors or mix pill navigation into these tabsets.
+
 | Call or registration | Responsibility | Source |
 |---|---|---|
 | `run_app()` → `fgstudio_app()` | Bind the Shiny app to loopback | `R/app.R` |

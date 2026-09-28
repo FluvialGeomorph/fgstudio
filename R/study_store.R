@@ -501,6 +501,26 @@ local_study_store <- function(data_dir) {
     discard_masks(key,directory)
     list(path=path,manifest=manifest)
   }
+  transform_request <- function(key,group_id,expected_path,expected_group) {
+    x <- read(key);g <- acquisition_groups(key)$groups[[group_id]]
+    if(is.null(g) || !identical(x$path,expected_path) || !identical(g$path,expected_group))
+      stop("Study or Survey Event changed. Review candidates again.")
+    if(is.null(x$analysis_crs) || is.null(x$vertical_reference) ||
+       !isTRUE(nzchar(x$vertical_reference$crs_wkt)) || !identical(x$vertical_reference$kind,"vertical_crs"))
+      stop("Save resolved horizontal and vertical target references in CRS first.")
+    adapter <- list(acquisition_groups=acquisition_groups,dem_preflight_request=dem_preflight_request,
+      survey_collections=survey_collections)
+    selections <- do.call(rbind,lapply(g$streams$stream_id,function(sid)
+      terrain_dem_sources(adapter,key,group_id,sid,x$path,g$path)))
+    paths <- unique(c(x$path,g$path,selections$selection_path,selections$path))
+    info <- file.info(paths)
+    if(anyNA(info$size)) stop("A saved input is unavailable.")
+    list(key=key,group_id=group_id,context=x$path,group=g$path,selections=selections,
+      stamps=data.frame(path=paths,bytes=info$size,modified=as.numeric(info$mtime)),
+      args=list(sources=unique(selections$path),target_horizontal=x$analysis_crs$wkt,
+        target_vertical=x$vertical_reference$crs_wkt,area=x$boundary_sf,
+        target_epoch=if(identical(x$vertical_reference$epoch_status,"known")) x$vertical_reference$coordinate_epoch else NULL))
+  }
   c(list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
     dem_destination=dem_destination,prepare_dem_download=prepare_dem_download,dem_download=dem_download,
     dem_files=dem_files,save_dem_files=save_dem_files,check_dem_files=check_dem_files,
@@ -517,5 +537,6 @@ local_study_store <- function(data_dir) {
     stream_segments = stream_segments, preview_reach = preview_reach, save_reach = save_reach,
     preview_reach_merge = preview_reach_merge, merge_reaches = merge_reaches,
     rename_feature = rename_feature,preview_reach_split=preview_reach_split,split_reach=split_reach),
-    study_dem_store(context_path,acquisition_groups,survey_collections))
+    study_dem_store(context_path,acquisition_groups,survey_collections),
+    study_transform_store(transform_request,context_path))
 }

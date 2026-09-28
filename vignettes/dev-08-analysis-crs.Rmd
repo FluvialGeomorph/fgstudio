@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Analysis setup records the analyst's projected horizontal coordinate system before
+The CRS tab records the analyst's projected horizontal coordinate system before
 terrain mosaicking. Map display stays in its display CRS. Source geometry and
 elevation values are not rewritten when a choice is saved.
 

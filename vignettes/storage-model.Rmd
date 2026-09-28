@@ -110,7 +110,7 @@ new FGDB domain entity. Preserve the distinction in both code and documentation.
 | App Survey Event definition | GeoPackage `settings`, `members`, Stream ID list and `event_links` | `write_survey_acquisition_group()` writes; mask/DEM request functions read | Coordinates shared acquisition inputs and links to Reach Survey Events; not an added hierarchy level |
 | Geometry source/piece evidence | GeoPackage line, polygon and cut layers linked to hierarchy IDs | Corridor and Reach-editing functions write/read | Reproducible construction evidence; source COMIDs and piece IDs do not replace FGDB entity IDs |
 | Study/Stream/Reach masks | External Byte GeoTIFFs linked to geometry and Event grid | `write_event_masks()` produces; `mask_terrain_mosaic()` consumes | Processing domain, not a governed feature class or observed terrain product |
-| Assembled Stream DEM | External Float32 GeoTIFF in international feet | `mosaic_terrain_tiles()` -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain; hydro-modification and downstream Reach binding are not yet integrated |
+| Assembled Stream DEM | External Float32 GeoTIFF in international feet on the Event grid | `mosaic_terrain_tiles(template=...)` (same-CRS bilinear resampling) -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain; hydro-modification and downstream Reach binding are not yet integrated |
 
 Study/Stream terrain may support several Reach Events. FGDB's folder requirements
 allow explicitly associated shared project assets; they do not require copying
@@ -118,6 +118,14 @@ or clipping a raster merely to fit a folder hierarchy. Subsequent Reach/Event
 products must retain their own identities, methods and source associations.
 
 ## Physical delivery boundary
+
+Transformation plans are another local preparation asset. The Study/Event-bound
+JSON revisions under `terrain-transformations` retain the full source/target
+reference evidence, operation candidates, resource identities and explicit analyst
+choices. `review_terrain_transformations()` discovers candidates;
+`study_transform_store()` writes and reopens plans. These are not executed-operation
+records or governed FGDB assets. Linking verified execution evidence to DEM
+editions remains unfinished; the current same-CRS DEM path is independent of plans.
 
 The existing FGDB delivery contract describes a Reach-Survey-Event folder containing:
 

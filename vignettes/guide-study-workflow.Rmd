@@ -234,14 +234,14 @@ Reach from one already defined.
 
 ## Survey acquisition and analysis references
 
-In **Analysis**, search projected EPSG systems applicable to the saved Study
+In **CRS**, search projected EPSG systems applicable to the saved Study
 Area. Filter horizontal units, inspect datum/frame and coverage, and open the
 SpatialReference.org explorer or selected definition. Check the CRS, then save it;
 validation and catalog evidence are recorded automatically. Advanced EPSG/WKT entry remains
 available. Selecting a horizontal CRS does not change elevations; epoch-dependent
 frames require a future qualified coordinate-epoch workflow for processing.
 
-In **Analysis > Vertical Reference**, choose a vertical height CRS, a 3D
+In **CRS > Vertical Reference**, choose a vertical height CRS, a 3D
 geographic CRS for ellipsoidal heights, or an explicit declared/local/unknown
 reference. Set the target elevation unit independently. Optional epoch/model
 fields preserve those details without guessing from survey dates. Check and save
@@ -274,7 +274,7 @@ focused footprint; **Custom comparison** lets you toggle footprints without
 changing saved inclusion. Zoom buttons return to the Study Area or visible set.
 Product review shows reported DEM pixel size: 1 m or finer is required but does
 not prove suitability. Downloaded tiles support metadata inspection and bounded
-terrain previews and aligned-grid Stream assembly under Survey Events. Acquisition plans
+terrain previews and Stream assembly at the chosen Event cell size under Survey Events. Acquisition plans
 can be revised and resaved.
 
 In **DEM files**, choose a saved Stream and a collection with DEM in your plan,
@@ -306,7 +306,7 @@ the session cache. Drag a rectangle and choose **Inspect selected area** for
 source-window detail; **Preview elevations** returns to the whole tile. These
 display samples do not change the original DEM.
 
-After **Analysis**, use **Continue to Survey Events** or open the
+After **CRS**, use **Continue to Survey Events** or open the
 adjacent **Survey Events** main tab. For an existing event, choose its date in
 **Survey Event date** (for example, **2019-12**). Its DEM appears immediately
 below; there is no separate date tab or DEM navigation step. Expand **Event
@@ -326,8 +326,10 @@ unknown. Existing Reach Events can be linked explicitly when available.
 **Save Survey Event** retains an immutable definition revision. **Review / edit Survey Event**
 reopens it; **Cancel** discards the editor. Definitions have stable IDs separate from
 their date labels and Reach Event IDs. Masks use the saved Study Area CRS and
-Survey Event cell size. The initial grid-alignment convention remains under
-project review; existing saved grids are unchanged. Changed selection/CRS evidence
+Survey Event cell size. DEMs use bilinear interpolation when assembled onto this
+grid; cell placement is handled automatically. Source cell sizes/alignment may
+differ; sources must retain compatible elevation references and the Study's
+horizontal CRS. Saved source priority determines overlap values. Changed selection/CRS evidence
 is flagged for review. Saving starts automatic mask preparation; it does not
 create a terrain DEM or a new Reach Event.
 
@@ -407,9 +409,25 @@ Move or back up the entire study folder, not only its latest context file.
 
 The Study Workspace sidebar can be collapsed with its edge toggle and reopened
 when you need another study. The bordered main tab set is **Geometry**,
-**Collections**, **Analysis**, and **Survey Events**.
+**Collections**, **CRS**, and **Survey Events**.
 
 ## Survey Events: top-to-bottom workflow
+
+Saved source references are checked automatically against the Study target.
+**Datum transformations** appears only when a datum choice is needed. Matching
+horizontal and vertical datums need no choice, even if projection or units differ.
+Distinct realizations, such as NAD83 and NAD83(2011), still require review.
+For each displayed pair, select an available operation and
+use **Save transformation plan**. No candidate is selected automatically, even
+when only one is available. Review its description, stated accuracy, area
+screening, coordinate epochs and required grids. Unavailable operations explain
+what is missing; ballpark substitutes cannot be selected. Matching references and
+the supported NAVD88 height-unit conversion are identified as requiring no datum
+change. Existing matching plans reopen with their saved choices.
+
+This step saves operation provenance for planning. Execution of the selected
+transformations is not integrated yet; existing same-CRS DEM preparation remains
+available. Changing inputs or operation resources requires a fresh review.
 
 Choose an existing Event or open **Define a Survey Event** in the top panel.
 **Event Settings** holds changes to the selected definition. The **DEMs** card below contains a tab for each assigned Stream. Saved DEMs are

@@ -51,6 +51,10 @@ do not create a routine completion narrative. Review generated changes separatel
 
 - Owner requirement: every app-development turn must end with a reviewable UI
   update in a fresh local preview and precise directions to the changed controls.
+  Present reviews in the whole app, with its normal navigation and saved Study
+  context. Do not substitute a standalone component/example screen unless the
+  owner specifically requests one. Explain where the changed controls belong in
+  the workflow.
   Keep increments small enough for owner feedback before proceeding. Do not build
   a backlog of backend functionality without UI review; if a backend-only step is
   necessary, clarify the intended reviewable outcome with the owner first.

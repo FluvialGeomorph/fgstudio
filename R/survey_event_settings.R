@@ -11,6 +11,7 @@ survey_event_settings_ui <- function(id) {
           shiny::actionButton(ns("edit"),"Review / edit Survey Event",class="btn-outline-primary btn-sm"))),
       shiny::uiOutput(ns("new_event_controls"))),
     shiny::conditionalPanel("input.group != null && input.group !== ''",ns=ns,
+      terrain_transform_review_ui(ns("transforms")),
       event_masks_ui(ns("masks")),survey_event_dems_ui(ns("dems"))))
 }
 
@@ -30,6 +31,10 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
     })
     masks <- event_masks_server("masks",preflight_context,store,
       pending=function() isTRUE(editing()) || selection_pending())
+    terrain_transform_review_server("transforms",current,shiny::reactive({
+      if(isTRUE(editing()) || selection_pending()) return(NULL)
+      preflight_context()
+    }),store)
     survey_event_dems_server("dems", current, shiny::reactive({
       if (isTRUE(editing()) || selection_pending()) return(NULL)
       preflight_context()

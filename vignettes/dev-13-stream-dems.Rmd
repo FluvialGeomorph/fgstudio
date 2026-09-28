@@ -23,25 +23,72 @@ explanation. Pause stops unfinished work while retaining completed results;
 Resume retries unfinished Streams. Waiting and Ready are internal queue states.
 The analyst guide describes the controls; this chapter describes their execution.
 
+## Transformation planning
+
+The bounded execution qualification in fluvgeo's
+`test_terrain_selected_operation_execution.R` verifies an exact catalog
+unit-conversion pipeline on a small real DEM window. Direct GDAL output can
+retain the source band-unit label after changing elevations. A file-backed
+warped VRT followed by explicit target CRS/unit metadata at final GeoTIFF
+materialization resolves that mismatch. This does not qualify datum-shift or
+coupled-operation execution; saved plans are not yet connected to DEM workers.
+
+Survey Events automatically checks datum compatibility and displays **Datum
+transformations** only for pairs requiring a choice. Matching horizontal and
+vertical datums hide the controls, including projection or unit differences;
+distinct datum realizations still require review. Candidate review uses the
+saved Survey Event context in the whole app, before mask and DEM preparation.
+A brief checking message is displayed while discovery runs. It uses the
+saved source files, Study reference targets and analysis area; no source or target
+picker duplicates saved choices. `terrain_transform_review_server()` runs backend
+`review_terrain_transformations()` in a worker. One complete operation is chosen
+per distinct reference pair, with no default even for a sole available candidate.
+Missing-resource, ballpark and epoch-dependent operations remain visible with
+reasons but cannot be selected. Descriptions retain combined horizontal/vertical
+steps; the analyst does not assemble arbitrary independent pipelines.
+
+`study_transform_store()` saves immutable local JSON plans after rechecking the
+input binding and resource/catalog evidence. The plan retains complete candidate
+evidence, exact selected pipelines and prior revisions. Reopening restores only
+matching choices. These plans do not yet drive DEM execution; the same-CRS worker
+below remains unchanged. No datum choice is invented for matching references or
+the existing NAVD88 unit conversion. See the analyst guide for the controls and
+`dev/schemas/terrain-transform-plan.md` for the persistence contract.
+
+| Function | Data read or written | Ownership and representation |
+| --- | --- | --- |
+| `transform_request()` | Saved source selections/receipts, targets and boundary | Reads Study/Event GeoPackages and original GeoTIFF paths |
+| `review_terrain_transformations()` | Embedded source references, local operation catalog/resources | Returns metadata only; no raster writes |
+| `save_transform_plan()` / `transform_plan()` | Candidate evidence and explicit selections | Immutable JSON under the Study, bound to its Survey Event; local planning asset |
+
 ## Raster calculation
 
 `launch_terrain_dem_trial()` runs these fluvgeo operations in one background worker:
 
 | Operation | Function | Result |
 | --- | --- | --- |
-| Crop source windows and merge in saved order | `mosaic_terrain_tiles()` | First-valid elevation mosaic |
+| Join consecutive compatible tiles, bilinearly resample each source grid, then merge in priority order | `mosaic_terrain_tiles(template=...)` | First-valid surface on the Event grid |
 | Apply the saved Stream domain | `mask_terrain_mosaic()` | DEM on the saved mask grid |
 | Convert NAVD88 metres to international feet | `terrain_to_international_feet()` | Float32 DEM with vertical EPSG:8228 |
 
 The worker opens input paths as file-backed terra rasters. Crops restrict work to
-the requested extent, merge preserves first-valid precedence, and masking retains
+the requested extent plus interpolation support, merge preserves first-valid precedence,
+bilinear resampling uses the saved mask's geometry, and subsequent masking retains
 NoData outside the analysis domain. Unit conversion divides metre elevations by
 0.3048 and preserves the horizontal grid and NoData. Outputs use filesystem
 GeoTIFFs. Original sources are retained.
 
-The integrated pipeline requires compatible aligned source/Event grids and NAVD88
-metre source elevations. It performs no resampling or datum transformation.
-Differing-grid and other vertical operations need explicit integration; the
+The integrated pipeline accepts differing source cell sizes/alignment, with the
+same full source CRS/units, the Event's horizontal CRS, and NAVD88 metre elevations.
+Consecutive compatible tiles are joined before resampling. Source-grid runs are
+resampled to the same full Event template, then combined in saved first/last-valid
+order without averaging overlaps. Interleaved source priorities are not reordered.
+Runs outside the output extent are omitted; newly adjacent compatible runs are
+joined so an irrelevant input cannot split a contributing tile seam.
+A two-cell halo at the larger source/output spacing preserves
+bilinear support before masking. Source compound CRS and band units are retained;
+there is no datum transformation. Cross-CRS processing
+and other vertical operations need explicit integration; the
 standalone warp API is described under
 [terrain developer tools](terrain-developer-tools.html#horizontal-warp-api).
 
@@ -56,7 +103,11 @@ Each tab mounts `terrain_mosaic_trial_server(process=FALSE)` as a display-only
 module. Lookup is filtered by Stream and scope. The plot uses a bounded display
 sample while the analytical GeoTIFF retains its full resolution. The map shows
 elevation units, analysis boundary, source tile boundaries and NoData. Optional
-DEM details group grid, source, storage, method and timing metadata.
+DEM details group output/source cell spacing, resampling, storage, method and
+timing metadata. Legacy aligned editions retain their original method label and
+are reused when their full saved-input recipe still matches. Earlier single-grid
+bilinear editions also remain reusable. Mixed-grid details list the input cell
+spacings and identify resampling from differing source grids.
 
 ## Implementation and tests
 
@@ -76,7 +127,7 @@ See [Data objects and local storage](storage-model.html) for the FGDB ownership 
 
 | Operation | Data object read or changed | Physical representation |
 | --- | --- | --- |
-| `mosaic_terrain_tiles()` | Combines selected source terrain | Reads original GeoTIFFs; writes elevation mosaic GeoTIFF |
+| `mosaic_terrain_tiles(template=...)` | Combines and resamples differing source grids to the Event grid | Reads source GeoTIFFs and mask geometry; writes one mosaic GeoTIFF; transient source-grid/run rasters are removed |
 | `mask_terrain_mosaic()` | Restricts the mosaic to the saved analysis domain | Reads mosaic/mask GeoTIFFs; writes masked DEM GeoTIFF |
 | `terrain_to_international_feet()` | Converts supported elevation units | Writes Float32 GeoTIFF with vertical reference evidence |
 | Stream result display | Reads assembled terrain associated with the selected Stream and acquisition definition | External GeoTIFF; no governed feature-class update |

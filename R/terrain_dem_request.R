@@ -17,7 +17,7 @@ terrain_dem_request <- function(store, current, context, reach_id = NULL, extent
   if (!stream_id %in% context$streams$stream_id) return(NULL)
   target <- current$vertical_reference
   if (is.null(target) || !identical(target$crs_authority,"EPSG:8228"))
-    stop("This DEM pipeline requires the saved NAVD88 international-foot target. Review Analysis.")
+    stop("This DEM pipeline requires the saved NAVD88 international-foot target. Review CRS.")
   selection <- terrain_dem_sources(store,current$key,context$group_id,stream_id,
     current$path,context$group_path)
   request <- store$mask_request(current$key,context$group_id,stream_id,current$path,

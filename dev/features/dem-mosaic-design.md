@@ -1,9 +1,11 @@
 # Stream DEM mosaic design
 
 The app assembles and reuses assigned Stream DEMs serially from saved Event
-settings. The supported path uses aligned grids and NAVD88 metre sources with an
-international-foot target. Differing-grid integration and portable folder binding
-remain separate work.
+settings. The supported path assembles consecutive compatible NAVD88 metre tiles,
+bilinearly resamples each source-grid run onto the saved same-horizontal-CRS Event
+grid, then merges in saved first/last-valid order before masking and international-
+foot conversion. Source spacing/alignment may differ. Cross-CRS integration and
+portable folder binding remain separate work.
 
 This document owns the intended processing contract. Implemented behavior,
 author requirements and unresolved proposals are distinguished below. Historical
@@ -80,7 +82,10 @@ cell size in the saved planar CRS's units. Existing Reach Events can be linked b
 ID after parentage/date validation; the definition writer creates no Reach Events.
 Revisions retain previous snapshots. The local store rejects stale study,
 selection or definition state and duplicate Reach Event links across definitions.
-The implementation uses a (0, 0) grid-alignment anchor within the saved real-world CRS. The specific alignment convention remains unconfirmed; do not interpret it as an arbitrary CRS or move saved grids automatically.
+The implementation retains its (0, 0) alignment as an internal convention.
+Owner clarification (2026-09-28): no clean-coordinate requirement or analyst
+anchor control is needed; resampling to the selected cell size is the practical
+workflow. Existing saved grids remain unchanged.
 See article 10 and sibling fluvgeo's `dev/schemas/survey-acquisition-groups.md`.
 USIEI free-text formats beyond explicit ISO day/date intervals remain unresolved.
 
@@ -114,7 +119,9 @@ different cell sizes need not share boundaries, and cross-resolution raster math
 requires explicit alignment. Non-integer ratios do not create nested grids merely
 by sharing an anchor. Grid persistence must store cell size in the selected CRS's
 linear units and use the same anchor across Events, never independently snap each
-Event to its own source tile origin. Proposed fixed anchor: (0, 0) in analysis CRS.
+Event to its own source tile origin. The existing (0, 0) convention remains an
+internal detail, not a pending analyst decision or a scientific requirement for
+round-number cell boundaries.
 
 Mixed source resolutions are allowed through explicit resampling onto the chosen
 Event grid. Report source versus output spacing and the resampling method; do not
@@ -154,9 +161,9 @@ ignoring NoData when a later source supplies a valid cell. The owner also permit
 last-value precedence. Do not average/blend overlap cells or use directory order
 as source priority.
 
-Use a raster template to fix target CRS, resolution, extent and alignment. Avoid
-interpolation for aligned sources. When projection/alignment requires it, use
-explicit bilinear interpolation for continuous elevation. Rasterize binary masks
+Use a raster template to fix target CRS, resolution, extent and alignment. The
+normal worker explicitly uses bilinear resampling for continuous elevation on the
+chosen Event grid, including when source cells already coincide. Rasterize binary masks
 on their template; do not bilinearly resample masks. Combine compatible neighboring
 tiles before warping where needed to prevent artificial interpolation seams.
 
@@ -222,10 +229,22 @@ Receipt reopening checks existence/size against retained transfer evidence, not 
 fresh raster hash. Source identities are rechecked before publication and reuse.
 
 One worker calls fluvgeo `mosaic_terrain_tiles()` -> `mask_terrain_mosaic()` ->
-`terrain_to_international_feet()`. Native file-backed crops restrict reads to the
-requested extent; merge uses explicit first-valid precedence; the saved mask
-retains the Event grid. NAVD88 metres are divided by 0.3048, with Float32 output
-and vertical EPSG:8228. No resampling or datum transformation is added by this path.
+`terrain_to_international_feet()`. The mosaic call receives the saved mask as a
+grid template. File-backed crops retain a two-cell halo at the larger of source
+and output spacing, merge applies first-valid precedence, then native terra
+bilinear resampling places the assembled surface on the exact Event grid. Mask
+values are applied afterwards. Source tiles share their full CRS/elevation units
+and the template's horizontal CRS. Consecutive same-grid tiles are joined before
+resampling; compatible tiles separated in source priority are not reordered.
+Runs outside the output extent are omitted and newly adjacent compatible runs
+are joined, preventing irrelevant inputs from splitting contributing tile seams.
+Every source-grid run uses the same full target template. A small-window comparison
+found that independently cropping target extents changed native interpolation
+weights at source-coverage edges; source reads remain bounded by the support halo.
+Native first/last-valid merge combines the resampled runs without another
+interpolation or overlap averaging. Source compound CRS and units survive resampling; no
+coordinate or datum transformation is performed. NAVD88 metres are then divided
+by 0.3048, with Float32 output and vertical EPSG:8228.
 Source files and earlier successful editions are retained.
 
 `study_dem_store()` stages and publishes immutable external GeoTIFF editions.
@@ -269,6 +288,24 @@ built the two tributaries serially; all three distinct editions reopened. Earlie
 small-window trials verified unchanged originals and Float32 sample preservation.
 These runs qualify the exercised aligned inputs, not all possible source cases.
 
+Same-CRS resampling qualification uses the retained real seam window with 0.5,
+2 and 3.3 m shifted output grids. Independent four-neighbor calculations check
+64 fine-grid samples; an uncropped reference checks interpolation support at
+window edges and the seam. Checks retain compound CRS, units, Float32 output and
+source hashes. The actual app worker also exercises a 2 m window crossing the
+saved Reach boundary, outside-mask NoData and immutable publication/reopening.
+A separate 128 x 96-cell 2 m review window from original downloaded sources took
+9.14 seconds in the worker. These are small-area correctness/integration results,
+not a full-Stream resampling performance measurement.
+
+Mixed-grid qualification adds 2 m mean-aggregated and shifted 1 m derivatives of
+the actual seam window. Checks cover first/last precedence, interleaved grid
+priorities, NoData fallback, noncontributing inputs, exact Event geometry, unchanged
+sources and staging cleanup. The app worker exercises mixed inputs through mask,
+conversion and immutable publication. The 128 x 96-cell 2 m mixed-grid review
+window took 10.25 seconds. These are controlled derivatives of real elevations,
+not independently acquired surveys or full-Stream performance qualification.
+
 Focused UI/storage/source/queue checks cover saved reuse, one active worker,
 failure retention, pause/resume and stale display exclusion. The final presentation
 checks passed with known installed-package R-build-version warnings. UI acceptance
@@ -277,13 +314,21 @@ qualification. Continue parameter development on small actual DEM windows.
 
 ## Remaining decisions and work
 
-- Integrate differing source/Event grids only after qualifying the intended
-  interpolation and vertical-preservation behavior. The standalone
+- Before enabling cross-CRS execution, present feasible horizontal/vertical datum
+  transformation candidates and require a saved analyst choice, even for a sole
+  candidate. Record the exact selected and executed operation, not just source
+  and target CRS names. Candidate applicability, accuracy, grid/model resources,
+  epochs, input binding, invalidation and provenance follow the transformation
+  selection contract in
+  [ADR 0009](../decisions/adr-0009-nsrs-modernization-and-explicit-vertical-operations.md).
+  The planning selector and immutable JSON storage are implemented under Survey
+  Events > Datum transformations. Selected-pipeline execution and its binding to
+  DEM editions remain unfinished. The current Event's 57 source files share one
+  reference pair requiring only the supported NAVD88 unit conversion.
+- Integrate cross-CRS processing separately from supported same-CRS resampling
+  of mixed source spacing/alignment. The standalone
   `warp_terrain_horizontal()` primitive has no app caller; article 13 describes
   its supported operation profile. Its existence does not qualify every input.
-- The specific numeric initial grid anchor remains unconfirmed. It describes cell
-  placement inside the saved real-world CRS, not a replacement CRS. Preserve saved
-  grids; do not silently choose another alignment convention.
 - Other vertical references, datum/epoch changes and mixed source compatibility
   need explicit methods and provenance under ADR 0009.
 - Implement FGDB portable folder metadata binding, relocation qualification and

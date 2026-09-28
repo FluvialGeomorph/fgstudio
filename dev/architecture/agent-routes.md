@@ -17,12 +17,13 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 
 | Task | Article | App source | First tests | Backend boundary |
 | --- | --- | --- | --- | --- |
-| Stream DEM queue / saved-source assembly / international-foot conversion | 13 | survey_event_dems.R, terrain_dem_request.R, terrain_dem_sources.R, terrain_dem_trial.R | test-survey-event-dems.R, test-terrain-dem-request.R, test-terrain-dem-sources.R, test-terrain-dem-trial.R | mosaic_terrain_tiles, mask_terrain_mosaic, terrain_to_international_feet |
+| Conditional datum review and saved transformation plans | 13 | terrain_transform_review.R, study_transform_store.R, study_store.R, survey_event_settings.R | test-terrain-transform-review.R | review_terrain_transformations; terrain_transform_candidates; terrain-transform-plan schema; test_terrain_selected_operation_execution.R (bounded execution qualification) |
+| Stream DEM queue / same-CRS bilinear resampling / international-foot conversion | 13 | survey_event_dems.R, terrain_dem_request.R, terrain_dem_sources.R, terrain_dem_trial.R | test-survey-event-dems.R, test-terrain-dem-request.R, test-terrain-dem-sources.R, test-terrain-dem-trial.R, test-terrain-dem-resampling.R | mosaic_terrain_tiles(template), mask_terrain_mosaic, terrain_to_international_feet |
 | Saved DEM publication / Stream-tab maps / bounded real-data diagnostics | 14; tools | study_dem_store.R, terrain_mosaic_trial.R | test-study-dem-store.R, test-terrain-mosaic-trial.R | External GeoTIFF editions; backend scientific checks remain in fluvgeo |
 | Complete source DEM paging / uncapped transfers / saved availability across refresh | 06 | stream_dem_files.R, stream_dem_download.R, study_store.R | test-stream-dem-files.R, test-stream-dem-download.R | discover_stream_dem_files; run_stream_dem_download; immutable receipts retained; history is not analysis binding |
 | Saved DEMs hidden after metadata revision; Survey Event terminology and suggested choices | 06, 10 | stream_dem_files.R, survey_event_settings.R, study_store.R | test-stream-dem-files.R, test-survey-event-settings.R | Existing Stream geometry/collection compatibility; legacy group API stays internal |
 | Unmounted source-review annotations, priority and overlap rule | tools | terrain_source_review.R, stream_dem_preflight.R, study_store.R | test-terrain-source-review.R | App-owned annotations; terrain-source-review schema; no processing authorization |
-| Horizontal raster operation qualification and Float32 storage for differing-grid integration | tools | No app caller yet; sibling fluvgeo/R/warp_terrain_horizontal.R | sibling test_warp_terrain_horizontal.R | warp_terrain_horizontal; horizontal-terrain-warp schema |
+| Horizontal raster operation qualification and Float32 storage for cross-CRS integration | tools | No app caller yet; sibling fluvgeo/R/warp_terrain_horizontal.R | sibling test_warp_terrain_horizontal.R | warp_terrain_horizontal; horizontal-terrain-warp schema |
 | Automatic Event masks / all assigned Streams / native terra raster operations / saved-output reuse | 12 | event_masks.R, survey_event_settings.R, study_store.R | test-event-masks.R | event_mask_key, write_event_masks, read_event_masks; recipe reuse, worker display cache and owned staging cleanup; event-masks schema |
 | Internal preflight diagnostics (not mounted in analyst UI) | tools | stream_dem_preflight.R, survey_event_settings.R, study_store.R | test-stream-dem-preflight.R | preflight_stream_dem; inspect_stream_dem_download |
 | Survey Event navigation / optional notes / required cell size | 10 | survey_event_settings.R, mod_study.R, study_store.R | test-survey-event-settings.R | propose_survey_acquisition_groups, write_survey_acquisition_group, read_survey_acquisition_group |
@@ -33,7 +34,7 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 | Source DEM download / receipts / cancellation / retry | 06 | stream_dem_download.R, study_store.R | test-stream-dem-download.R, test-stream-dem-files.R | prepare_stream_dem_download, run_stream_dem_download, read_stream_dem_download, cancel_stream_dem_download |
 | Stream DEM files / saved choices / acquisition AOI | 06 | stream_dem_files.R, mod_survey_collections.R, study_store.R | test-stream-dem-files.R | discover_stream_dem_files, write_stream_dem_selection, read_stream_dem_selection |
 | Survey Collection discovery / shared map / resolution / product plan (ADR 0007) | 05 | mod_survey_collections.R, study_store.R | test-survey-collections.R | discover_survey_collections, survey_collection_products, write_survey_collection_selection, read_survey_collection_selection |
-| Startup, session or revision lifecycle | 02 | app.R, mod_study.R, study_store.R | test-study-module.R, test-study-store.R | start_study_context, read_study_context, revise_study_context |
+| App-wide Flatly theme / consistent tabsets / startup, session or revision lifecycle | 02 | app.R, mod_study.R, study_store.R | test-study-module.R, test-study-store.R | start_study_context, read_study_context, revise_study_context |
 | Boundary adoption | 02, 03 | mod_boundary.R, polygon_selection.R, study_store.R | test-boundary.R, test-polygon-selection.R | combine_study_area_polygons, check_study_area_containment |
 | Discovery or service feedback | 03 | drainage_explorer.R, network_reference.R, drainage_inventory.R | test-drainage.R, test-network-reference.R | locate_drainage_stream, get_drainage_context |
 | Stream selection/order/buffer | 03 | stream_selection.R, study_store.R | test-stream-selection.R, test-stream-repeat.R | preview_stream_corridor, add_study_stream_corridor, order_drainage_flowlines |
@@ -107,8 +108,11 @@ Current DEM route: `survey_event_settings_server()` ->
 `terrain_dem_request()` for each assigned Stream. `terrain_dem_sources()` resolves
 saved file choices and receipt-backed assets through `dem_preflight_request`,
 `read_stream_dem_selection` and `read_stream_dem_download`. The worker calls
-fluvgeo mosaic/mask/international-foot functions; differing-grid integration is
-still open. Article 13 owns the human trace and test routes.
+fluvgeo mosaic (bilinear resampling to the mask template)/mask/international-foot
+functions. Source spacing/alignment may differ: consecutive compatible tiles are
+joined before resampling, then combined in saved priority. Sources retain one
+full CRS/elevation unit and the Event's horizontal CRS. Article 13 owns the human
+trace; backend test_terrain_mixed_grids.R verifies seams, overlap order and NoData.
 
 Storage: `local_study_store()` -> `study_dem_store()` (`prepare_dem`, `find_dem`,
 `publish_dem`). Result tabs mount display-only `terrain_mosaic_trial_server()`

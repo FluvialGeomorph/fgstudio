@@ -36,15 +36,28 @@ The application supports:
 
 ## Terrain workflow and remaining scope
 
-The aligned-grid DEM workflow includes:
+The same-horizontal-CRS DEM workflow includes:
 source acquisition/viewing, saved Study analysis references, Survey Event settings,
 automatic masks, serial Stream assembly, NAVD88 international-foot conversion,
-immutable local GeoTIFF publication and reuse, and per-Stream map review.
+immutable local GeoTIFF publication and reuse, bilinear resampling to the selected
+Event cell size, and per-Stream map review. Source tiles may differ in spacing or
+alignment while sharing their full CRS and elevation units. Consecutive compatible
+tiles are assembled before resampling, preserving saved source priority.
 
 Survey Events follows saved inputs. One DEMs card contains Stream tabs and optional
 technical details; messages appear for processing, failure or pause. No backend
 approval screens, extra source/Stream pickers or output-download/save controls.
 Masks remain hidden except optional development troubleshooting.
+
+Transformation candidate review and saved analyst selection are implemented as
+a planning step before cross-CRS execution. Destination CRS selection alone
+does not choose a datum transformation. Present feasible horizontal/vertical
+operations with their applicability, accuracy and resource requirements; no
+automatic selection, including a sole candidate. Preserve the selected and
+executed pipeline in each DEM's provenance. This scientific choice is required
+under [ADR 0009](../decisions/adr-0009-nsrs-modernization-and-explicit-vertical-operations.md),
+and is distinct from a backend approval screen. Selected-pipeline DEM execution
+remains to be integrated; existing same-CRS processing remains unchanged.
 
 The [mosaic design](../features/dem-mosaic-design.md) owns the current processing
 contract, measured real-data evidence and unresolved choices. The
@@ -53,8 +66,9 @@ contract, measured real-data evidence and unresolved choices. The
 13 and [agent routes](../architecture/agent-routes.md) trace implementation.
 
 Next feature selection remains with the owner. Remaining terrain work includes
-qualified differing-grid integration, confirmation of the initial grid-alignment
-convention, other vertical operations, and FGDB portable folder binding. The
+cross-CRS integration, other vertical operations, and FGDB
+portable folder binding. Grid placement is an internal implementation detail;
+no analyst anchor decision or clean-coordinate requirement is needed. The
 standalone horizontal-warp primitive has no app caller. Preserve saved grids and
 retain actionable unsupported-case failures until methods are resolved. Do not
 infer authorization for a new scientific operation from this list.

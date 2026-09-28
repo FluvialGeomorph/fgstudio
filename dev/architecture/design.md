@@ -7,6 +7,10 @@ persistence. FGDB defines the enterprise data model and delivery requirements.
 The analyst guide owns operating instructions; numbered developer articles and
 `agent-routes.md` trace implementation.
 
+The app-wide bslib theme is Bootstrap 5 Bootswatch Flatly. Standard tab navigation
+is used throughout, including the Study Workspace sidebar. Theme colors and tab
+states come from Flatly rather than module-specific CSS overrides.
+
 ## Session and storage boundaries
 
 `fgstudio_app()` creates the application; `run_app()` supplies the local data root.
@@ -48,7 +52,7 @@ The map search changes viewport only.
 1. Collection discovery records acquisition/product intent at Study Area scale.
 2. Source file selection and acquisition use the saved Stream polygon and immutable
    receipts. Inspection opens bounded displays with session cache reuse.
-3. Analysis settings record horizontal and vertical targets. Survey Events record
+3. The CRS tab records horizontal and vertical targets. Survey Events record
    Collection/Stream membership and output cell size.
 4. `event_masks_server()` prepares/reuses the saved grid/domain in a background
    worker. Mask visualization is an optional diagnostic, disabled by default.

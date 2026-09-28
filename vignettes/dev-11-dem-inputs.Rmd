@@ -53,7 +53,7 @@ perform a coordinate or elevation transformation by itself.
 
 Missing selections or acquired files direct the analyst to **Collections > DEM
 files**. Event membership/spacing problems identify **Event Settings**; an
-unsupported vertical target identifies **Analysis**. The job snapshots inputs,
+unsupported vertical target identifies **CRS**. The job snapshots inputs,
 then rechecks their binding and selection identity before publishing. Reopening
 also excludes editions whose saved-source selection has changed.
 

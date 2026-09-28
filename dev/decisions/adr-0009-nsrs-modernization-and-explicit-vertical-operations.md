@@ -67,7 +67,57 @@ operational readiness from a name, an EPSG entry or the label "2022".
    SPCS2022 uses the international foot when feet are used. Preserve legacy foot
    definitions; deprecation does not authorize reinterpreting historic values.
 
+## Transformation selection: owner direction, 2026-09-28
+
+Selecting destination reference systems is not selecting a transformation. Present
+feasible candidate horizontal and vertical datum transformations and require the
+analyst to select the operation before it is used. Do not silently select the
+first, highest-ranked or sole candidate. The selection and exact executed operation
+are mandatory provenance. Candidate review and durable selection are implemented
+as planning under Survey Events. Selected-pipeline DEM execution remains
+unimplemented; plans do not enable it. Candidate discovery and local persistence
+are specified in `dev/schemas/terrain-transform-plan.md`.
+
+- Discover candidates for each distinct source-to-target reference pair and the
+  analysis area, using known coordinate epochs and installed resources. Resolve
+  missing reference/epoch evidence where required to determine feasibility.
+  Files sharing operation requirements may share a choice; do not repeat the
+  same decision for every tile.
+- Present operation name and authority/code where available, source and target
+  references, area of use, stated accuracy (explicitly unknown when unspecified),
+  required grids/models and availability, epoch requirements, and horizontal and
+  vertical effects. Show unavailable operations separately with their reasons.
+  Execution support is part of feasibility, not merely catalog presence.
+- Start with no transformation selected. Require an explicit choice even when
+  only one feasible candidate exists. A recommendation is not a selection.
+  Never silently substitute another operation when the selected one is unavailable.
+- Explain horizontal and vertical effects separately. A candidate may be a
+  concatenated operation affecting both; preserve its complete ordered pipeline.
+  Do not imply arbitrary horizontal and vertical choices can safely be combined.
+  Distinguish reprojection, datum transformation, elevation-unit conversion and
+  raster interpolation in the processing record.
+- Persist operation name/identifiers and executable pipeline, source/target
+  definitions, area and accuracy evidence, coordinate epochs, required resource
+  identities/versions/checksums, software and coordinate database versions, input
+  bindings, and selection time/actor when known. Retain the candidate evidence
+  presented at selection. Link the executed operation record to every resulting
+  DEM edition; CRS names or an EPSG pair alone are insufficient provenance.
+- Revalidate saved selections when bound inputs, references, area, epochs or
+  resources change. Require a new choice if the old one no longer applies; retain
+  earlier choices and DEM histories. Execute the saved pipeline instead of
+  asking the library to select another operation during processing.
+- When no datum change is needed, state and record that explicitly. Identity,
+  projection-only processing and exact unit conversion must not be described as
+  datum transformations. Do not invent a transform choice solely to create a
+  confirmation step.
+
 ## Consequences and next slice
+
+The owner requires the transformation interface only when a datum choice is
+needed. Matching horizontal and vertical datums, including different projections
+or units, do not prompt for a datum operation. Distinct realizations remain
+distinct. The app checks automatically and displays only pairs requiring review;
+unresolved references must not silently be treated as matching.
 
 Backend implementation 9048 qualifies a bounded static same-geodetic-reference
 horizontal raster path: retain compound source evidence, pass a separate 2D

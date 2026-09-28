@@ -79,7 +79,7 @@ terrain_mosaic_trial_server <- function(id, current, event_context = function() 
           if(identical(trial$level,"Stream")) "Preview: Stream portion" else "Preview: portion of Reach"),
         shiny::p(class = "mb-0",
           if (identical(trial$stage, "international_feet")) "Elevation: NAVD88 international feet." else
-            paste("Source elevation unit:", trial$source_unit, "- no resampling or elevation conversion.")),
+            paste("Source elevation unit:", trial$source_unit)),
         if (identical(trial$stage, "reach_masked")) shiny::p(class = "text-warning",
           "Unit conversion is pending; this preview retains source elevations."))
     })
@@ -96,12 +96,23 @@ terrain_mosaic_trial_server <- function(id, current, event_context = function() 
             item("Grid dimensions", paste(paste(format(trial$result$dimensions[1:2], big.mark = ",", trim = TRUE), collapse = " x "), "(rows x columns)")),
             item("Cell spacing", paste(paste(trial$result$resolution, collapse = " x "),
               if(is.null(trial$horizontal_unit)) "metre" else trial$horizontal_unit)),
+            if(!is.null(trial$unmasked_result$source_resolution)) item("Source cell spacing",
+              paste(paste(trial$unmasked_result$source_resolution, collapse = " x "),
+                if(is.null(trial$horizontal_unit)) "metre" else trial$horizontal_unit)),
+            if(!is.null(trial$unmasked_result$source_resolutions)) item("Source cell spacing",
+              paste(paste(vapply(trial$unmasked_result$source_resolutions,function(x)
+                paste(x,collapse=" x "),character(1)),collapse="; "),
+                if(is.null(trial$horizontal_unit)) "metre" else trial$horizontal_unit)),
+            item("Resampling", if(identical(trial$unmasked_result$resampling,"bilinear"))
+              if(isTRUE(trial$unmasked_result$mixed_source_grids))
+                "Bilinear interpolation from differing source grids to the Event cell size." else
+                "Bilinear interpolation to the Event cell size." else "None; source cells already aligned with the Event grid."),
             item("Storage", paste(trial$result$datatype, "GeoTIFF", if(!is.null(trial$saved_dem)) "in the Study folder")),
             item("Sources", if(!is.null(trial$source_selection)) paste(nrow(trial$source_selection),
               "DEM files selected automatically from saved Survey Event and Stream assignments.") else paste(length(trial$sources), "source DEM files")),
             item("Processing", if(identical(trial$stage, "international_feet"))
-              "Metres / 0.3048. Saved Event grid and analysis mask retained. No resampling or datum transformation." else
-              "Source elevations retained; no resampling or elevation conversion."),
+              "Metres / 0.3048. Saved Event grid and analysis mask retained. No datum transformation." else
+              "Source elevation units retained; no elevation conversion."),
             item("Processing time", sprintf("%.2f seconds", trial$seconds)))))
     })
     output$map <- shiny::renderPlot({

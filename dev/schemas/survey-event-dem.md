@@ -22,7 +22,10 @@ processing recipe and compact trial/provenance/display information. Its primary
 raster path is relative, resolved only inside the managed edition. The binding
 identifies the Study, saved context revision, Survey Event settings revision and
 Survey Collection selection. The recipe records source/mask file identity metadata,
-backend version, overlap order and units. Source paths remain provenance; a saved
+backend version, overlap order, units, bilinear resampling and ordered source-grid
+run handling (recipe v3). Mixed-grid mosaic metadata retains source resolutions
+and source-index runs with their original alignment and interpolation halo.
+Single-grid metadata retains its existing spacing/halo fields. Source paths remain provenance; a saved
 DEM can be displayed without development fixture options.
 
 Workers write only into unique managed staging directories. An already verified
@@ -39,7 +42,21 @@ Reopening reads the small edition record and checks raster presence/byte size; i
 does not scan pixels or recalculate hashes. The local managed-file assumption and
 size check are not cryptographic integrity verification. Corrupt/missing editions
 are skipped. The current strict revision binding excludes earlier results after
-settings changes; metadata-only reuse across revisions is future work.
+settings changes; metadata-only reuse across revisions is future work. Completed
+recipe-v1 editions from fluvgeo 2026.09.24.9057 remain reusable against the exact
+original input recipe, including paths, sizes, modification times, scope, extent
+and selection. Their method remains no-resampling; upgrading the app does not
+rebuild unchanged accepted DEMs. Recipe-v2 single-grid bilinear editions from
+fluvgeo 2026.09.28.9058 are likewise reusable against the exact earlier recipe.
+Recipe-v3 mixed-grid editions from fluvgeo 2026.09.28.9059 and 9060 also remain reusable
+after adding transformation planning; its scientific producer is unchanged.
+Canonical packageVersion strings omit leading zeroes in date components.
+
+Transformation plans are separate local JSON records under the
+[planning schema](terrain-transform-plan.md). They do not yet participate in the
+DEM recipe or authorize cross-reference processing. The next execution increment
+must bind the saved choice and verified executed pipeline into each resulting
+edition, without changing the provenance of existing same-CRS editions.
 
 ## Requests, scope and selection identity
 
@@ -72,5 +89,5 @@ controls and article 13 for request/worker/display ownership.
 Verification covers real DEM publication with exact file checksum equality,
 fresh adapter/session reopening, stale binding/selection rejection, Stream-scoped
 lookup and managed cleanup protection. Raster calculations are independently
-qualified in fluvgeo. General differing-grid integration, metadata-only reuse
+qualified in fluvgeo. Cross-CRS integration, metadata-only reuse
 across revisions and portable folder relocation remain unfinished.

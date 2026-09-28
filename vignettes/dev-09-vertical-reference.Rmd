@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Analysis setup separates Horizontal CRS and Vertical reference into compact tabs.
+The CRS tab separates Horizontal CRS and Vertical Reference into bordered tabs.
 The vertical form records the intended Study Area target, not a claim that source
 DEMs already conform. Saving never rewrites their declarations or elevation values.
 

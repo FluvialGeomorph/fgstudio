@@ -10,7 +10,7 @@ test_that("DEM view is available and renders actual development results when sup
   shiny::testServer(terrain_mosaic_trial_server, args = list(id = "trial",
       current = function() list(key = trial$key), event_context = context), {
     expect_match(output$summary$html, "portion of Reach")
-    expect_match(output$summary$html, if (identical(trial$stage, "international_feet")) "NAVD88 international feet" else "no resampling or elevation conversion")
+    expect_match(output$summary$html, if (identical(trial$stage, "international_feet")) "NAVD88 international feet" else "Source elevation unit")
     expect_true(length(output$map) > 0)
     if (!is.null(trial$group_id)) {
       if (identical(trial$stage, "reach_masked")) expect_match(output$summary$html, "Unit conversion is pending")

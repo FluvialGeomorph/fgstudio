@@ -5,12 +5,35 @@ terrain_dem_trial_recipe <- function(trial) {
     unique(trial$source_selection$selection_path))
   info <- file.info(paths)
   if (anyNA(info$size)) stop("A saved trial input is unavailable.")
-  list(version = 1L, backend = as.character(utils::packageVersion("fluvgeo")),
+  list(version = 3L, backend = as.character(utils::packageVersion("fluvgeo")),
     paths = paths, size = info$size, modified = as.numeric(info$mtime),
     overlap = trial$unmasked_result$overlap, source_extent = trial$source_extent,
     source_selection = trial$source_selection, scope = trial$scope, reach_id = trial$reach$reach_id,
     stream_id = trial$stream_id,
-    units = "international_foot")
+    units = "international_foot", resampling = "bilinear", grid_handling = "ordered_source_grid_runs")
+}
+
+# Editions from the completed aligned workflow remain valid for identical saved
+# inputs. Match that exact legacy recipe; changed grids/selections cannot reuse it.
+terrain_dem_legacy_recipe <- function(recipe) {
+  recipe$version <- 1L
+  recipe$backend <- as.character(package_version("2026.09.24.9057"))
+  recipe$resampling <- NULL
+  recipe$grid_handling <- NULL
+  recipe
+}
+
+terrain_dem_single_grid_recipe <- function(recipe) {
+  recipe$version <- 2L
+  recipe$backend <- as.character(package_version("2026.09.28.9058"))
+  recipe$grid_handling <- NULL
+  recipe
+}
+
+terrain_dem_mixed_grid_recipe <- function(recipe,backend="2026.09.28.9059") {
+  recipe$version <- 3L
+  recipe$backend <- as.character(package_version(backend))
+  recipe
 }
 
 launch_terrain_dem_trial <- function(trial, directory, cached = NULL) {
@@ -34,7 +57,7 @@ launch_terrain_dem_trial <- function(trial, directory, cached = NULL) {
     started <- proc.time()[["elapsed"]]
     trial$unmasked_result <- fluvgeo::mosaic_terrain_tiles(trial$sources,
       file.path(directory, "mosaic.tif"), trial$unmasked_result$overlap,
-      extent = trial$source_extent)
+      extent = trial$source_extent, template = trial$mask_file)
     trial$masked_result <- fluvgeo::mask_terrain_mosaic(trial$unmasked_result$path,
       trial$mask_file, file.path(directory, "masked.tif"))
     trial$result <- fluvgeo::terrain_to_international_feet(trial$masked_result$path,
@@ -109,6 +132,10 @@ terrain_dem_trial_job <- function(input, output, session, initial, context, curr
       if (durable) {
         binding <<- store$dem_request(initial$key,initial$group_id,context()$path,context()$group_path)
         saved <- store$find_dem(binding,recipe)
+        for(backend in c("2026.09.28.9060","2026.09.28.9059"))
+          if(is.null(saved)) saved <- store$find_dem(binding,terrain_dem_mixed_grid_recipe(recipe,backend))
+        if (is.null(saved)) saved <- store$find_dem(binding,terrain_dem_single_grid_recipe(recipe))
+        if (is.null(saved)) saved <- store$find_dem(binding,terrain_dem_legacy_recipe(recipe))
         if (!is.null(saved)) { value(saved); notice("Saved DEM ready. No raster processing needed."); return() }
       }
       key <- as.character(openssl::sha256(serialize(recipe, NULL)))

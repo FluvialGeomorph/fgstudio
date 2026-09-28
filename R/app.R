@@ -8,7 +8,7 @@ fgstudio_app <- function(data_dir = file.path(getwd(), ".local-data")) {
   store <- local_study_store(data_dir)
   ui <- bslib::page_fluid(
     title = "FluvialGeomorph Studio",
-    theme = bslib::bs_theme(version = 5, primary = "#245c4f"),
+    theme = bslib::bs_theme(version = 5, bootswatch = "flatly"),
     shiny::div(class = "container-fluid py-2",
       shiny::tags$header(
         shiny::p("FLUVIALGEOMORPH STUDIO", class = "text-uppercase text-body-secondary mb-1"),

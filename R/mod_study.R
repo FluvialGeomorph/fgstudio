@@ -4,7 +4,7 @@ mod_study_ui <- function(id) {
     fillable = FALSE, fill = FALSE,
     sidebar = bslib::sidebar(id = ns("workspace_sidebar"), title = "Study Workspace",
       width = 260, open = "open",
-      shiny::tabsetPanel(id = ns("workspace_task"), type = "pills", selected = "new",
+      shiny::tabsetPanel(id = ns("workspace_task"), type = "tabs", selected = "new",
         shiny::tabPanel("New", value = "new",
           shiny::textInput(ns("name"), "Study Area name", placeholder = "e.g., Papillion Creek"),
           shiny::tags$details(class = "small mb-2", shiny::tags$summary("Purpose / customer question (optional)"),
@@ -22,11 +22,10 @@ mod_study_ui <- function(id) {
     bslib::card(
       bslib::card_header("Your Study Area"),
       shiny::uiOutput(ns("summary")),
-      shiny::tags$style(".fg-study-tabs > .tabbable > .nav { border: 1px solid var(--bs-border-color, #adb5bd); border-radius: .5rem; background: var(--bs-tertiary-bg, #f5f7f6); padding: .4rem; gap: .25rem; margin-bottom: 1rem; } .fg-study-tabs > .tabbable > .nav .nav-link { border-radius: .3rem; font-weight: 500; }"),
-      shiny::div(class = "fg-study-tabs", shiny::tabsetPanel(id=ns("study_task"),type="pills",
+      shiny::div(class = "fg-study-tabs", shiny::tabsetPanel(id=ns("study_task"),type="tabs",
         shiny::tabPanel("Geometry",value="Study geometry",shiny::uiOutput(ns("boundary_editor")),shiny::uiOutput(ns("streams_editor"))),
         shiny::tabPanel("Collections",value="Survey Collections",mod_survey_collections_ui(ns("survey_collections"))),
-        shiny::tabPanel("Analysis",value="Analysis setup",shiny::tabsetPanel(type="pills",
+        shiny::tabPanel("CRS",value="Analysis setup",shiny::tabsetPanel(type="tabs",
           shiny::tabPanel("Horizontal CRS",study_analysis_crs_ui(ns("analysis_crs"))),
           shiny::tabPanel("Vertical Reference",study_vertical_reference_ui(ns("vertical_reference")))),
           shiny::actionButton(ns("continue_event"), "Continue to Survey Events", class="btn-primary")),
@@ -298,9 +297,9 @@ mod_study_server <- function(id, store) {
         compact_table(data.frame(Item = c("Purpose", "Boundary", "Streams / Reaches / Surveys", "Analysis CRS", "Next"),
           Status = c(purpose, if (x$boundary) "Saved - editable" else "Not defined",
             sprintf("%d / %d / %d", x$streams, x$reaches, x$events),
-            if (is.null(x$analysis_crs)) "Required before mosaicking - open Analysis" else x$analysis_crs$name,
+            if (is.null(x$analysis_crs)) "Required before mosaicking - open CRS" else x$analysis_crs$name,
             if (!is.null(collections$selection_path())) {
-              if (is.null(x$analysis_crs)) "Open Analysis to define the analysis reference" else
+              if (is.null(x$analysis_crs)) "Open CRS to define the analysis reference" else
                 "Open Survey Events to review your saved collections and survey date"
             } else if (x$reaches > 0L) "Open Collections to discover and select lidar acquisitions" else
             if (x$streams > 0L) "Choose Reaches on the map to define Reaches within a Stream" else
