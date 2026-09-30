@@ -21,11 +21,17 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
     discovery <- shiny::reactiveVal(NULL); editing <- shiny::reactiveVal(FALSE)
     status <- shiny::reactiveVal("Save Survey Collection selections and the Study Area analysis CRS first.")
     edit_id <- NULL; expected <- NULL
+    selected_group <- shiny::reactive({
+      ids <- names(saved()$groups)
+      if(length(input$group)==1L && input$group %in% ids) return(input$group)
+      if(length(ids)) ids[[1]] else NULL
+    })
     preflight_context <- shiny::reactive({
-      if(length(input$group)!=1L) return(NULL)
-      x <- current(); g <- saved()$groups[[input$group]]
+      id <- selected_group();if(is.null(id)) return(NULL)
+      x <- current(); g <- saved()$groups[[id]]
       if(is.null(x) || is.null(g)) return(NULL)
       list(key=x$key,path=x$path,selection=selection_path(),group_id=g$settings$group_id,group_path=g$path,
+        event_label=paste0(g$settings$year,if(!is.na(g$settings$month)) sprintf("-%02d",g$settings$month) else " (month unknown)"),
         vertical_reference=x$vertical_reference,
         streams=x$stream_inventory[x$stream_inventory$stream_id %in% g$streams$stream_id,,drop=FALSE])
     })
@@ -58,7 +64,7 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
       labels[duplicate] <- paste(labels[duplicate],vapply(groups[duplicate],function(g) paste(g$members$title,collapse=", "),character(1)),sep=" | ")
       shiny::selectInput(session$ns("group"),"Survey Event date",
         choices=stats::setNames(as.character(names(groups)),labels),selectize=FALSE,
-        selected=shiny::isolate(input$group))
+        selected=shiny::isolate(selected_group()))
     })
     output$new_event_controls <- shiny::renderUI(shiny::tags$details(
       open=if(!length(saved()$groups)) TRUE else NULL,
@@ -137,7 +143,7 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
       editing(TRUE)
     }
     shiny::observeEvent(input$new,open_editor(),ignoreInit=TRUE)
-    shiny::observeEvent(input$edit,open_editor(input$group),ignoreInit=TRUE)
+    shiny::observeEvent(input$edit,open_editor(selected_group()),ignoreInit=TRUE)
     shiny::observeEvent(input$discard,{ editing(FALSE); shiny::removeModal(session=session) },ignoreInit=TRUE)
     shiny::observeEvent(input$apply_proposal,{
       if(!editing() || !nzchar(input$proposal)) return()
@@ -167,14 +173,15 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
     output$editor_status <- shiny::renderUI(shiny::div(role="status",status()))
     output$inventory <- shiny::renderTable({
       groups <- saved()$groups
-      if(length(input$group)!=1L || is.null(groups[[input$group]])) return(NULL)
-      groups <- groups[input$group]
+      if(is.null(selected_group())) return(NULL)
+      groups <- groups[selected_group()]
       do.call(rbind,lapply(groups,function(g) data.frame(Year=g$settings$year,Month=g$settings$month,
         Cell_size=g$settings$cell_size,Unit=g$settings$unit,Collections=nrow(g$members),Streams=nrow(g$streams),
         Reach_events=nrow(g$event_links),Review=if(is.null(current()$analysis_crs) ||
           !identical(g$settings$wkt,current()$analysis_crs$wkt) ||
           !identical(g$settings$selection_revision,basename(selection_path()))) "Changed setup: review required" else "Saved")))
     },spacing="xs")
-    list(has_pending=function() isTRUE(shiny::isolate(editing())),status=status)
+    list(has_pending=function() isTRUE(shiny::isolate(editing())),status=status,
+      context=shiny::reactive({if(isTRUE(editing()) || selection_pending()) return(NULL);preflight_context()}))
   })
 }

@@ -19,7 +19,8 @@ controls. Documentation-only tasks need no app restart. Use established
 FluvialGeomorph terminology (Survey Event, Survey Collection, Stream, Reach).
 Ask before introducing an unfamiliar domain concept; do not expose internal
 "acquisition group" implementation names as a new analyst concept. Review the UI
-backlog before adding further terrain-processing functionality.
+backlog for constraints relevant to the selected feature; optional UI polish does
+not take priority over it.
 
 ## Implemented local hierarchy
 
@@ -69,7 +70,7 @@ contract, measured real-data evidence and unresolved choices. The
 [analyst guide](../../vignettes/guide-study-workflow.Rmd) owns UI procedure; article
 13 and [agent routes](../architecture/agent-routes.md) trace implementation.
 
-Next feature selection remains with the owner. Remaining terrain work includes
+Remaining terrain work includes
 cross-CRS integration, other vertical operations, and FGDB
 portable folder binding. Grid placement is an internal implementation detail;
 no analyst anchor decision or clean-coordinate requirement is needed. The
@@ -94,6 +95,48 @@ authentication/edit transport. These are not an ordered implementation commitmen
 Developer documentation follows ADR 0006 and the paired maintenance workflow.
 Human and agent development must remain interchangeable; generated navigation is
 not scientific authority. Keep local diagnostics opt-in.
+
+## Hydro modification: implemented locally
+
+The current local Hydro Modify increment is complete. The map inspection and
+edition-bound cutline drawing, background application and saved-result review
+are implemented in article 15. The owner authorized comparable terra cell
+assignment: touched cells, first-drawn shared-cell priority, and no widening in
+this version. Preserve legacy minimum-elevation conditioning and source NoData.
+The first saved Survey Event supplies context without visiting its settings tab;
+an explicit valid selection is preserved. Synthetic stream extraction is next.
+Do not resume optional hydro polish or unrelated transform probes by default.
+
+## Next increment: synthetic stream extraction
+
+The owner selected synthetic stream extraction from prepared Stream terrain,
+using saved Hydro DEMs where available. It is not implemented yet. Review the
+legacy tools in sibling `FluvialGeomorph-toolbox/tools/`:
+
+- `_03_ContributingArea.py`: pit removal, D-infinity flow and contributing area.
+- `_03a_ContributingAreaD8.py`: the alternate D8 route.
+- `_04_StreamNetwork.py`: thresholding and vector network construction.
+
+Confirm available shared backend capabilities and execution dependencies before
+choosing the implementation. D-infinity versus D8, contributing-area meaning and
+threshold units are scientific choices to resolve from the legacy method and
+owner guidance; do not silently substitute a method or assume square-area units.
+Keep horizontal raster units distinct from elevation units.
+
+Deliver one usable whole-app workflow: select the prepared Stream/Event DEM,
+calculate contributing area, expose an analyst-controlled channel threshold with
+explicit units, preview the resulting network, and save/reopen vector output
+linked to the exact input DEM edition, parameters, method and software evidence.
+Show processing, failure and empty-result states. Preserve existing source DEMs,
+hydro results and drawings. Keep local outputs distinct from governed FGDB network
+objects until their delivery binding is defined.
+
+Completion includes backend and app integration, persistence, focused scientific
+and lifecycle checks, paired developer documentation and a whole-app review.
+Resolve routine intermediate steps without separate owner handoffs. Ask only for
+unresolved consequential choices and continue independent authorized work while
+waiting. Small real DEM windows are the default development evidence; use a full
+Stream only when needed to verify integration or performance.
 
 ## Standing safeguards
 

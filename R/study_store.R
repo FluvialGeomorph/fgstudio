@@ -538,5 +538,6 @@ local_study_store <- function(data_dir) {
     preview_reach_merge = preview_reach_merge, merge_reaches = merge_reaches,
     rename_feature = rename_feature,preview_reach_split=preview_reach_split,split_reach=split_reach),
     study_dem_store(context_path,acquisition_groups,survey_collections),
-    study_transform_store(transform_request,context_path))
+    study_transform_store(transform_request,context_path),
+    study_hydro_store(context_path))
 }

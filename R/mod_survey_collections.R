@@ -171,7 +171,10 @@ mod_survey_collections_server <- function(id,current,store,launch=launch_survey_
       }
     },ignoreInit=TRUE)
     output$map <- leaflet::renderLeaflet({
-      m <- leaflet::addProviderTiles(leaflet::leaflet(),leaflet::providers$OpenStreetMap)
+      m <- leaflet::addProviderTiles(leaflet::leaflet(),leaflet::providers$OpenStreetMap,group="Street map") |>
+        add_opentopomap() |>
+        leaflet::addLayersControl(baseGroups=c("Street map","OpenTopoMap"),
+          options=leaflet::layersControlOptions(collapsed=TRUE))
       x <- current()
       if(!is.null(x) && isTRUE(x$boundary)) {
         g <- sf::st_transform(x$boundary_sf,4326); b <- sf::st_bbox(g)

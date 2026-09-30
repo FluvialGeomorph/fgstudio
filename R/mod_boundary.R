@@ -93,7 +93,10 @@ mod_boundary_server <- function(id, study, store, is_active, on_saved, search = 
     }, ignoreInit = TRUE)
     output$map <- leaflet::renderLeaflet({
       map <- leaflet::leaflet(options = leaflet::leafletOptions(preferCanvas = TRUE)) |>
-        leaflet::addTiles(options = leaflet::tileOptions(noWrap = TRUE))
+        leaflet::addTiles(group="Street map",options = leaflet::tileOptions(noWrap = TRUE)) |>
+        add_opentopomap() |>
+        leaflet::addLayersControl(baseGroups=c("Street map","OpenTopoMap"),
+          options=leaflet::layersControlOptions(collapsed=TRUE))
       if (!is.null(study$boundary_sf)) {
         shape <- sf::st_transform(study$boundary_sf, 4326)
         box <- sf::st_bbox(shape)
@@ -174,7 +177,7 @@ mod_boundary_server <- function(id, study, store, is_active, on_saved, search = 
       if (identical(input$selection_target,"reach") && identical(input$reach_operation,"split") && !is.null(reach_split$preview())) "Reach split preview"))
     layer_control <- shiny::observeEvent(layer_groups(), {
       map <- leaflet::leafletProxy("map", session = session) |> leaflet::removeLayersControl()
-      if (length(layer_groups())) leaflet::addLayersControl(map, overlayGroups = layer_groups(),
+      leaflet::addLayersControl(map, baseGroups=c("Street map","OpenTopoMap"), overlayGroups = layer_groups(),
         options = leaflet::layersControlOptions(collapsed = TRUE))
     }, ignoreNULL = FALSE, priority = -10)
     initialized <- shiny::observeEvent(input$map_mode, {

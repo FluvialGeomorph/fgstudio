@@ -65,9 +65,10 @@ study_dem_store <- function(context_path, acquisition_groups, survey_collections
       backend=record$recipe$backend)
     record
   }
-  find <- function(binding, recipe=NULL, stream_id=NULL, scope=NULL) {
+  find <- function(binding, recipe=NULL, stream_id=NULL, scope=NULL,edition_id=NULL) {
     paths <- list.dirs(folder(binding$key,"editions"),recursive=FALSE,full.names=TRUE)
     paths <- paths[grepl("^[0-9a-f]{32}$",basename(paths))]
+    if(!is.null(edition_id)) paths <- paths[basename(paths)==edition_id]
     paths <- paths[order(file.info(paths)$mtime,decreasing=TRUE)]
     for (p in paths) {
       # Resolve links before reading any edition data.

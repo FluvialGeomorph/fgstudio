@@ -141,7 +141,9 @@ terrain_dem_trial_job <- function(input, output, session, initial, context, curr
       if (durable) {
         binding <<- store$dem_request(initial$key,initial$group_id,context()$path,context()$group_path)
         saved <- store$find_dem(binding,recipe)
-        for(backend in c("2026.09.28.9060","2026.09.28.9059"))
+        # Display/hydro releases did not change the Stream DEM producer.
+        for(backend in c("2026.09.29.9065","2026.09.29.9064","2026.09.29.9063","2026.09.28.9062","2026.09.28.9061",
+                        "2026.09.28.9060","2026.09.28.9059"))
           if(is.null(saved)) saved <- store$find_dem(binding,terrain_dem_mixed_grid_recipe(recipe,backend))
         if (is.null(saved)) saved <- store$find_dem(binding,terrain_dem_single_grid_recipe(recipe))
         if (is.null(saved)) saved <- store$find_dem(binding,terrain_dem_legacy_recipe(recipe))

@@ -345,8 +345,9 @@ edition and use their own spatial domains. Do not require independent DEM creati
 or persistent raster copies solely because there are multiple Reaches. Temporary
 windowed reads/crops are execution choices, not new governed terrain identities.
 
-The app implements Stream assembly/reuse. Hydro-modification, explicit downstream
-Reach/Event asset associations and portable delivery remain to be integrated.
+The app implements Stream assembly/reuse and local hydro-modification with saved
+cutlines and source-linked GeoTIFF results. Explicit downstream Reach/Event asset
+associations and portable delivery remain to be integrated.
 FGDB's existing Reach-Survey-Event hydro DEM ownership rule needs a corresponding
 revision; exact relationship tables/keys are not defined here. Preserve Reach
 ownership of other derived features while separating shared raster identity and

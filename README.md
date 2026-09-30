@@ -7,7 +7,8 @@ terrain and shared R methods to characterize stream geometry.
 
 The intended workflow connects Study Area, Stream and Reach definition with
 survey selection, terrain development, Level 1 analysis and reviewable reports.
-Today, the app implements the early study-definition and source-terrain steps.
+Today, the app supports study definition, source acquisition, Stream DEM assembly
+and map-based hydro modification.
 Maps, guided choices and saved evidence make those steps accessible while
 keeping consequential scientific decisions with the analyst.
 
@@ -46,12 +47,17 @@ definition matters even when a project does not use FGDB.
   source DEM tiles, and inspect their metadata and terrain previews.
 - Specify a planar horizontal analysis CRS and a separate vertical target,
   elevation units and optional epoch/model metadata.
+- Configure Survey Events and cell sizes; assemble and reopen Stream DEM editions
+  with same-CRS bilinear resampling and retained processing evidence.
+- Inspect elevation/hillshade in Hydro Modify, draw and reopen cutlines, and save
+  hydro-modified DEMs while preserving their source and method provenance.
 - Retain saved revisions and source evidence as the study evolves.
 
 The current release is a **trusted, single-analyst local development preview**.
-Survey Event assembly, chosen Event cell sizes, aligned masks, Stream/Event DEM
-mosaics and source-reference reconciliation are next parts of terrain development.
-Level 1 execution, report delivery and FGDB access are not yet exposed by this app.
+Synthetic stream extraction is the next selected feature. Datum-operation review
+and explicit selection are available, but execution of selected cross-CRS pipelines
+remains pending. Level 1 execution, report delivery and governed FGDB delivery
+are not yet exposed by this app.
 Saving a CRS specification does not transform elevations or establish data fitness.
 
 ## Documentation as part of development

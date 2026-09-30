@@ -31,8 +31,9 @@ an engineering question.
 
 For example, a team assessing a stream corridor can define the Study Area and
 Reaches, inspect available lidar acquisitions, retain original DEM tiles and
-record intended reference systems today. The next terrain steps will organize
-those acquisitions into Survey Events and produce consistently aligned terrain.
+record intended reference systems, organize Survey Events and assemble aligned
+Stream DEMs. Hydro Modify supports visual inspection, saved cutline editing and
+provenance-linked hydro DEM production. Synthetic stream extraction is next.
 The intended continuation is shared analysis and reports that another analyst
 or customer can review without reconstructing the originating GIS session.
 
@@ -88,6 +89,8 @@ choices as scope and evidence develop; this is not a rigid wizard.
 | Find and inspect observations | Retained acquisition choices, original DEMs and evidence about their contents | Survey Collection discovery, DEM selection/download and bounded inspection implemented |
 | Specify analysis references | Explicit horizontal and vertical targets and units | Implemented as checked, saved specifications; no elevation conversion on save |
 | Develop analysis terrain | One consistent Stream DEM per Survey Event, aligned grids and hierarchical masks | Event settings, chosen cell size, automatic masks, same-CRS bilinear assembly of mixed source grids and saved Stream editions implemented; cross-CRS integration remains open |
+| Hydro-modify terrain | Saved cutlines and a derived DEM linked to its exact source and method | Map inspection, cutline editing/application, reopening and before/after review implemented locally |
+| Extract a synthetic stream network | Contributing area, explicit channel threshold and a saved network linked to its DEM | Owner-selected next feature; not yet implemented |
 | Analyze and report | Reach-level geometry evidence and a reviewable explanation of the study and its terrain | Shared backend capabilities and reporting designs inform the destination; app execution/report delivery remain future work |
 | Govern and share accepted content | Qualified enterprise records and relationships | Eventual FGDB integration; no Enterprise connection in this app |
 

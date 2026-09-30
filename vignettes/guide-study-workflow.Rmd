@@ -457,3 +457,49 @@ Elevation units appear above each map. Open
 information. No review or approval of these details is required.
 
 Processing messages appear only while building DEMs or when work is paused or needs attention. Opening saved DEMs does not show Waiting or Ready notifications.
+
+## Map basemaps
+
+Every interactive map offers **OpenTopoMap** in its upper-right layers control:
+the Study workspace (including boundary, Stream, Reach and drainage exploration),
+Survey Collections/DEM files, and Hydro Modify. The current default basemap
+remains selected until you switch. Basemaps stay below data overlays; OpenTopoMap
+tiles remain visible when zooming closer for DEM inspection.
+
+## Inspect channels and draw cutlines
+
+Open **Hydro Modify** beside **Survey Events**. The first saved Survey Event is
+selected automatically, and its date appears above the Stream tabs. If you have
+chosen another Event in **Survey Events**, that choice carries through here.
+Choose a Stream tab and zoom along its channel. The map updates the elevation
+stretch for each view and combines the standard terrain colors with hillshade.
+Zoom until the fine-scale message enables the line tool, then pan to inspect
+potential flow blockages. Draw across a blockage and extend the line to lower
+channel elevations on both sides. Double-click to finish; completed cutlines save
+automatically. Use the edit/delete tools to revise them. Reopening restores the
+drawings for the same Stream DEM edition.
+
+Choose **Apply cutlines** to create the hydro-modified DEM. Each cutline's
+intersected cells are lowered to their minimum elevation, without widening;
+earlier cutlines take priority where cells are shared. NoData stays NoData.
+Switch between **Original DEM** and **Hydro-modified DEM** to review the result.
+Editing a drawing saves a new revision; apply it to update the result. Original
+DEMs and earlier drawing/results are retained. **Return to Stream** restores the
+Stream view if you pan away from its DEM.
+
+The map opens at the Stream DEM's raster extent. Use the layers control in the
+upper right to select Imagery, Street map or OpenTopoMap and toggle elevation, hillshade, cutlines or the
+DEM extent. The elevation legend is at the lower right. Use the lower-left
+Elevation and Hillshade opacity sliders to adjust each layer from transparent
+to opaque, with immediate feedback and no raster reload. Existing display pyramids
+are reused; otherwise only the visible window is prepared, so opening a newly
+modified DEM does not wait for full-raster hillshade and pyramids. Basemaps
+stay beneath the DEM and cutlines when switched. Applying cutlines limits zone
+calculations to their surrounding area, then saves a complete Stream Hydro DEM;
+writing and checking this full-resolution result can still take several seconds.
+
+Hover over cutlines to see their numbers. A line can be inside the rectangular
+DEM extent but cross only NoData, especially outside the Stream mask. Apply
+reports those line numbers and applies the valid cuts. Select the appropriate
+Stream or edit the reported lines. Existing drawings remain attached to the DEM
+edition on which they were drawn, even when another equivalent edition exists.

@@ -1,5 +1,11 @@
 # Agent entry routes (FG Studio scope)
 
+For the next synthetic stream extraction increment, start with the
+[current handoff](../checkpoints/current/terrain-acquisition.md) and
+[project plan](../goals/project-plan.md). Hydro Modify is implemented; extraction
+is not. Review the legacy methods named there before selecting a scientific
+backend. Article 15 supplies the existing Hydro DEM input and persistence route.
+
 For project purpose or audience, read `vignettes/fgstudio.Rmd`; for analyst
 operations, `vignettes/guide-study-workflow.Rmd`. These orient the task without
 replacing the implementation routes below. Article 01 explains the context-routing
@@ -126,3 +132,20 @@ messages are visible. No development fixture is needed by the normal Event path.
 Before changing storage, follow `dev/workflows/r-spatial.md` to FGDB ADR-0025 and
 the Esri findings. Portable folder binding remains unfinished; no DEM-GeoPackage
 migration or analyst output-download workflow is authorized.
+
+Map basemaps: `R/map_basemaps.R` supplies OpenTopoMap to `mod_boundary_server()`,
+`mod_survey_collections_server()` and `hydro_modify_server()`. The Study workspace
+retains base groups when rebuilding its dynamic overlay control. Analyst guidance
+is in the study workflow; Article 15 describes the Hydro layer-ordering boundary.
+
+Hydro Modify: `survey_event_settings_server()` resolves the first saved Event
+unless a valid explicit choice exists, independently of dropdown rendering.
+`mod_study_server()` passes that shared Event context to
+`hydro_modify_server()`; `study_hydro_store()` saves/reopens edition-bound
+cutline GeoPackages. `fluvgeo::prepare_hydro_dem_view()` prepares background
+viewport displays. Article 15 owns the human route and storage table. Drawing
+and inspection lead to `launch_hydro_burn()` -> `fluvgeo::burn_hydro_cutlines()` ->
+`hydro_publish()`. Article 15 covers retained originals, stale completion guards,
+derived GeoTIFF/JSON evidence, browser-only opacity controls in `hydro-display.js`,
+viewport-first loading, fixed map-layer ordering, cutline-envelope
+processing and before/after review.

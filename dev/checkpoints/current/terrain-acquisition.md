@@ -1,130 +1,91 @@
-# Terrain workflow: current handoff
+# Terrain workflow: next-session handoff
 
-FG Studio 9072 / isolated fluvgeo 9061. The app uses bslib's Bootstrap 5 Flatly
-theme and standard tabs consistently, including the Study Workspace sidebar.
-The DEMs card uses one body with no top padding so empty status/control outputs
-do not create flex-layout gaps above the Stream tabs.
-Study navigation includes CRS. The owner directed practical resampling to
-the selected Event cell size; cell-boundary anchor controls and clean-coordinate
-requirements are unnecessary. Same-horizontal-CRS bilinear resampling is integrated
-after compatible source-tile assembly and before masking/foot conversion. Mixed
-source cell sizes and alignments now use ordered source-grid runs on the same
-Event template; source CRS and elevation units must still agree.
+Updated 2026-09-30. FG Studio 0.0.0.9080 / isolated fluvgeo 2026.09.29.9066.
+The local Hydro Modify increment is complete. **Synthetic stream extraction is
+the owner-selected next feature; it is not implemented yet.**
 
-Survey Events automatically checks references and displays Datum transformations
-only when a datum choice is required. Same-datum projection, grid and unit changes
-hide the controls; distinct realizations remain subject to review. It discovers reference-pair candidate
-operations and stores explicit analyst choices in immutable JSON plans. The
-selector never preselects an operation. Missing grids, ballpark and epoch-dependent
-operations are unavailable. Matching references and the existing NAVD88 unit-only
-case record no datum change. Execution of the selected pipeline remains pending.
+## Start here
 
-DEM details includes Coordinate-operation provenance from saved result evidence.
-New native calculations retain an additive execution record with exact reference
-definitions, methods and producer versions. Earlier editions are not rewritten;
-missing evidence remains unknown. Plans are never presented as executed operations.
-At the owner's request, all three 2019-12 Stream DEMs were recalculated with this
-producer and published as new immutable editions. Their execution records reopen
-unchanged; previous edition files retain their sizes and modification times.
-The read-only/rebuild evidence is in ignored
-`dev/check-output/rebuilt-stream-provenance.log` and `.rds`.
-Focused provenance, real-window worker/publication/reopen and DEM view checks pass
-58 assertions; one installed-package R-build-version warning remains.
+Read workspace and repository `AGENTS.md`, then:
 
-## Resume from maintained owners
+1. [Project plan](../../goals/project-plan.md): next integrated outcome and scope.
+2. [Hydro Modify developer article](../../../vignettes/dev-15-hydro-modify.Rmd)
+   and [storage crosswalk](../../../vignettes/storage-model.Rmd): existing inputs,
+   workers, saved editions and the local-versus-FGDB boundary.
+3. [R spatial workflow](../../workflows/r-spatial.md), followed by the legacy
+   contributing-area and network tools named in the project plan.
 
-- `dev/goals/project-plan.md`: accomplished scope and next owner decision.
-- `dev/features/dem-mosaic-design.md`: scientific contract, implementation limits,
-  consolidated real-data measurements and remaining source/vertical compatibility.
-- `vignettes/guide-study-workflow.Rmd`: current analyst procedure.
-- `vignettes/dev-13-stream-dems.Rmd` and `dev/architecture/agent-routes.md`:
-  processing call paths. Articles 11/12/14 cover inputs, masks and editions; terrain-developer-tools.Rmd covers standalone diagnostics.
-- `dev/schemas/survey-event-dem.md`: local edition format and lifecycle.
+Use [agent routes](../../architecture/agent-routes.md) for targeted source/tests;
+do not reconstruct previous sessions or load every terrain diagnostic.
+Work in the existing saved checkout: fgstudio and sibling fluvgeo have uncommitted
+implementation changes, including new files. A clean checkout would omit them.
+Inspect current Git evidence and preserve those changes before any Git action.
 
-## Local review setup
+## Current capability and constraints
 
-Preview: http://127.0.0.1:8800/?study=85fbe60be7c1f957bf3d5f3e9e41f401
-Launcher: `dev/check-output/run-dem-tabs-preview.R` (ignored local aid).
-Select Survey Events, 2019-12, then a Stream tab. Mainstem and both tributaries
-already have saved GeoTIFFs; routine review must reuse them. No development target
-or mask-diagnostic option is needed. DEM details distinguish previous aligned
-editions from new bilinear editions and report mixed source/output spacing.
+- Survey Events assemble immutable Stream DEM editions with same-horizontal-CRS
+  bilinear resampling, mixed source cell sizes/alignment and ordered source
+  priority. Outputs use the Event grid and international-foot elevations.
+- Datum candidate review saves explicit analyst selections only when a datum
+  change requires a choice. Selected-pipeline DEM execution is still deferred;
+  a saved plan must never be represented as an executed operation.
+- Hydro Modify opens with the first saved Survey Event, preserves an explicit
+  valid selection and shows its date. Streams have extent-based map views,
+  shared terrain colors, elevation/hillshade opacity controls and imagery,
+  street and OpenTopoMap basemaps.
+- Cutlines can be drawn/edited/deleted and reopen from immutable GeoPackage
+  revisions. Apply runs in the background and saves a derived GeoTIFF with
+  source edition, drawing revision, hashes, methods and coordinate provenance.
+- The accepted hydro method uses touched cells, first-drawn priority on shared
+  cells and each cutline zone's minimum elevation, without widening. Source
+  grid, CRS, units and NoData remain intact. NoData-only lines are explicitly
+  omitted; valid lines can proceed.
+- Keep drawings pinned to their displayed source edition, even when a newer
+  equivalent DEM exists. Never queue a Cutlines-group clear alongside map-widget
+  replacement: a late proxy message can erase the restored drawing display.
+- Initial display reuses existing pyramids or prepares a bounded window with
+  `build_cache=FALSE`; the Event context prewarms the display worker. Do not
+  reintroduce a full-raster pyramid build into the first-view critical path.
 
-The owner requires all future reviews in the whole app with normal navigation
-and saved Study context. Port 8801 also serves the whole app, launched with ignored
-`dev/check-output/run-whole-app-preview.R`. Open the Study link with the same
-`study` parameter, then Survey Events and 2019-12. Datum review sits before mask
-and DEM preparation; the actual references match, so its controls remain hidden.
-A brief checking message provides feedback during discovery. The previous
-standalone dropdown screen is retired as an owner-facing preview.
+## Next integrated action
 
-Use the isolated `dev/local-library` and workstation instructions. Diagnostic
-records under ignored `dev/check-output/real-reach-mosaic/` include
-`feet-result.rds`, `full-reach-result.rds`, `full-stream-result.rds` and
-`event-queue-result.rds`. Use actual small windows for further method development,
-not repeated whole-Stream/workspace builds. Do not install over shared fluvgeo.
+Review the legacy scientific method, resolve consequential method/threshold-unit
+choices, then deliver contributing area, analyst-controlled threshold, network
+preview and persisted vector/provenance output from an exact prepared DEM edition.
+Use saved Hydro DEMs where available. Backend, app, persistence, error handling
+and focused verification belong to this feature, not separate "proceed" handoffs.
+See the project plan for acceptance scope. Do not resume optional hydro polish or
+unrelated transform qualification by default.
 
-## Remaining work
+## Retained review context
 
-Follow `dev/workflows/complete-development-task.md` when resuming: deliver a usable
-authorized outcome, not another isolated qualification per turn. The transform
-items below are incomplete work, not an instruction to prioritize them over the
-owner's next feature choice. Hydro modification on the existing matching-datum
-Stream DEMs has been recommended as the next feature; implementation scope and
-established scientific methods must be checked before that work begins.
+Primary whole-app preview:
+http://127.0.0.1:8801/?study=85fbe60be7c1f957bf3d5f3e9e41f401
 
-Remaining transform capability: integrate execution of the explicitly selected
-pipeline and bind verified horizontal/vertical operation provenance to resulting
-DEM editions.
-The first bounded execution check is retained in fluvgeo's
-`test_terrain_selected_operation_execution.R`: an exact unit-conversion pipeline
-preserves values/NoData, but direct GDAL GeoTIFF output has a stale band-unit label.
-A warped VRT plus explicit target CRS/unit metadata during final materialization
-passes the check. Vertical datum shifts and full worker integration remain unqualified.
-Combined projection, bilinear resampling to 2 m and metre-to-foot conversion now
-also pass a real-window configuration comparison (10 assertions) against terra's
-horizontal-only projection plus arithmetic conversion. Stream queue checks pass
-16 assertions. These checks do not change or rebuild the saved Stream DEMs.
-The completed horizontal-datum qualification covers NAD83(2011) to NAD83 with four official NADCON5
-grids, exact pipeline/checksum evidence, point round trips and inverse-coordinate
-raster sampling. Resources and their URL/hash manifest are isolated under ignored
-`dev/check-output/proj-grids/`; normal previews/shared GIS paths are unchanged.
-Use `FLUVGEO_TEST_PROJ_DATA` with that self-contained directory (including proj.db)
-for the opt-in backend test. Missing-resource checks need a fresh process because
-PROJ caches loaded grids. Software used is visible in saved DEM provenance.
-Vertical datum changes and Stream-worker execution integration remain pending.
-ADR 0009 owns the scientific contract. `terrain-transform-plan.md` and sibling
-fluvgeo `terrain-transform-candidates.md` specify implemented planning. The actual
-Event has 57 selected sources and one reference pair needing no datum change.
+This is Spencer Creek, Survey Event 2019-12. The last read-only inspection found
+27 saved cutlines: Mainstem 8, east tributary 12, west tributary 7. Reuse the saved
+Study and DEMs; do not recreate drawings or publish diagnostic outputs into it.
+Data are under `.local-data/<study-key>/`; `hydro-modify` holds drawings/results,
+`event-dems/editions` holds raw editions and `terrain-display` holds display caches.
 
-Cross-CRS integration, other vertical operations and
-FGDB portable folder binding remain open. Do not move saved grids
-or infer a new scientific method from existing code. The horizontal-warp primitive
-has no app caller. External GeoTIFF DEMs remain mandatory under FGDB ADR-0025;
-GeoPackages hold vectors/tables, and edition.rds is only an internal index.
+Verify the preview is running; processes need not survive a new session. The
+ignored launcher `dev/check-output/run-whole-app-preview.R` uses the isolated
+`dev/local-library`. Follow workstation routing and never replace shared fluvgeo.
+Use small real DEM windows for development; full Stream runs need a specific
+integration question. Review changes in the whole app with normal navigation.
 
-This increment changes fgstudio and the sibling backend; only the isolated
-fgstudio development library is updated. No commit, deployment or data retirement
-is implied. Earlier recipe-v1 aligned and v2 single-grid resampled editions remain
-reusable on identical inputs;
-read-only checks matched all three actual Stream editions. Recipe versions use
-R's canonical packageVersion spelling (for example, 2026.9.24.9057).
+Focused backend/module/storage/publication checks and saved-drawing restoration
+checks passed in the preceding increment. The owner confirmed drawing behavior
+and improved display performance. Agent browser automation timed out, so those
+checks do not establish agent-performed visual interaction coverage. No full
+credential-dependent backend suite is claimed.
 
-Conditional review checks pass: 35 backend assertions and 104 app assertions
-(two installed-package R-build-version warnings). Explicit choice and saved-plan
-restoration are covered by module tests; the datum example has missing-grid and
-ballpark candidates, neither selectable. Both preview URLs serve fresh processes;
-browser automation timed out. Previous resampling qualification passed 96 backend
-and 108 app assertions; the mixed-grid review worker took 10.25 seconds.
-The previously run broader app suite retains an unchanged
-case-sensitive test expecting `Vertical reference` while the UI says `Vertical
-Reference`; neither source nor test was changed by this increment. The full
-backend suite needs unavailable ArcGIS credentials and local GDB fixtures.
-CRS tab markup checks pass. The affected Event/request tests passed 56 assertions
-with one stale fixture-path failure: the opt-in Reach fixture points to an older
-mask edition than the current saved mask. No analyst mask was replaced by the
-test. The bounded explicit-operation execution qualification passes 8 assertions.
-The documentation site rebuilt and its local links passed verification.
-The prior backend 9060 archive checks (tests/examples/vignettes/manual skipped; optional
-suggestions not required) completed with no errors, one unchanged non-ASCII
-source warning and two notes. Targeted terrain and app tests ran separately.
+## Deferred, not the next task
+
+Cross-CRS selected-pipeline execution, vertical datum shifts and portable FGDB
+Reach/Event bindings remain open. Local Hydro DEM production does not complete
+that governed delivery contract. [Mosaic design](../../features/dem-mosaic-design.md),
+[DEM edition schema](../../schemas/survey-event-dem.md) and
+[transform-plan schema](../../schemas/terrain-transform-plan.md) retain the scope.
+Bounded execution tests in fluvgeo remain qualification evidence, not app support.
+No commit, deployment or data retirement is implied by this handoff.

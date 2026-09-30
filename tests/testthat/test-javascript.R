@@ -11,6 +11,11 @@ test_that("network JavaScript isolates maps, gates tiles and disposes events", {
   run_javascript_contract("network-reference", list(hook = paste(readLines(asset), collapse = "\n")))
 })
 
+test_that("hydro opacity controls adjust independent panes and survive map replacement", {
+  asset <- system.file("www", "hydro-display.js", package = "fgstudio", mustWork = TRUE)
+  run_javascript_contract("hydro-display",list(hook=paste(readLines(asset),collapse="\n")))
+})
+
 test_that("CRS dropdown JavaScript handles viewport, scroll and cleanup", {
   options <- crs_selectize_options()
   run_javascript_contract("crs-dropdown",

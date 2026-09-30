@@ -128,7 +128,7 @@ terrain_mosaic_trial_server <- function(id, current, event_context = function() 
 draw_terrain_mosaic_trial <- function(trial) {
   r <- terra::rast(trial$result$path)
   if (terra::ncell(r) > 250000) r <- terra::spatSample(r, 250000, method = "regular", as.raster = TRUE)
-  terra::plot(r, col = grDevices::hcl.colors(80, "Terrain"), axes = TRUE,
+  terra::plot(r, col = terrain_palette(80), axes = TRUE,
               main = if (identical(trial$stage, "international_feet")) paste(if(identical(trial$level,"Stream")) "Stream" else "Reach","DEM (international feet)") else if (identical(trial$stage, "reach_masked")) "Reach DEM preview (source metres)" else "Mosaicked elevation (source metres)")
   boundary <- sf::st_transform(if(is.null(trial$boundary)) trial$reach else trial$boundary,terra::crs(r))
   graphics::plot(sf::st_geometry(boundary), add = TRUE, border = "#e68a00", lwd = 2)

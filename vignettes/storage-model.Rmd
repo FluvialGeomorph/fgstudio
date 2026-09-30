@@ -34,8 +34,8 @@ applicable Reach/Event records, with relationships and metadata in the local
 GeoPackage/delivery binding. Exact relationship tables and keys require FGDB
 schema definition; this article does not invent their physical names.
 
-The current app implements Stream assembly and reuse. Hydro-modification and
-binding shared terrain to downstream Reach analyses are not yet integrated. The
+The current app implements Stream assembly, reuse and local hydro-modification.
+Binding shared terrain to downstream Reach analyses is not yet integrated. The
 owner's direction is to retain Stream-scale processing as these capabilities
 mature. FGDB's existing Reach-Survey-Event hydro DEM ownership rule must be revised
 to express that sharing; it must not force independent DEM production per Reach.
@@ -91,7 +91,7 @@ pending where indicated.
 | Reach | GeoPackage `reaches`, with Stream parent ID and optional polygon | `add_study_reach_corridor()`, `merge_study_reaches()`, `split_study_reach()` create/revise; downstream analysis uses Reach identity | Normative spatial owner of Survey Events and unit of derivation |
 | Survey Event | GeoPackage `survey_events`, when supplied, with Reach parent ID and year/optional month/day | Context readers preserve records; app Event definitions can link existing IDs but do not create these Reach Event rows | Governs a terrain condition/acquisition period and its derived content |
 | Analysis reference | GeoPackage `analysis_reference` and `vertical_reference` tables; CRS also attached to geometry/rasters | `set_study_analysis_crs()` and `set_study_vertical_reference()` record specifications; processing reads them | Supplies spatial/scientific provenance; selecting a target is not transforming a product |
-| Hydro-modified DEM | External numerical GeoTIFF, associated with consuming Reach Survey Events through delivery metadata | No producer integrated in the current app pipeline | Governed terrain product; existing Reach ownership requires reconciliation with shared Stream terrain |
+| Hydro-modified DEM | External numerical GeoTIFF, associated with consuming Reach Survey Events through delivery metadata | Local Hydro Modify uses `burn_hydro_cutlines()` and saves source-linked GeoTIFF editions; governed delivery binding remains pending | Governed terrain product; existing Reach ownership requires reconciliation with shared Stream terrain |
 | Other governed FG features/products | GeoPackage feature layers/attribute tables; external GeoTIFFs for raster products | Downstream producers are not integrated by the current DEM assembly | Feature catalog governs object meaning, ownership, attributes and edition acceptance |
 
 The app's local hierarchy can be incomplete during study definition. It is not
@@ -110,7 +110,7 @@ new FGDB domain entity. Preserve the distinction in both code and documentation.
 | App Survey Event definition | GeoPackage `settings`, `members`, Stream ID list and `event_links` | `write_survey_acquisition_group()` writes; mask/DEM request functions read | Coordinates shared acquisition inputs and links to Reach Survey Events; not an added hierarchy level |
 | Geometry source/piece evidence | GeoPackage line, polygon and cut layers linked to hierarchy IDs | Corridor and Reach-editing functions write/read | Reproducible construction evidence; source COMIDs and piece IDs do not replace FGDB entity IDs |
 | Study/Stream/Reach masks | External Byte GeoTIFFs linked to geometry and Event grid | `write_event_masks()` produces; `mask_terrain_mosaic()` consumes | Processing domain, not a governed feature class or observed terrain product |
-| Assembled Stream DEM | External Float32 GeoTIFF in international feet on the Event grid | `mosaic_terrain_tiles(template=...)` (same-CRS bilinear resampling) -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain; hydro-modification and downstream Reach binding are not yet integrated |
+| Assembled Stream DEM | External Float32 GeoTIFF in international feet on the Event grid | `mosaic_terrain_tiles(template=...)` (same-CRS bilinear resampling) -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain consumed by local Hydro Modify; downstream Reach delivery binding remains pending |
 | Local DEM execution evidence | Additive `execution` record inside the edition's `edition.rds`; retained backend result metadata for older editions | `launch_terrain_dem_trial()` captures methods, WKT and software; `study_dem_store()` persists; `terrain_dem_provenance_ui()` reads | Bound to the displayed Stream/Event edition; separate from planned operations and not yet portable FGDB delivery metadata |
 
 Study/Stream terrain may support several Reach Events. FGDB's folder requirements
@@ -179,3 +179,20 @@ Local context representation is specified in fluvgeo's
 `dev/schemas/study-context.md`; app DEM persistence is specified in fgstudio's
 `dev/schemas/survey-event-dem.md`. These implementations support the data model
 without claiming to complete FGDB conformance or enterprise transport.
+
+Hydro Modify cutlines are local preparation assets linked to the Study, selected
+Survey Event, Stream and source DEM edition. `study_hydro_store()` publishes
+immutable drawing revisions under the Study's `hydro-modify` directory. Nonempty
+drawings use a `cutlines` GeoPackage layer; an internal RDS record retains binding
+and revision evidence. Empty revisions retain the deletion state. Applying cuts
+publishes a derived `result/hydro-dem.tif` with JSON provenance and an internal
+completion index, linked to the source DEM edition and exact drawing revision.
+This local preparation result does not complete the governed FGDB hydro DEM or
+portable delivery binding.
+See [Hydro modification](dev-15-hydro-modify.html) for operation and storage routes.
+
+Regenerable elevation/hillshade COG pyramids live separately under Study-local
+`terrain-display`, keyed by source identity and display recipe. Interactive views
+reuse these when present and otherwise prepare only temporary viewport rasters;
+opening a DEM does not require building a full cache. These caches accelerate
+inspection and are not analytical terrain editions or portable FGDB products.

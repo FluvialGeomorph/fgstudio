@@ -145,7 +145,7 @@ dem_brush_window <- function(preview,brush) {
 draw_dem_preview <- function(preview) {
   values <- preview$values;finite <- is.finite(values)
   colours <- matrix("#d9d9d9",nrow(values),ncol(values))
-  palette <- grDevices::hcl.colors(256,"Viridis")
+  palette <- terrain_palette(256)
   limits <- if(any(finite)) range(values[finite]) else c(NA_real_,NA_real_)
   if(any(finite)) {
     index <- if(diff(limits)==0) rep(128L,sum(finite)) else

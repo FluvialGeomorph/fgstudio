@@ -27,6 +27,35 @@ test_that("group revisions retain identity, evidence, cell units and original as
   expect_equal(s$read(x$key)$events,0L)
 })
 
+test_that("Event context defaults before its dropdown renders and preserves explicit selection", {
+  local_mocked_bindings(event_masks_server=function(...) list(),
+    terrain_transform_review_server=function(...) NULL,survey_event_dems_server=function(...) NULL)
+  f <- event_test_setup(); x <- f$x
+  withr::defer(unlink(dirname(dirname(x$path)),recursive=TRUE))
+  a <- f$store$save_acquisition_group(x$key,"USIEI:1",x$stream_inventory$stream_id,
+    2020,2,1,"",character(),NULL,x$path,f$selection,NULL)
+  b <- f$store$save_acquisition_group(x$key,"USIEI:1",x$stream_inventory$stream_id,
+    2021,3,1,"",character(),NULL,x$path,f$selection,a$path)
+  pending <- shiny::reactiveVal(FALSE)
+  shiny::testServer(survey_event_settings_server,args=list(current=function() x,store=f$store,
+    selection_path=function() f$selection,selection_pending=pending),{
+    session$flushReact()
+    ids <- names(saved()$groups)
+    expect_null(input$group)
+    expect_identical(session$returned$context()$group_id,ids[[1]])
+    expect_match(session$returned$context()$event_label,"202[01]-0[23]")
+    session$setInputs(group=ids[[2]])
+    expect_identical(session$returned$context()$group_id,ids[[2]])
+    reload();session$flushReact()
+    expect_identical(session$returned$context()$group_id,ids[[2]])
+    pending(TRUE);session$flushReact();expect_null(session$returned$context())
+    pending(FALSE);session$setInputs(group="unavailable")
+    expect_identical(session$returned$context()$group_id,ids[[1]])
+    saved(list(path=NULL,groups=list()));session$flushReact()
+    expect_null(session$returned$context())
+  })
+})
+
 test_that("Event editor requires explicit spacing, saves and reopens reviewed groups", {
   local_mocked_bindings(event_masks_server=function(...) list())
   f <- event_test_setup(); x <- f$x

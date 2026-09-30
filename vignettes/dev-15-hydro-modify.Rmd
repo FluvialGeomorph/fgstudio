@@ -1,0 +1,128 @@
+---
+title: "15. Hydro modification"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{15. Hydro modification}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Hydro Modify follows Survey Events in the Study tabset. It uses the selected
+Event and its existing Stream DEM editions. `selected_group()` in Event settings
+resolves a valid explicit selection or the first saved Event before the hidden
+dropdown renders. Both panels therefore use the same context; pending edits still
+withhold processing, and no saved Events produce the normal empty state.
+Hydro Modify shows the selected Event date above its Stream tabs. The current implementation supports
+close inspection, persistent cutline drawing, background hydro modification and
+review of the saved result against the original DEM.
+
+`survey_event_settings_server()` exposes its saved Event context to
+`hydro_modify_server()` through `mod_study_server()`. Each Stream tab resolves its
+eligible edition with `dem_request()` and `find_dem()`. Event, Study or Stream
+changes replace the map context and restore drawings bound to that source edition.
+
+The map widget itself is initialized to the DEM raster's extent; it does not
+depend on an early proxy command reaching a still-hidden widget. The layer control
+selects Imagery, Street map or OpenTopoMap and independently toggles Elevation,
+Hillshade, Cutlines and DEM extent. Stream changes replace the map widget and
+restore only drawings attached to that displayed DEM. Do not queue proxy clears
+of the cutline group during replacement: Shiny may deliver them after the new
+widget has restored its saved lines, erasing those lines from the browser.
+`add_opentopomap()` supplies consistent provider attribution and native zoom
+limits across all interactive viewers, using the Hydro basemap pane here. Study
+workspace layer-control refreshes retain the basemap choices even with no overlays.
+Independent Elevation and Hillshade opacity sliders in the lower-left map control
+adjust their panes immediately in the browser. Values survive Stream/map
+replacement within the page; they do not trigger raster work or change cutlines.
+
+The display worker starts and loads spatial packages when a Survey Event context
+is available, before map bounds are needed. Map bounds are debounced before it calls
+`fluvgeo::prepare_hydro_dem_view()`. It crops a file-backed DEM before preparing
+elevation and hillshade display GeoTIFFs. Study-local `terrain-display` caches
+contain COG elevation and hillshade pyramids, keyed by source path, size, modified
+time and display recipe. The interactive caller sets `build_cache=FALSE`: it reuses
+existing pyramids but does not wait for a full-raster cache build. With no cache,
+GDAL reads only a bounded, display-sized window and hillshade is calculated on
+that window (at display resolution for overview scales). The default backend
+option still supports explicit full-cache preparation outside the interactive
+path. GDAL window extraction selects available overviews within a display
+budget; close views retain source cells before Web Mercator display
+reprojection. Geographic map bounds are intersected with the DEM's geographic
+extent before projection to its local CRS. Wrapped longitudes are normalized;
+empty views return a normal message and a Return to Stream action. Each viewport
+uses a local elevation stretch. The color sequence
+matches `fluvgeo::get_terrain_leaflet()` and is shared by the other DEM views.
+International-foot elevations on metre grids are converted for hillshade slope.
+Analytical DEMs are never changed by display preparation.
+
+A cold-worker check on a saved mainstem Hydro DEM measured 9.43 seconds for the
+window-only first view versus 45.76 seconds when first building full-raster
+pyramids. Worker prewarming can overlap package startup with Event navigation;
+timing still depends on the source, storage and machine.
+
+The line/edit/delete toolbar is available when the display is unaggregated and
+the map shows at least two screen pixels per source cell. This is an inspection
+aid, not a claim that a blockage has been resolved. Completed Leaflet drawings
+are validated as geographic polylines and saved immediately. A revision conflict
+rejects a stale edit rather than overwriting another saved drawing.
+
+| Data object / preparation asset | Operation | Storage and ownership |
+| --- | --- | --- |
+| Saved Stream DEM | Read for display | Existing external GeoTIFF edition associated with the selected Event and Stream |
+| Cutline drawing revision | `hydro_drawn_lines()`, `study_hydro_store()` | Study-local `hydro-modify/<event hash>/<stream hash>/<revision>/cutlines.gpkg`, layer `cutlines`; source DEM ID and context in `cutlines.rds` |
+| Hydro-modified Stream DEM | `launch_hydro_burn()` -> `fluvgeo::burn_hydro_cutlines()` -> `hydro_publish()` | Drawing revision's `result/hydro-dem.tif`, `provenance.json` and internal `result.rds`; explicit source DEM edition and cutline revision links |
+| Elevation and hillshade display | `prepare_hydro_dem_view()` | Session/job-owned temporary GeoTIFFs, removed when replaced or the session ends |
+| Display pyramids | `.fg_hydro_display_cache()` | Study-local `terrain-display/<key>` COGs and completion record; regenerable, separate from analytical editions |
+
+These drawings are local preparation assets, not an implemented FGDB portable
+hydro-DEM binding. Earlier revisions and source DEMs are retained. Empty drawing
+revisions have no vector payload. Completed derived rasters are published by
+renaming their job directory only after completion. A changed drawing, displayed
+source, source selection or Study context rejects stale completion. A newer DEM
+edition does not invalidate a job bound to the retained displayed edition. Reopening
+drawings selects their linked edition when its saved input binding remains valid.
+Display/hydro-only backend releases reuse equivalent Stream DEM recipes rather
+than trigger unnecessary rebuilding. Re-applying
+an unchanged drawing reuses its saved result. Changing drawings creates a new
+revision and switches review back to the original DEM until the new cuts are
+applied. Editing and source changes retain previous results.
+
+The author-provided legacy `_02_HydroDEM.py` rasterizes line IDs, optionally
+expands zones, calculates each zone's minimum elevation, and replaces elevations
+inside those zones. The owner authorized a comparable terra cell assignment on
+2026-09-29. The implementation uses touched cells, lowest drawing-order ID for
+shared cells, and no widening. Source NoData is preserved, including within a cut.
+Cutlines crossing only NoData are reported by number and omitted, while valid
+cuts are applied; if all cuts lack elevations, no result is published. A rectangular
+raster extent is not a valid-cell footprint. Fully covered cutlines are recorded
+without failing the operation. Rasterization uses an explicit zero
+background, excluded from zonal minima; file-backed integer rasterization must
+not rely on implicit NoData background behavior. Native terra operations do the
+file-backed work. Zone calculations use the cutline envelope, padded by one
+source cell and aligned to the source grid. A file-backed merge restores this
+patch over the full source; the final writer explicitly restores elevation units
+and CRS. No full DEM values are materialized in R. Basemaps occupy a fixed pane
+below hillshade and elevation, so switching basemaps cannot cover the DEM or
+cutlines.
+
+On the retained 8,974 by 10,688-cell mainstem DEM with one saved cutline,
+the background worker took 12.27 seconds versus 37.12 seconds for full-grid
+zone intermediates on the development workstation. Complete raster comparison
+verified identical values and NoData, with matching grid, units, zone minima and
+source checksum. This is a local benchmark, not a general runtime guarantee;
+the final full-resolution output still needs writing and hashing.
+
+The output retains the source grid, CRS and elevation units. JSON evidence records
+source/output SHA-256 hashes, zone minima, method, software, source execution
+history and the exact PROJ operation used to place map-digitized XY cutlines on
+the grid. This display-coordinate conversion does not execute a new DEM datum
+transformation. Full datum-operation selection for new DEM references remains a
+separate workflow. This local result is not a qualified FGDB portable delivery.
+
+Verification routes: `test-hydro-modify.R` exercises drawing validation, revision
+conflicts and reopening; `test-hydro-module.R` exercises Event/Stream binding;
+`test-hydro-publication.R` checks completion and stale-job rejection. Backend
+`test_burn_hydro_cutlines.R` independently checks expected cells and intersections;
+`test_hydro_dem_view.R` covers world/wrapped/outside viewports.
+Real-window display checks use existing DEMs without writing analyst cutlines.
+Browser review is still required for the rendered drawing interactions.
