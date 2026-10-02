@@ -1,10 +1,8 @@
 # Agent entry routes (FG Studio scope)
 
-For the next synthetic stream extraction increment, start with the
-[current handoff](../checkpoints/current/terrain-acquisition.md) and
-[project plan](../goals/project-plan.md). Hydro Modify is implemented; extraction
-is not. Review the legacy methods named there before selecting a scientific
-backend. Article 15 supplies the existing Hydro DEM input and persistence route.
+For synthetic stream extraction, start with the [project plan](../goals/project-plan.md),
+Article 15 and the [candidate schema](../schemas/synthetic-stream-network.md).
+The current handoff remains historical orientation, not the implementation route.
 
 For project purpose or audience, read `vignettes/fgstudio.Rmd`; for analyst
 operations, `vignettes/guide-study-workflow.Rmd`. These orient the task without
@@ -27,6 +25,7 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 | Conditional datum review and saved transformation plans | 13 | terrain_transform_review.R, study_transform_store.R, study_store.R, survey_event_settings.R | test-terrain-transform-review.R | review_terrain_transformations; terrain_transform_candidates; terrain-transform-plan schema; test_terrain_selected_operation_execution.R, test_terrain_projected_operation_execution.R and test_terrain_datum_operation_execution.R (bounded execution qualification) |
 | Stream DEM queue / same-CRS bilinear resampling / international-foot conversion | 13 | survey_event_dems.R, terrain_dem_request.R, terrain_dem_sources.R, terrain_dem_trial.R | test-survey-event-dems.R, test-terrain-dem-request.R, test-terrain-dem-sources.R, test-terrain-dem-trial.R, test-terrain-dem-resampling.R | mosaic_terrain_tiles(template), mask_terrain_mosaic, terrain_to_international_feet |
 | Saved DEM publication / Stream-tab maps / bounded real-data diagnostics | 14; tools | study_dem_store.R, terrain_mosaic_trial.R | test-study-dem-store.R, test-terrain-mosaic-trial.R | External GeoTIFF editions; backend scientific checks remain in fluvgeo |
+| Synthetic stream extraction / review / reopening | 15 | hydro_modify.R, stream_network_store.R, study_store.R | test-hydro-module.R, test-stream-network-store.R | locate_stream_outlet, extract_synthetic_stream_network; compact Priority-Flood/D8 implementation and tests remain in fluvgeo |
 | Complete source DEM paging / uncapped transfers / saved availability across refresh | 06 | stream_dem_files.R, stream_dem_download.R, study_store.R | test-stream-dem-files.R, test-stream-dem-download.R | discover_stream_dem_files; run_stream_dem_download; immutable receipts retained; history is not analysis binding |
 | Saved DEMs hidden after metadata revision; Survey Event terminology and suggested choices | 06, 10 | stream_dem_files.R, survey_event_settings.R, study_store.R | test-stream-dem-files.R, test-survey-event-settings.R | Existing Stream geometry/collection compatibility; legacy group API stays internal |
 | Unmounted source-review annotations, priority and overlap rule | tools | terrain_source_review.R, stream_dem_preflight.R, study_store.R | test-terrain-source-review.R | App-owned annotations; terrain-source-review schema; no processing authorization |
@@ -149,3 +148,11 @@ and inspection lead to `launch_hydro_burn()` -> `fluvgeo::burn_hydro_cutlines()`
 derived GeoTIFF/JSON evidence, browser-only opacity controls in `hydro-display.js`,
 viewport-first loading, fixed map-layer ordering, cutline-envelope
 processing and before/after review.
+
+Synthetic Stream: `hydro_modify_server()` starts `launch_stream_extraction()`
+for the first run and `launch_stream_threshold()` for later threshold-only updates
+from the exact saved Hydro DEM. The worker calls `fluvgeo::locate_stream_outlet()`
+and `fluvgeo::extract_synthetic_stream_network()`. `study_stream_network_store()`
+publishes an immutable candidate only when the Hydro result hash and cutline
+revision still match. Article 15 covers the stream-line overlay and diagnostic
+routing evidence.

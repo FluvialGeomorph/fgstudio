@@ -52,3 +52,11 @@ test_that("UI escapes study content and shows a clear next step", {
   })
   expect_s3_class(fgstudio_app(withr::local_tempdir()), "shiny.appobj")
 })
+
+test_that("the app includes delayed visual feedback for blocking work",{
+  rendered <- htmltools::renderTags(fg_working_overlay())
+  html <- paste(rendered$head,rendered$html)
+  expect_match(html,"fg-working-overlay",fixed=TRUE)
+  expect_match(html,"shiny:busy",fixed=TRUE)
+  expect_match(html,"<progress",fixed=TRUE)
+})

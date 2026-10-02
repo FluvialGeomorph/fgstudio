@@ -2,6 +2,5 @@
 
 Store only checkpoints for genuinely resumable unfinished work here. Remove or archive them when the work is completed or superseded.
 
-- [Stream DEM mosaic design](terrain-acquisition.md): owner requirements recorded;
-  horizontal and vertical target specification implemented; Event grouping/cell
-  size, source-reference reconciliation, masks and mosaics remain.
+No active checkpoint is required. Current scope and deferred terrain work are
+owned by the project plan and feature records.

@@ -14,7 +14,8 @@ dropdown renders. Both panels therefore use the same context; pending edits stil
 withhold processing, and no saved Events produce the normal empty state.
 Hydro Modify shows the selected Event date above its Stream tabs. The current implementation supports
 close inspection, persistent cutline drawing, background hydro modification and
-review of the saved result against the original DEM.
+review of the saved result against the original DEM. From a saved Hydro DEM it
+also extracts, displays and reopens a terrain-derived candidate stream network.
 
 `survey_event_settings_server()` exposes its saved Event context to
 `hydro_modify_server()` through `mod_study_server()`. Each Stream tab resolves its
@@ -24,7 +25,7 @@ changes replace the map context and restore drawings bound to that source editio
 The map widget itself is initialized to the DEM raster's extent; it does not
 depend on an early proxy command reaching a still-hidden widget. The layer control
 selects Imagery, Street map or OpenTopoMap and independently toggles Elevation,
-Hillshade, Cutlines and DEM extent. Stream changes replace the map widget and
+Hillshade, Synthetic stream, Cutlines and DEM extent. Stream changes replace the map widget and
 restore only drawings attached to that displayed DEM. Do not queue proxy clears
 of the cutline group during replacement: Shiny may deliver them after the new
 widget has restored its saved lines, erasing those lines from the browser.
@@ -73,6 +74,7 @@ rejects a stale edit rather than overwriting another saved drawing.
 | Hydro-modified Stream DEM | `launch_hydro_burn()` -> `fluvgeo::burn_hydro_cutlines()` -> `hydro_publish()` | Drawing revision's `result/hydro-dem.tif`, `provenance.json` and internal `result.rds`; explicit source DEM edition and cutline revision links |
 | Elevation and hillshade display | `prepare_hydro_dem_view()` | Session/job-owned temporary GeoTIFFs, removed when replaced or the session ends |
 | Display pyramids | `.fg_hydro_display_cache()` | Study-local `terrain-display/<key>` COGs and completion record; regenerable, separate from analytical editions |
+| Synthetic stream candidate | First run: `launch_stream_extraction()` -> `locate_stream_outlet()` -> `extract_synthetic_stream_network()`; threshold updates: `launch_stream_threshold()` -> `threshold_synthetic_stream_network()`; both publish through `study_stream_network_store()` | Hydro-revision-local immutable directory containing routing/fill/direction/accumulation GeoTIFFs, diagnostic fill GeoTIFF, `stream-network.gpkg`, outlet evidence and provenance |
 
 These drawings are local preparation assets, not an implemented FGDB portable
 hydro-DEM binding. Earlier revisions and source DEMs are retained. Empty drawing
@@ -105,6 +107,33 @@ and CRS. No full DEM values are materialized in R. Basemaps occupy a fixed pane
 below hillshade and elevation, so switching basemaps cannot cover the DEM or
 cutlines.
 
+## Synthetic Stream review
+
+The analyst enters an initiation area in hectares; one hectare is the default.
+Extraction requires the saved Hydro DEM and runs in a separate R process. The
+NHDPlusV2 source chain and the next downstream NLDI segment identify an
+approximate rounded-cap crossing. The selected outlet is the lowest valid Hydro
+DEM boundary cell within 30 metres of that crossing. When NLDI does not return a
+next segment, as on the east Spencer tributary, the fallback is the lowest valid
+cap cell within 200 metres of the terminal reference endpoint. Published
+hydrography does not constrain the derived path.
+
+`fluvgeo::extract_synthetic_stream_network()` creates a separate routing surface
+with compact Priority-Flood, resolves D8 flats, accumulates upstream cells,
+converts the hectare threshold using the projected cell area, and consolidates
+cell edges into maximal lines between heads, junctions and the outlet. Cyan
+lines show the vector candidate over the same viewport-stretched Hydro DEM.
+Fill-depth outputs are retained only as diagnostics and are not mounted on the
+map. The analytical Hydro DEM is unchanged. Later threshold changes reuse the
+saved direction and accumulation rasters and rebuild only the vector network.
+
+Publication rechecks the Study context, cutline revision and Hydro-output hash.
+Reopening restores only a candidate derived from that exact result. A changed
+Hydro DEM leaves earlier revisions intact but does not present them as current.
+Processing, empty-network and failure messages remain in the Synthetic Stream
+card. This is the historical first-cut `stream_network` acceptance target, not a
+governed or analyst-accepted final network.
+
 On the retained 8,974 by 10,688-cell mainstem DEM with one saved cutline,
 the background worker took 12.27 seconds versus 37.12 seconds for full-grid
 zone intermediates on the development workstation. Complete raster comparison
@@ -124,5 +153,8 @@ conflicts and reopening; `test-hydro-module.R` exercises Event/Stream binding;
 `test-hydro-publication.R` checks completion and stale-job rejection. Backend
 `test_burn_hydro_cutlines.R` independently checks expected cells and intersections;
 `test_hydro_dem_view.R` covers world/wrapped/outside viewports.
+`test-stream-network-store.R` covers immutable candidate publication and exact
+Hydro-result binding; backend `test_synthetic_stream_network.R` covers the
+complete native extraction output contract.
 Real-window display checks use existing DEMs without writing analyst cutlines.
 Browser review is still required for the rendered drawing interactions.

@@ -56,7 +56,7 @@ test_that("both CRS menus escape clipping containers and keep vertical details o
   expect_equal(opts$dropdownParent,"body")
   expect_match(as.character(opts$onDropdownOpen),"window.innerHeight",fixed=TRUE)
   html <- as.character(mod_study_ui("fixture"))
-  expect_match(html,"Vertical reference",fixed=TRUE)
+  expect_match(html,"Vertical Reference",fixed=TRUE)
   expect_match(html,"Coordinate epoch and intended model (optional)",fixed=TRUE)
   expect_match(html,"Save vertical specification",fixed=TRUE)
 })

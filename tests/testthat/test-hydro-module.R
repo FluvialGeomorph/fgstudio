@@ -79,3 +79,79 @@ test_that("Apply publishes a completed worker result and exposes its saved surfa
     expect_match(notice(),"Showing the saved")
   })
 })
+
+test_that("Synthetic Stream publishes and restores a Hydro-bound candidate",{
+  directory <- withr::local_tempdir();path <- file.path(directory,"study.gpkg");file.create(path)
+  source_path <- file.path(directory,"source.tif")
+  raster <- terra::rast(matrix(9:1,nrow=3),extent=terra::ext(0,3,0,3),crs="EPSG:26915")
+  terra::writeRaster(raster,source_path)
+  dem <- list(saved_dem=list(id="dem1"),result=list(path=source_path,resolution=c(1,1)))
+  hydro <- study_hydro_store(function(key) path)
+  network_store <- study_stream_network_store(function(key) path,hydro$hydro_read)
+  lines <- sf::st_sf(source_id="1",geometry=sf::st_sfc(
+    sf::st_linestring(matrix(c(0,3,3,0),ncol=2,byrow=TRUE)),crs=26915))
+  cuts <- hydro_drawn_lines(list(type="FeatureCollection",features=list(list(
+    geometry=list(type="LineString",coordinates=list(c(0,0),c(.001,.001)))))))
+  drawing <- hydro$hydro_save("study","event","s1","dem1",cuts,NULL,path)
+  stage <- hydro$hydro_prepare(drawing);hydro_file <- file.path(stage,"hydro-dem.tif")
+  terra::writeRaster(raster,hydro_file)
+  drawing <- hydro$hydro_publish(drawing,stage,list(path=hydro_file,
+    output_sha256="hydro-sha",method="fixture"))
+  store <- c(hydro,network_store,list(dem_request=function(...) list(),
+    find_dem=function(...) dem,stream_segments=function(...) list(lines=lines)))
+  launch <- function(source,reference_lines,directory,threshold_ha,memory_budget_mb) {
+    for(name in c("routing.tif","fill-depth.tif","flow-direction.tif",
+      "flow-accumulation.tif","fill-changes-display.tif"))
+      terra::writeRaster(raster,file.path(directory,name))
+    vector <- sf::st_sf(stream_line_id="SN00001",geometry=sf::st_sfc(
+      sf::st_linestring(matrix(c(0,3,3,0),ncol=2,byrow=TRUE)),crs=26915))
+    sf::st_write(vector,file.path(directory,"stream-network.gpkg"),quiet=TRUE)
+    result <- list(schema="SYNTHETIC_STREAM_NETWORK_1",source_sha256="hydro-sha",
+      threshold_ha=threshold_ha,stream_lines=1,stream_length_m=4,changed_cells=2,
+      files=list(routing="routing.tif",fill_depth="fill-depth.tif",
+        direction="flow-direction.tif",accumulation="flow-accumulation.tif",
+        fill_display="fill-changes-display.tif",stream_network="stream-network.gpkg"))
+    saveRDS(result,file.path(directory,"result.rds"))
+    list(is_alive=function() FALSE,get_result=function()
+      list(result=result,outlet=data.frame(cell=9,x=2.5,y=.5,elevation=1)))
+  }
+  ctx <- list(key="study",path=path,group_id="event",group_path="event.gpkg",
+    streams=data.frame(stream_id="s1",stream_name="Stream one"))
+  shiny::testServer(hydro_modify_server,args=list(current=function() list(key="study"),
+    context=function() ctx,store=store,launch_extract=launch),{
+    session$setInputs(stream="s1",surface="hydro",threshold_ha=1)
+    expect_null(network())
+    session$setInputs(extract_stream=1)
+    expect_match(output$stream_status$html,"<progress",fixed=TRUE)
+    poll()
+    session$flushReact()
+    expect_identical(network()$threshold_ha,1)
+    expect_match(stream_notice(),"Candidate saved")
+    expect_false(grepl("<progress",output$stream_status$html,fixed=TRUE))
+    expect_identical(store$stream_network_read(record())$app$hydro_cutline_revision,drawing$id)
+  })
+})
+
+test_that("a threshold update reuses routing outputs and replaces only the network",{
+  directory <- withr::local_tempdir()
+  original <- file.path(directory,"original");dir.create(original)
+  stage <- file.path(directory,"stage");dir.create(stage)
+  source <- file.path(directory,"dem.tif")
+  dem <- terra::rast(matrix(9:1,nrow=3,byrow=TRUE),
+    extent=terra::ext(0,3,0,3),crs="EPSG:26915")
+  terra::writeRaster(dem,source)
+  candidate <- fluvgeo::extract_synthetic_stream_network(source,9,original,
+    threshold_ha=.0001,memory_budget_mb=2048)
+  candidate$path <- original
+  candidate$outlet <- data.frame(cell=9,x=2.5,y=.5,elevation=1)
+  direction_before <- unname(tools::md5sum(file.path(original,candidate$files$direction)))
+
+  updated <- reuse_stream_network_threshold(candidate,stage,.0002)
+
+  expect_equal(updated$result$threshold_cells,2)
+  expect_equal(updated$result$threshold_ha,.0002)
+  expect_identical(unname(tools::md5sum(file.path(stage,candidate$files$direction))),
+    direction_before)
+  expect_true(file.exists(file.path(stage,updated$result$files$stream_network)))
+  expect_identical(updated$outlet,candidate$outlet)
+})

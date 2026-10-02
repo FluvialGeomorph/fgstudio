@@ -33,7 +33,8 @@ For example, a team assessing a stream corridor can define the Study Area and
 Reaches, inspect available lidar acquisitions, retain original DEM tiles and
 record intended reference systems, organize Survey Events and assemble aligned
 Stream DEMs. Hydro Modify supports visual inspection, saved cutline editing and
-provenance-linked hydro DEM production. Synthetic stream extraction is next.
+provenance-linked hydro DEM production. Synthetic Stream derives and restores a
+threshold-adjustable first-cut candidate network from that saved terrain.
 The intended continuation is shared analysis and reports that another analyst
 or customer can review without reconstructing the originating GIS session.
 

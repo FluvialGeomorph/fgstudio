@@ -104,35 +104,42 @@ are implemented in article 15. The owner authorized comparable terra cell
 assignment: touched cells, first-drawn shared-cell priority, and no widening in
 this version. Preserve legacy minimum-elevation conditioning and source NoData.
 The first saved Survey Event supplies context without visiting its settings tab;
-an explicit valid selection is preserved. Synthetic stream extraction is next.
-Do not resume optional hydro polish or unrelated transform probes by default.
+an explicit valid selection is preserved. Synthetic stream extraction is also
+complete locally. Do not resume optional hydro polish or unrelated transform
+probes by default.
 
-## Next increment: synthetic stream extraction
+## Synthetic stream extraction: implemented locally
 
 The owner selected synthetic stream extraction from prepared Stream terrain,
-using saved Hydro DEMs where available. It is not implemented yet. Review the
-legacy tools in sibling `FluvialGeomorph-toolbox/tools/`:
+using saved Hydro DEMs. The first local analyst workflow is implemented in
+Hydro Modify. The legacy reference tools remain:
 
 - `_03_ContributingArea.py`: pit removal, D-infinity flow and contributing area.
 - `_03a_ContributingAreaD8.py`: the alternate D8 route.
 - `_04_StreamNetwork.py`: thresholding and vector network construction.
 
-Confirm available shared backend capabilities and execution dependencies before
-choosing the implementation. D-infinity versus D8, contributing-area meaning and
-threshold units are scientific choices to resolve from the legacy method and
-owner guidance; do not silently substitute a method or assume square-area units.
+The implemented backend uses compact Priority-Flood conditioning, steepest-
+downslope D8 with Barnes flat resolution, upstream-cell accumulation and an
+analyst threshold in hectares. One hectare is the default accepted starting
+threshold. The saved Hydro DEM is never overwritten. The owner accepted the
+functional local `stream_network` derivation workflow on 2026-10-02 after review
+of all three Spencer Creek Stream candidates. Broader validation on other terrain
+forms remains future qualification, not a blocker to this feature.
 Keep horizontal raster units distinct from elevation units.
 
-Deliver one usable whole-app workflow: select the prepared Stream/Event DEM,
-calculate contributing area, expose an analyst-controlled channel threshold with
-explicit units, preview the resulting network, and save/reopen vector output
+The whole-app workflow selects the prepared Stream/Event DEM,
+calculates contributing area, exposes an analyst-controlled channel threshold with
+explicit units, previews the resulting network, and saves/reopens vector output
 linked to the exact input DEM edition, parameters, method and software evidence.
 Show processing, failure and empty-result states. Preserve existing source DEMs,
 hydro results and drawings. Keep local outputs distinct from governed FGDB network
 objects until their delivery binding is defined.
 
-Completion includes backend and app integration, persistence, focused scientific
-and lifecycle checks, paired developer documentation and a whole-app review.
+Backend and app integration, persistence, focused scientific and lifecycle checks,
+paired developer documentation, and whole-app owner review are complete locally.
+Threshold changes reuse saved direction and accumulation outputs and rebuild only
+the vector candidate. Fill depth remains diagnostic evidence and is not displayed
+on the analyst review map.
 Resolve routine intermediate steps without separate owner handoffs. Ask only for
 unresolved consequential choices and continue independent authorized work while
 waiting. Small real DEM windows are the default development evidence; use a full

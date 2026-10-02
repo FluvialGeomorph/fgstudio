@@ -112,6 +112,7 @@ new FGDB domain entity. Preserve the distinction in both code and documentation.
 | Study/Stream/Reach masks | External Byte GeoTIFFs linked to geometry and Event grid | `write_event_masks()` produces; `mask_terrain_mosaic()` consumes | Processing domain, not a governed feature class or observed terrain product |
 | Assembled Stream DEM | External Float32 GeoTIFF in international feet on the Event grid | `mosaic_terrain_tiles(template=...)` (same-CRS bilinear resampling) -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain consumed by local Hydro Modify; downstream Reach delivery binding remains pending |
 | Local DEM execution evidence | Additive `execution` record inside the edition's `edition.rds`; retained backend result metadata for older editions | `launch_terrain_dem_trial()` captures methods, WKT and software; `study_dem_store()` persists; `terrain_dem_provenance_ui()` reads | Bound to the displayed Stream/Event edition; separate from planned operations and not yet portable FGDB delivery metadata |
+| Synthetic stream candidate | Hydro-revision-local GeoTIFF routing evidence plus `stream-network.gpkg`, outlet record and provenance | `locate_stream_outlet()` and `extract_synthetic_stream_network()` produce; `study_stream_network_store()` publishes/reopens | Historical first-cut vector for analyst review; not accepted governed network content merely because processing succeeds |
 
 Study/Stream terrain may support several Reach Events. FGDB's folder requirements
 allow explicitly associated shared project assets; they do not require copying
@@ -190,6 +191,13 @@ completion index, linked to the source DEM edition and exact drawing revision.
 This local preparation result does not complete the governed FGDB hydro DEM or
 portable delivery binding.
 See [Hydro modification](dev-15-hydro-modify.html) for operation and storage routes.
+
+Synthetic stream revisions live below that exact Hydro revision. Their result
+record repeats the Hydro output hash, cutline revision, threshold in hectares,
+selected outlet, method and software. Routing and fill surfaces are derived
+evidence; the Hydro DEM remains unchanged. The native fill-depth raster remains
+available for diagnostics but is not mounted on the review map. The vector remains
+a local candidate until a later FGDB acceptance/delivery binding is defined.
 
 Regenerable elevation/hillshade COG pyramids live separately under Study-local
 `terrain-display`, keyed by source identity and display recipe. Interactive views

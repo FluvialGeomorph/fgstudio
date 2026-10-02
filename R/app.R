@@ -1,3 +1,16 @@
+fg_working_overlay <- function() {
+  shiny::tagList(
+    shiny::tags$head(
+      shiny::tags$style(shiny::HTML("#fg-working-overlay{display:none;position:fixed;inset:0;z-index:20000;background:rgba(18,32,45,.38);align-items:center;justify-content:center}.fg-working-card{width:min(28rem,calc(100vw - 2rem));background:white;border-radius:.5rem;padding:1.25rem;box-shadow:0 .5rem 2rem rgba(0,0,0,.3)}")),
+      shiny::tags$script(shiny::HTML("(function(){var timer=null;function overlay(){return document.getElementById('fg-working-overlay');}$(document).on('shiny:busy',function(){clearTimeout(timer);timer=setTimeout(function(){var x=overlay();if(x){x.style.display='flex';x.setAttribute('aria-hidden','false');}},600);});$(document).on('shiny:idle',function(){clearTimeout(timer);timer=null;var x=overlay();if(x){x.style.display='none';x.setAttribute('aria-hidden','true');}});})();"))),
+    shiny::div(id="fg-working-overlay",role="dialog",`aria-modal`="true",
+      `aria-hidden`="true",class="fg-working-overlay",
+      shiny::div(class="fg-working-card",
+        shiny::tags$h2(class="h5","FG Studio is working"),
+        shiny::p(class="mb-2","Loading the Study Area or completing another operation. Please wait."),
+        shiny::tags$progress(style="width:100%",`aria-label`="FG Studio is working"))))
+}
+
 #' Create the FluvialGeomorph Studio application
 #'
 #' @param data_dir Local server-side storage directory. This initial app is for
@@ -9,6 +22,7 @@ fgstudio_app <- function(data_dir = file.path(getwd(), ".local-data")) {
   ui <- bslib::page_fluid(
     title = "FluvialGeomorph Studio",
     theme = bslib::bs_theme(version = 5, bootswatch = "flatly"),
+    fg_working_overlay(),
     shiny::div(class = "container-fluid py-2",
       shiny::tags$header(
         shiny::p("FLUVIALGEOMORPH STUDIO", class = "text-uppercase text-body-secondary mb-1"),

@@ -498,6 +498,23 @@ stay beneath the DEM and cutlines when switched. Applying cutlines limits zone
 calculations to their surrounding area, then saves a complete Stream Hydro DEM;
 writing and checking this full-resolution result can still take several seconds.
 
+After the Hydro DEM is saved, use the **Synthetic Stream** card below the map.
+Start with the default **1 hectare** initiation area and choose **Extract stream
+network**. The work continues in the background. When it finishes, the cyan line
+shows the derived candidate network over the Hydro DEM. Pan and zoom to use the
+local elevation stretch when judging the line against fine terrain. Toggle
+**Synthetic stream** in the layers control. Fill-depth outputs remain available
+as processing diagnostics but are not placed on the review map.
+The Hydro DEM itself is not filled or overwritten. Reopening the same Stream and
+Hydro revision restores the candidate and its exact threshold, outlet and method
+evidence. A candidate still requires analyst review; it is not accepted solely
+because extraction completed.
+
+After the first extraction, change the initiation area and choose **Update
+stream threshold**. This reuses the saved direction and accumulation rasters;
+it does not repeat outlet selection, terrain conditioning, flow direction or
+flow accumulation.
+
 Hover over cutlines to see their numbers. A line can be inside the rectangular
 DEM extent but cross only NoData, especially outside the Stream mask. Apply
 reports those line numbers and applies the valid cuts. Select the appropriate
