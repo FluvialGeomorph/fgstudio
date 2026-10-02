@@ -149,6 +149,32 @@ The related loss of the shared Mapbox account is closed independently for legacy
 not change FG Studio terrain analysis or its interactive basemap contract. A
 multi-year or multi-provider catalog of sub-metre imagery is deferred as a
 nice-to-have feature rather than extending this completed increment.
+
+## Next feature: reviewed Flowline derivation
+
+Flowline is the next selected feature after the accepted synthetic Stream
+Network. The legacy tool assumed the analyst had already removed tributaries and
+assigned Reach names; current code does not yet perform that selection or create
+Reach/event-setting Flowline candidates. Follow the canonical backend proposal in
+[the fluvgeo feature design](../../../fluvgeo/dev/features/stream-network-to-flowline.md)
+and the draft [FGDB Flowline contract](../../../FGDB/dev/schemas/flowline-feature-contract.md).
+
+The intended app outcome is a separate Flowline step that opens an exact saved
+Stream Network revision, recommends one terrain-derived Stream-level path using
+retained reference/Reach evidence, lets the analyst choose another network head
+when needed, compares raw and smoothed paths over the Hydro DEM, and saves/reopens
+one candidate for every applicable Reach under that event setting. The current
+Spencer 2019-12 setting has no governed Reach-owned Survey Event IDs; preserve
+that fact and do not fabricate them. Smoothing and Reach division reuse the saved
+vector network; they do not rerun filling, direction, accumulation, or
+thresholding.
+
+The first review target is all three Spencer Streams and all eleven current
+Reaches. The owner must see route alternatives and real-data smoothing
+comparisons before a default open smoothing method/tolerance is accepted. Keep
+Flowline Points, stationing, field thalweg import, governed FGDB publication,
+and desktop/QGIS migration outside this increment.
+
 Resolve routine intermediate steps without separate owner handoffs. Ask only for
 unresolved consequential choices and continue independent authorized work while
 waiting. Small real DEM windows are the default development evidence; use a full
