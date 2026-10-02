@@ -139,7 +139,16 @@ Backend and app integration, persistence, focused scientific and lifecycle check
 paired developer documentation, and whole-app owner review are complete locally.
 Threshold changes reuse saved direction and accumulation outputs and rebuild only
 the vector candidate. Fill depth remains diagnostic evidence and is not displayed
-on the analyst review map.
+on the analyst review map. Saved-Study restoration and long-running extraction
+show explicit working feedback, and the terminal NLDI fallback permits extraction
+when the service returns no next downstream segment but local reference and
+terrain evidence remain sufficient.
+
+The related loss of the shared Mapbox account is closed independently for legacy
+`fluvgeo` static reach maps with credential-free USDA FPAC NAIP imagery. It does
+not change FG Studio terrain analysis or its interactive basemap contract. A
+multi-year or multi-provider catalog of sub-metre imagery is deferred as a
+nice-to-have feature rather than extending this completed increment.
 Resolve routine intermediate steps without separate owner handoffs. Ask only for
 unresolved consequential choices and continue independent authorized work while
 waiting. Small real DEM windows are the default development evidence; use a full
