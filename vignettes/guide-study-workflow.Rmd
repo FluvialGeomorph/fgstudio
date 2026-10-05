@@ -515,6 +515,22 @@ stream threshold**. This reuses the saved direction and accumulation rasters;
 it does not repeat outlet selection, terrain conditioning, flow direction or
 flow accumulation.
 
+## Review the automatically selected Flowline
+
+Open **Flowline** after saving the synthetic Stream Network. Choose the Stream
+tab to inspect; no tributary or segment selection is required. FG Studio compares
+every complete terrain-derived head-to-outlet route with the NHDPlusV2 Stream
+you previously selected and displays the longest best-matching route in gold.
+The complete network remains visible in muted cyan and the saved reference in
+dashed magenta. Pan and zoom to compare all three against the locally stretched
+Hydro DEM and hillshade.
+
+The summary reports the path length, source-line count, number of routes compared
+and separation from the next reference match. If prerequisites are missing,
+return to **Hydro Modify** to save the Hydro DEM and synthetic network. This
+review produces the raw continuous Stream path; smoothing, Reach division and
+saved Flowline candidates are not part of the current preview.
+
 Hover over cutlines to see their numbers. A line can be inside the rectangular
 DEM extent but cross only NoData, especially outside the Stream mask. Apply
 reports those line numbers and applies the valid cuts. Select the appropriate

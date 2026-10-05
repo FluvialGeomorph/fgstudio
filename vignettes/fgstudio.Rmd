@@ -35,6 +35,8 @@ record intended reference systems, organize Survey Events and assemble aligned
 Stream DEMs. Hydro Modify supports visual inspection, saved cutline editing and
 provenance-linked hydro DEM production. Synthetic Stream derives and restores a
 threshold-adjustable first-cut candidate network from that saved terrain.
+Flowline then selects and displays the reference-supported longest complete path
+without asking the analyst to prune tributaries manually.
 The intended continuation is shared analysis and reports that another analyst
 or customer can review without reconstructing the originating GIS session.
 

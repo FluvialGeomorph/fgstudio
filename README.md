@@ -51,6 +51,8 @@ definition matters even when a project does not use FGDB.
   with same-CRS bilinear resampling and retained processing evidence.
 - Inspect elevation/hillshade in Hydro Modify, draw and reopen cutlines, and save
   hydro-modified DEMs while preserving their source and method provenance.
+- Automatically select and review a raw mainstem Flowline from a saved synthetic
+  Stream Network using the previously chosen NHDPlusV2 Stream as reference evidence.
 - Retain saved revisions and source evidence as the study evolves.
 
 The current release is a **trusted, single-analyst local development preview**.

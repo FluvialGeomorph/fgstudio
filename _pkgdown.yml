@@ -50,6 +50,8 @@ navbar:
           href: articles/dev-14-dem-editions.html
         - text: "15. Hydro modification"
           href: articles/dev-15-hydro-modify.html
+        - text: "16. Automatic Flowline selection"
+          href: articles/dev-16-flowline.html
         - text: Terrain developer tools
           href: articles/terrain-developer-tools.html
 reference:
@@ -83,6 +85,7 @@ articles:
       - dev-13-stream-dems
       - dev-14-dem-editions
       - dev-15-hydro-modify
+      - dev-16-flowline
 
   - title: Developer reference
     desc: Diagnostic and standalone tools outside the application workflow.

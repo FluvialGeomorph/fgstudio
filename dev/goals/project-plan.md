@@ -152,18 +152,20 @@ nice-to-have feature rather than extending this completed increment.
 
 ## Next feature: automatic Flowline derivation
 
-Flowline is the next selected feature after the accepted synthetic Stream
-Network. The legacy tool assumed the analyst had already removed tributaries and
-assigned Reach names; current code does not yet perform that selection or create
-Reach/event-setting Flowline candidates. Follow the canonical backend proposal in
+Flowline is the selected feature after the accepted synthetic Stream Network.
+The legacy tool assumed the analyst had already removed tributaries and assigned
+Reach names. FG Studio now performs the first part automatically: its Flowline
+tab selects and displays one raw Stream-level path without segment controls. It
+does not yet smooth, divide or persist Reach/event-setting Flowline candidates.
+Follow the canonical backend design in
 [the fluvgeo feature design](../../../fluvgeo/dev/features/stream-network-to-flowline.md)
 and the draft [FGDB Flowline contract](../../../FGDB/dev/schemas/flowline-feature-contract.md).
 
-The intended app outcome is a separate Flowline step that opens an exact saved
-Stream Network revision, automatically selects one terrain-derived Stream-level
-path using retained NHDPlusV2 and Reach evidence, compares raw and smoothed paths
-over the Hydro DEM, and saves/reopens one candidate for every applicable Reach
-under that event setting. Stream definition already expresses the analyst's
+The implemented Flowline step opens an exact saved Stream Network revision,
+automatically selects one terrain-derived Stream-level path using retained
+NHDPlusV2 evidence, and compares the raw path over the Hydro DEM. The remaining
+feature work will smooth and divide that path, then save/reopen one candidate for
+every applicable Reach under that event setting. Stream definition already expresses the analyst's
 choice of Stream, so this step must not ask the analyst to select network heads or
 segments. If the available topology and retained evidence cannot support one
 defensible result, fail with an actionable route back to Stream definition rather
@@ -172,16 +174,18 @@ no governed Reach-owned Survey Event IDs; preserve that fact and do not fabricat
 them. Smoothing and Reach division reuse the saved vector network; they do not
 rerun filling, direction, accumulation, or thresholding.
 
-Keep synthetic path selection separate from the existing
+Synthetic path selection remains separate from the existing
 `fluvgeo::flowline(flowline, reach_name, dem)` preparation function. Pass the one
 assembled line into that established contract so FG Studio gains the DEM-derived
 source while `{ohwm2}` retains its arbitrary user-drawn Flowline workflow without
 behavior or signature changes.
 
-The first review target is all three Spencer Streams and all eleven current
-Reaches. The owner must see the automatically selected route, muted source network,
-retained reference evidence and real-data smoothing comparisons before a default
-open smoothing method/tolerance is accepted. Keep
+The raw app review is available for all three Spencer Streams: gold selected
+route, muted cyan network, dashed magenta reference and locally stretched Hydro
+DEM. The next implementation adds real-data smoothing comparisons, then divides
+the accepted continuous path across all eleven current Reaches and persists the
+local candidates. The owner must see those smoothing comparisons before a default
+open method/tolerance is accepted. Keep
 Flowline Points, stationing, field thalweg import, governed FGDB publication,
 and desktop/QGIS migration outside this increment.
 

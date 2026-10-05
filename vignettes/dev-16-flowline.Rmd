@@ -1,0 +1,64 @@
+---
+title: "16. Automatic Flowline selection"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{16. Automatic Flowline selection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Flowline follows Hydro Modify in the Study workspace. Opening the tab uses the
+selected Survey Event and Stream, reads the exact saved Hydro revision and its
+current synthetic Stream Network candidate, and selects one raw Stream-level
+path without asking the analyst to choose network heads or segments. Stream
+definition already records that intent.
+
+`flowline_review_server()` resolves the saved inputs through
+`hydro_read()`, `stream_network_read()` and `stream_segments()`. The ordinary
+`load_flowline_review()` adapter reads `stream-network.gpkg` and calls
+`fluvgeo::select_stream_mainstem()`. The backend validates a one-outlet acyclic
+directed tree, enumerates every complete head-to-outlet route and compares each
+full terrain path with the retained NHDPlusV2 Stream geometry using discrete
+Hausdorff distance. Among equivalent best reference matches it selects the
+longest route; stable upstream-cell ordering resolves a remaining exact tie.
+Reference geometry identifies the selected Stream but never supplies output
+coordinates.
+
+The result includes one downstream-to-upstream `sf` Flowline, the ordered source
+`stream_line_id` rows and every candidate route with length, reference mismatch,
+rank and selection flags. This raw result can enter the existing
+`fluvgeo::flowline(flowline, reach_name, dem)` preparation contract. That function
+continues to accept arbitrary browser-drawn lines for `{ohwm2}`; correctly defined
+projected terrain lines now pass through its historical WGS84/Web Mercator CRS
+repair unchanged.
+
+The app map displays the selected raw path in gold, the complete synthetic
+network in muted cyan and saved NHDPlusV2 evidence in dashed magenta over the
+same viewport-stretched Hydro DEM and hillshade used for terrain review. The
+summary reports the routes evaluated, source-line count, path length, reference
+mismatch and next-best reference margin. This is a review-only result: no branch
+choice, smoothing control, Reach split or candidate publication is implemented
+in this slice. Missing or incompatible prerequisites fail with a route back to
+Hydro Modify instead of inventing geometry.
+
+| Data object / preparation asset | Operation | Storage and ownership |
+| --- | --- | --- |
+| Saved Hydro DEM revision | `hydro_read()` | Existing Hydro-revision external GeoTIFF; read-only |
+| Synthetic Stream Network revision | `stream_network_read()` | Existing Hydro-revision-local `stream-network.gpkg`; read-only |
+| Retained NHDPlusV2 Stream evidence | `stream_segments()` | Hash-linked Stream selection/piece GeoPackage; read-only reference evidence |
+| Automatically selected raw Stream path | `select_stream_mainstem()` | Transient `sf` result with ordered source-line and candidate-score evidence; not yet a saved or governed Flowline |
+| Viewport elevation/hillshade | `prepare_hydro_dem_view()` | Regenerable session display from the Hydro GeoTIFF; analytical terrain is unchanged |
+
+On the saved Spencer Creek inputs, the current candidates contain 15, 16 and 15
+complete paths. Selection took 1.38, 0.44 and 0.31 seconds respectively on the
+development workstation. The selected route was also the longest complete route
+for all three Streams. The mainstem and east tributary had next-best Hausdorff
+margins of 447.8 and 475.9 metres. The west tributary's two best reference
+distances tied, and the longer of those routes was selected as specified. These
+measurements qualify the current review examples, not all terrain forms.
+
+Verification routes are `test-flowline-review.R` in FG Studio and
+`test_select_stream_mainstem.R` plus `test_flowline.R` in `{fluvgeo}`. The next
+feature increment compares bounded smoothing methods on these same raw paths,
+then divides the accepted continuous Stream path at ordered Reach-source
+boundaries and publishes immutable local candidates.
