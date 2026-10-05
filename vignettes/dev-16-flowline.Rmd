@@ -24,20 +24,24 @@ longest route; stable upstream-cell ordering resolves a remaining exact tie.
 Reference geometry identifies the selected Stream but never supplies output
 coordinates.
 
-The result includes one downstream-to-upstream `sf` Flowline, the ordered source
+The selection result includes one downstream-to-upstream raw `sf` Flowline, the ordered source
 `stream_line_id` rows and every candidate route with length, reference mismatch,
 rank and selection flags. This raw result can enter the existing
 `fluvgeo::flowline(flowline, reach_name, dem)` preparation contract. That function
 continues to accept arbitrary browser-drawn lines for `{ohwm2}`; correctly defined
 projected terrain lines now pass through its historical WGS84/Web Mercator CRS
-repair unchanged.
+repair unchanged. `smooth_flowline()` then applies Gaussian kernel regression
+with the legacy toolbox's default 2-map-unit tolerance, fixed endpoints,
+simple/valid geometry checks and a maximum-displacement guard equal to the
+bandwidth. This portable method is not claimed to reproduce PAEK vertices.
 
-The app map displays the selected raw path in gold, the complete synthetic
+The app map displays the selected and smoothed path in gold, the complete synthetic
 network in muted cyan and saved NHDPlusV2 evidence in dashed magenta over the
 same viewport-stretched Hydro DEM and hillshade used for terrain review. The
 summary reports the routes evaluated, source-line count, path length, reference
-mismatch and next-best reference margin. This is a review-only result: no branch
-choice, smoothing control, Reach split or candidate publication is implemented
+mismatch, next-best reference margin and smoothing diagnostics. Routine use has
+no branch or smoothing control; the historical default is automatic. This is a
+review-only result: no Reach split or candidate publication is implemented
 in this slice. Missing or incompatible prerequisites fail with a route back to
 Hydro Modify instead of inventing geometry.
 
@@ -46,7 +50,7 @@ Hydro Modify instead of inventing geometry.
 | Saved Hydro DEM revision | `hydro_read()` | Existing Hydro-revision external GeoTIFF; read-only |
 | Synthetic Stream Network revision | `stream_network_read()` | Existing Hydro-revision-local `stream-network.gpkg`; read-only |
 | Retained NHDPlusV2 Stream evidence | `stream_segments()` | Hash-linked Stream selection/piece GeoPackage; read-only reference evidence |
-| Automatically selected raw Stream path | `select_stream_mainstem()` | Transient `sf` result with ordered source-line and candidate-score evidence; not yet a saved or governed Flowline |
+| Automatically selected Stream path | `select_stream_mainstem()` then `smooth_flowline()` | Transient raw and smoothed `sf` results with ordered source-line, candidate-score and smoothing evidence; not yet a saved or governed Flowline |
 | Viewport elevation/hillshade | `prepare_hydro_dem_view()` | Regenerable session display from the Hydro GeoTIFF; analytical terrain is unchanged |
 
 On the saved Spencer Creek inputs, the current candidates contain 15, 16 and 15
@@ -57,8 +61,13 @@ margins of 447.8 and 475.9 metres. The west tributary's two best reference
 distances tied, and the longer of those routes was selected as specified. These
 measurements qualify the current review examples, not all terrain forms.
 
+The legacy ArcGIS toolbox's stored default is 2 map units, within its documented
+acceptable 2–5 range. Applied as a 2 m Gaussian bandwidth on the three Spencer
+paths, maximum displacement was 0.54–0.57 m, length decreased by 5.9–6.2 percent,
+endpoints were unchanged, and all outputs remained valid and simple. Processing
+took 0.14–0.48 seconds per Stream on the development workstation.
+
 Verification routes are `test-flowline-review.R` in FG Studio and
 `test_select_stream_mainstem.R` plus `test_flowline.R` in `{fluvgeo}`. The next
-feature increment compares bounded smoothing methods on these same raw paths,
-then divides the accepted continuous Stream path at ordered Reach-source
-boundaries and publishes immutable local candidates.
+feature increment divides the accepted continuous Stream path at ordered
+Reach-source boundaries and publishes immutable local candidates.

@@ -155,16 +155,18 @@ nice-to-have feature rather than extending this completed increment.
 Flowline is the selected feature after the accepted synthetic Stream Network.
 The legacy tool assumed the analyst had already removed tributaries and assigned
 Reach names. FG Studio now performs the first part automatically: its Flowline
-tab selects and displays one raw Stream-level path without segment controls. It
-does not yet smooth, divide or persist Reach/event-setting Flowline candidates.
+tab selects and displays one smoothed Stream-level path without segment or
+smoothing controls. It does not yet divide or persist Reach/event-setting
+Flowline candidates.
 Follow the canonical backend design in
 [the fluvgeo feature design](../../../fluvgeo/dev/features/stream-network-to-flowline.md)
 and the draft [FGDB Flowline contract](../../../FGDB/dev/schemas/flowline-feature-contract.md).
 
 The implemented Flowline step opens an exact saved Stream Network revision,
 automatically selects one terrain-derived Stream-level path using retained
-NHDPlusV2 evidence, and compares the raw path over the Hydro DEM. The remaining
-feature work will smooth and divide that path, then save/reopen one candidate for
+NHDPlusV2 evidence, and applies the bounded historical 2-map-unit smoothing
+default over the Hydro DEM. The remaining feature work will divide that path,
+then save/reopen one candidate for
 every applicable Reach under that event setting. Stream definition already expresses the analyst's
 choice of Stream, so this step must not ask the analyst to select network heads or
 segments. If the available topology and retained evidence cannot support one
@@ -180,12 +182,10 @@ assembled line into that established contract so FG Studio gains the DEM-derived
 source while `{ohwm2}` retains its arbitrary user-drawn Flowline workflow without
 behavior or signature changes.
 
-The raw app review is available for all three Spencer Streams: gold selected
+The smoothed app review is available for all three Spencer Streams: gold selected
 route, muted cyan network, dashed magenta reference and locally stretched Hydro
-DEM. The next implementation adds real-data smoothing comparisons, then divides
-the accepted continuous path across all eleven current Reaches and persists the
-local candidates. The owner must see those smoothing comparisons before a default
-open method/tolerance is accepted. Keep
+DEM. The next implementation divides the accepted continuous path across all
+eleven current Reaches and persists the local candidates. Keep
 Flowline Points, stationing, field thalweg import, governed FGDB publication,
 and desktop/QGIS migration outside this increment.
 

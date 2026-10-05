@@ -113,7 +113,7 @@ new FGDB domain entity. Preserve the distinction in both code and documentation.
 | Assembled Stream DEM | External Float32 GeoTIFF in international feet on the Event grid | `mosaic_terrain_tiles(template=...)` (same-CRS bilinear resampling) -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain consumed by local Hydro Modify; downstream Reach delivery binding remains pending |
 | Local DEM execution evidence | Additive `execution` record inside the edition's `edition.rds`; retained backend result metadata for older editions | `launch_terrain_dem_trial()` captures methods, WKT and software; `study_dem_store()` persists; `terrain_dem_provenance_ui()` reads | Bound to the displayed Stream/Event edition; separate from planned operations and not yet portable FGDB delivery metadata |
 | Synthetic stream candidate | Hydro-revision-local GeoTIFF routing evidence plus `stream-network.gpkg`, outlet record and provenance | `locate_stream_outlet()` and `extract_synthetic_stream_network()` produce; `study_stream_network_store()` publishes/reopens | Historical first-cut vector for analyst review; not accepted governed network content merely because processing succeeds |
-| Automatically selected raw Stream path | Transient `sf` Flowline plus ordered source-line and candidate-route score evidence | `select_stream_mainstem()` derives from the exact synthetic network and retained NHDPlusV2 Stream lines; `flowline_review_server()` displays | Review-only preparation result in the current slice; no GeoPackage Flowline candidate or FGDB object is written yet |
+| Automatically selected Stream path | Transient raw and smoothed `sf` Flowlines plus ordered source-line, candidate-route score and smoothing evidence | `select_stream_mainstem()` derives from the exact synthetic network and retained NHDPlusV2 Stream lines; `smooth_flowline()` applies the bounded historical default; `flowline_review_server()` displays | Review-only preparation result in the current slice; no GeoPackage Flowline candidate or FGDB object is written yet |
 
 Study/Stream terrain may support several Reach Events. FGDB's folder requirements
 allow explicitly associated shared project assets; they do not require copying
@@ -193,10 +193,11 @@ This local preparation result does not complete the governed FGDB hydro DEM or
 portable delivery binding.
 See [Hydro modification](dev-15-hydro-modify.html) for operation and storage routes.
 
-The Flowline tab reads those immutable inputs and derives one transient raw
-Stream path. It does not write a new object, mutate terrain or alter the saved
-network. See [Automatic Flowline selection](dev-16-flowline.html). Smoothing,
-Reach division and local Flowline-candidate persistence remain the next binding.
+The Flowline tab reads those immutable inputs, derives one transient raw Stream
+path, and smooths it with the historical 2-map-unit default. It does not write a
+new object, mutate terrain or alter the saved network. See
+[Automatic Flowline selection](dev-16-flowline.html). Reach division and local
+Flowline-candidate persistence remain the next binding.
 
 Synthetic stream revisions live below that exact Hydro revision. Their result
 record repeats the Hydro output hash, cutline revision, threshold in hectares,

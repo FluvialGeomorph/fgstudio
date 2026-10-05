@@ -22,7 +22,7 @@ flowline_review_fixture <- function(directory) {
   list(study=study,store=store,reference=reference)
 }
 
-test_that("Flowline review automatically selects and displays one raw path",{
+test_that("Flowline review automatically selects, smooths and displays one path",{
   fixture <- flowline_review_fixture(withr::local_tempdir())
   context <- list(key="study",path=fixture$study,group_id="event",group_path="event.gpkg",
     event_label="2019-12",streams=data.frame(stream_id="s1",stream_name="Stream one"))
@@ -31,11 +31,15 @@ test_that("Flowline review automatically selects and displays one raw path",{
     expect_identical(selected()$stream,"s1")
     session$setInputs(stream="s1")
     expect_identical(review()$result$selected_segments$stream_line_id,c("B","T"))
-    expect_match(notice(),"selected automatically")
+    expect_s3_class(review()$result$raw_flowline,"sf")
+    expect_true(review()$result$flowline$smoothing_valid)
+    expect_equal(review()$result$flowline$smoothing_bandwidth,2)
+    expect_match(notice(),"selected and smoothed automatically")
     widget <- jsonlite::fromJSON(output$map,simplifyVector=FALSE)
     calls <- widget$x$calls
     expect_equal(sum(vapply(calls,function(x)identical(x$method,"addPolylines"),logical(1))),3L)
     expect_match(output$summary$html,"Complete paths compared",fixed=TRUE)
+    expect_match(output$summary$html,"Maximum smoothing displacement",fixed=TRUE)
     expect_false(grepl("type=\"checkbox\"|type=\"radio\"|<select",
       output$summary$html,ignore.case=TRUE))
   })

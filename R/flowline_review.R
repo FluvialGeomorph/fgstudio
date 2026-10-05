@@ -8,7 +8,7 @@ flowline_review_ui <- function(id) {
     shiny::div(class="d-flex gap-2 flex-wrap mb-2",
       shiny::actionButton(ns("return_stream"),"Return to Stream",class="btn-outline-secondary btn-sm")),
     leaflet::leafletOutput(ns("map"),height="650px"),
-    shiny::p(class="small","Gold is the automatically selected raw Flowline path. Cyan shows the complete synthetic Stream Network; magenta shows the retained NHDPlusV2 reference. Elevation colors stretch to the current view."))
+    shiny::p(class="small","Gold is the automatically selected and smoothed Flowline. Cyan shows the complete synthetic Stream Network; magenta shows the retained NHDPlusV2 reference. Elevation colors stretch to the current view."))
 }
 
 load_flowline_review <- function(store, selection) {
@@ -23,6 +23,8 @@ load_flowline_review <- function(store, selection) {
   network <- sf::st_read(network_path,quiet=TRUE)
   reference <- store$stream_segments(selection$key,selection$stream,selection$path)$lines
   result <- fluvgeo::select_stream_mainstem(network,reference)
+  result$raw_flowline <- result$flowline
+  result$flowline <- fluvgeo::smooth_flowline(result$raw_flowline)
   list(record=record,candidate=candidate,network=network,reference=reference,
     result=result,dem=file.path(record$path,record$result$file))
 }
@@ -89,7 +91,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         value <- load_flowline_review(store,selection)
         review(value)
         path <- value$result$flowline
-        notice(paste0("Raw Flowline selected automatically: ",
+        notice(paste0("Flowline selected and smoothed automatically: ",
           format(round(path$length_m),big.mark=",")," m from ",
           path$source_segment_count," network lines. ",nrow(value$result$candidates),
           " complete head-to-outlet paths were evaluated."))
@@ -132,7 +134,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
             label="Saved NHDPlusV2 Stream reference",
             options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines")) |>
           leaflet::addPolylines(data=path,group="Selected Flowline",color="#ffd400",
-            weight=7,opacity=1,label=paste0("Automatically selected raw Flowline; ",
+            weight=7,opacity=1,label=paste0("Automatically selected and smoothed Flowline; ",
               format(round(path$length_m),big.mark=",")," m"),
             options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
       }
@@ -148,11 +150,16 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
       path <- value$result$flowline
       margin <- if(is.na(path$reference_margin_m)) "Only one complete path" else
         paste0(format(round(path$reference_margin_m,1),big.mark=",")," m")
-      compact_table(data.frame(Item=c("Selection","Complete paths compared","Raw Flowline length",
-        "Source network lines","Reference mismatch","Next-best reference margin"),
+      compact_table(data.frame(Item=c("Selection","Complete paths compared","Smoothed Flowline length",
+        "Source network lines","Reference mismatch","Next-best reference margin",
+        "Smoothing","Maximum smoothing displacement","Length change from raw path"),
         Value=c("Automatic reference-constrained longest path",nrow(value$result$candidates),
           paste0(format(round(path$length_m),big.mark=",")," m"),path$source_segment_count,
-          paste0(format(round(path$reference_hausdorff_m,1),big.mark=",")," m"),margin)))
+          paste0(format(round(path$reference_hausdorff_m,1),big.mark=",")," m"),margin,
+          paste0(path$smoothing_method,"; ",path$smoothing_bandwidth," ",
+            path$smoothing_unit," bandwidth (historical default)"),
+          paste0(round(path$maximum_displacement,2)," ",path$smoothing_unit),
+          paste0(round(path$length_change_percent,1),"%"))))
     })
     fit_stream <- function(){value<-shiny::isolate(review());if(is.null(value))return()
       b<-flowline_dem_bounds(value$dem);leaflet::fitBounds(leaflet::leafletProxy("map",session),b[1],b[2],b[3],b[4])}
