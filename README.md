@@ -53,7 +53,8 @@ definition matters even when a project does not use FGDB.
   hydro-modified DEMs while preserving their source and method provenance.
 - Automatically select and review a smoothed mainstem Flowline from a saved
   synthetic Stream Network using the previously chosen NHDPlusV2 Stream as
-  reference evidence and the historical 2-map-unit smoothing default.
+  reference evidence, with a conservative 2 m default and selectable 2–5 m
+  smoothing candidates.
 - Retain saved revisions and source evidence as the study evolves.
 
 The current release is a **trusted, single-analyst local development preview**.

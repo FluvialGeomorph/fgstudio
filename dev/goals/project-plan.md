@@ -155,8 +155,11 @@ nice-to-have feature rather than extending this completed increment.
 Flowline is the selected feature after the accepted synthetic Stream Network.
 The legacy tool assumed the analyst had already removed tributaries and assigned
 Reach names. FG Studio now performs the first part automatically: its Flowline
-tab selects and displays one smoothed Stream-level path without segment or
-smoothing controls. It does not yet divide or persist Reach/event-setting
+tab selects and displays one smoothed Stream-level path without segment controls.
+It precomputes the historical 2–5-map-unit smoothing candidates, defaults to the
+conservative 2-map-unit result, and lets the analyst switch the displayed
+candidate without rerunning selection or terrain processing. It does not yet
+divide or persist Reach/event-setting
 Flowline candidates.
 Follow the canonical backend design in
 [the fluvgeo feature design](../../../fluvgeo/dev/features/stream-network-to-flowline.md)
@@ -164,8 +167,8 @@ and the draft [FGDB Flowline contract](../../../FGDB/dev/schemas/flowline-featur
 
 The implemented Flowline step opens an exact saved Stream Network revision,
 automatically selects one terrain-derived Stream-level path using retained
-NHDPlusV2 evidence, and applies the bounded historical 2-map-unit smoothing
-default over the Hydro DEM. The remaining feature work will divide that path,
+NHDPlusV2 evidence, and displays a bounded candidate from the historical
+2–5-map-unit smoothing range over the Hydro DEM. The remaining feature work will divide that path,
 then save/reopen one candidate for
 every applicable Reach under that event setting. Stream definition already expresses the analyst's
 choice of Stream, so this step must not ask the analyst to select network heads or

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "fgstudio",
-  "package_version": "0.0.0.9062",
+  "package_version": "0.0.0.9083",
   "generator": {
     "pkgnet": "0.6.1",
     "flow": "0.2.0"
@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "16a40cb7bc5b5a18240b98363be4fe3693003d29ca9945aab239558b435e864b"
+      "sha256": "8d66170d878e5d32d2d5b4227dbfdaf54154028b39f3e1726abf7973b9dc1413"
     },
     {
       "file": "NAMESPACE",
@@ -18,7 +18,7 @@
     },
     {
       "file": "R/app.R",
-      "sha256": "6e0bc715af34ea63d491c585c746e1ed97a60799a74de7cc66014178a4b8019f"
+      "sha256": "dc2988a25d031446718210dc7561e097a6b61bee83841551f555786309dbd312"
     },
     {
       "file": "R/compact_table.R",
@@ -38,7 +38,23 @@
     },
     {
       "file": "R/event_masks.R",
-      "sha256": "2a1265af0d52737bbcd287596c0e091d39145ba972de54acd8fca60a50444bff"
+      "sha256": "5d11e6ba4f71105ad282efdc2d777ff250f107345f662681d5d6fd49637c251d"
+    },
+    {
+      "file": "R/flowline_review.R",
+      "sha256": "af5ce22797a3d452186c2e53de43002b5b9de2dab8ba8d4ca8de471c460e14cd"
+    },
+    {
+      "file": "R/hydro_modify.R",
+      "sha256": "835e4d09c407a122169ef9819f922050d861102ec4d23e8156904af1ba7e7e0f"
+    },
+    {
+      "file": "R/hydro_store.R",
+      "sha256": "f76157a021ce4b549b39179d366f064a7d1f7f6fe7070f14232e4d488f09f2f7"
+    },
+    {
+      "file": "R/map_basemaps.R",
+      "sha256": "88ea72937133435961ed14f6eb822b10cd64e3b16622d7070fd610c52a750d10"
     },
     {
       "file": "R/map_search.R",
@@ -46,7 +62,7 @@
     },
     {
       "file": "R/mod_boundary.R",
-      "sha256": "e22353b3c7f01a53279a1d21163d12eeaf84cebab73c05c2d4bb605c78407120"
+      "sha256": "306853da541ed369f0ba0e4f509a2a4f91b8162d80e5ba3255ef65d1a7547d50"
     },
     {
       "file": "R/mod_streams.R",
@@ -54,11 +70,11 @@
     },
     {
       "file": "R/mod_study.R",
-      "sha256": "c7adcbd1e24cf271ae5f406a8289572fddfd2444bd11c9871b453c948357c3d4"
+      "sha256": "cd4f6aa77f2f1ec6fadaa7722db470a417834be7ca670024a1f91c94dc4f0474"
     },
     {
       "file": "R/mod_survey_collections.R",
-      "sha256": "50e634168de64241303d1a828dbee90c2b2a6b32de8aee6437a8c2ef4943916c"
+      "sha256": "800aa9ab0a75f0f44c740c49ff279a896c3aca496b0a1eb1e4705dc1b84f623d"
     },
     {
       "file": "R/network_reference.R",
@@ -102,11 +118,15 @@
     },
     {
       "file": "R/stream_dem_inspection.R",
-      "sha256": "5e46948362cfdf23e36456864dc785b038bd3116f837b29595075b6916515d5c"
+      "sha256": "61b3a9efd2bd6f01b0e93a6a9a4ef1b005c7249f8fe64a0816d2c9376e3efdc8"
     },
     {
       "file": "R/stream_dem_preflight.R",
       "sha256": "633a30c39ef88db1fd41e061de4e6f3f4f9182ff184645d0db1a3936e3aca81a"
+    },
+    {
+      "file": "R/stream_network_store.R",
+      "sha256": "773a29279d8b9fe2a13c09dd4e7aab9b116845aefb6184539675424d41838175"
     },
     {
       "file": "R/stream_selection.R",
@@ -118,7 +138,7 @@
     },
     {
       "file": "R/study_dem_store.R",
-      "sha256": "ce9d68f0667c5d0d20e09ad23279b4d0a0f25c7282172478f264ce6c1f4c6963"
+      "sha256": "c81a14bf3a99e1825d18130fefb85b4305bcc732bb3b575d155895b81861d3ee"
     },
     {
       "file": "R/study_feature_names.R",
@@ -126,7 +146,11 @@
     },
     {
       "file": "R/study_store.R",
-      "sha256": "f86186b2dc77945927a1bad4db0623d70b88f8738ccfc37be90ca0c623848ad6"
+      "sha256": "67d4e013d42ce97d6466fe703e7e0aaf5f9018578b6f1b53169ae68bdef489fb"
+    },
+    {
+      "file": "R/study_transform_store.R",
+      "sha256": "092ebad55028c8db577bc9ef74c4a6ce53fa1200c9799e083e5d9c89d8bdd5a5"
     },
     {
       "file": "R/study_vertical_reference.R",
@@ -134,15 +158,19 @@
     },
     {
       "file": "R/survey_event_dems.R",
-      "sha256": "f82c5dc81524e10619cf4350281994fdf0287134f4cc20a9829f8665d637c10c"
+      "sha256": "dc83ce35382f35f0aedc1eeb15dc83458728ff341c4ffd71f88493a1297fa39e"
     },
     {
       "file": "R/survey_event_settings.R",
-      "sha256": "075fd1b82e378064d1a9ba312fa488624f28512c4ea56f17c06c031e5237e6fa"
+      "sha256": "295613a107b5dd26bdf0c187e5ecd878dd96dc7c597300adb93ffbfe98bbeb97"
+    },
+    {
+      "file": "R/terrain_dem_provenance.R",
+      "sha256": "c44e5766bccfb3e365d34a4fd7717de5041da63af4b66baf72b7cce0c59ab9cf"
     },
     {
       "file": "R/terrain_dem_request.R",
-      "sha256": "7d9f529b004f13e0d7e1716da7eb3dff6396a348154e6206dd45e1ea59af285f"
+      "sha256": "6dac164787ff9f77af50d22978fdb23aa9de3c6ee7f6fae4588939d4b10640ef"
     },
     {
       "file": "R/terrain_dem_sources.R",
@@ -150,15 +178,23 @@
     },
     {
       "file": "R/terrain_dem_trial.R",
-      "sha256": "220c1958bbb77da96b6d769e6ce6817ab8c1566d3ac10d298ddbc3153ce8674a"
+      "sha256": "234e34da21030355bfec1ac81ca1c9b25a8ea27c23d218d2977345890c876101"
     },
     {
       "file": "R/terrain_mosaic_trial.R",
-      "sha256": "829499d2ed55dbaa6069fe9da2df2e05294e041046618a4fa33fa3229e3bd36e"
+      "sha256": "4361d3bccdde5e26d4de81ff1636a4d86f27c8dbdf78166329e157b22b51a55a"
+    },
+    {
+      "file": "R/terrain_palette.R",
+      "sha256": "b2dc84fe10fcadb2bcfc00471cd75a5fbd14a6d721c970300f26518f5dd8b225"
     },
     {
       "file": "R/terrain_source_review.R",
       "sha256": "93b50c9006b411ec4987e314f70a59e28b196918ff4bf690cada22b9648c30d7"
+    },
+    {
+      "file": "R/terrain_transform_review.R",
+      "sha256": "fd27640d116019c63617a49cca06b408d4ece452b8d64a4ea47e5b3a1c4d9b2f"
     },
     {
       "file": "dev/architecture/reviewed-call-bridges.json",
@@ -173,6 +209,16 @@
         {
           "file": "R/network_reference.R",
           "line": 6
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::add_opentopomap",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/map_basemaps.R",
+          "line": 2
         }
       ]
     },
@@ -192,7 +238,7 @@
       "locations": [
         {
           "file": "R/mod_boundary.R",
-          "line": 347
+          "line": 350
         }
       ]
     },
@@ -202,7 +248,7 @@
       "locations": [
         {
           "file": "R/mod_boundary.R",
-          "line": 334
+          "line": 337
         }
       ]
     },
@@ -212,7 +258,7 @@
       "locations": [
         {
           "file": "R/mod_boundary.R",
-          "line": 327
+          "line": 330
         }
       ]
     },
@@ -352,7 +398,7 @@
       "locations": [
         {
           "file": "R/terrain_mosaic_trial.R",
-          "line": 117
+          "line": 128
         }
       ]
     },
@@ -387,12 +433,62 @@
       ]
     },
     {
+      "id": "fgstudio::fg_working_overlay",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/app.R",
+          "line": 1
+        }
+      ]
+    },
+    {
       "id": "fgstudio::fgstudio_app",
       "exported": true,
       "locations": [
         {
           "file": "R/app.R",
-          "line": 7
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::flowline_dem_bounds",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 252
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::flowline_review_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::flowline_review_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::flowline_smoothing_candidate",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 39
         }
       ]
     },
@@ -417,6 +513,56 @@
       ]
     },
     {
+      "id": "fgstudio::hydro_dem_bounds",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 437
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::hydro_drawn_lines",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_store.R",
+          "line": 84
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::hydro_error_message",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 432
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::hydro_modify_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::hydro_modify_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 1
+        }
+      ]
+    },
+    {
       "id": "fgstudio::launch_drainage_job",
       "exported": false,
       "locations": [
@@ -433,6 +579,16 @@
         {
           "file": "R/event_masks.R",
           "line": 1
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_hydro_burn",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 372
         }
       ]
     },
@@ -477,6 +633,26 @@
       ]
     },
     {
+      "id": "fgstudio::launch_stream_extraction",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 378
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_stream_threshold",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 390
+        }
+      ]
+    },
+    {
       "id": "fgstudio::launch_survey_collection_job",
       "exported": false,
       "locations": [
@@ -492,7 +668,7 @@
       "locations": [
         {
           "file": "R/terrain_dem_trial.R",
-          "line": 16
+          "line": 39
         }
       ]
     },
@@ -523,6 +699,16 @@
         {
           "file": "R/terrain_mosaic_trial.R",
           "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::load_flowline_review",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 19
         }
       ]
     },
@@ -592,7 +778,7 @@
       "locations": [
         {
           "file": "R/mod_study.R",
-          "line": 38
+          "line": 39
         }
       ]
     },
@@ -747,12 +933,22 @@
       ]
     },
     {
+      "id": "fgstudio::reuse_stream_network_threshold",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 399
+        }
+      ]
+    },
+    {
       "id": "fgstudio::run_app",
       "exported": true,
       "locations": [
         {
           "file": "R/app.R",
-          "line": 35
+          "line": 49
         }
       ]
     },
@@ -972,6 +1168,36 @@
       ]
     },
     {
+      "id": "fgstudio::study_hydro_store",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_store.R",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::study_stream_network_store",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/stream_network_store.R",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::study_transform_store",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/study_transform_store.R",
+          "line": 2
+        }
+      ]
+    },
+    {
       "id": "fgstudio::study_vertical_reference_server",
       "exported": false,
       "locations": [
@@ -997,7 +1223,7 @@
       "locations": [
         {
           "file": "R/survey_event_dems.R",
-          "line": 9
+          "line": 10
         }
       ]
     },
@@ -1017,7 +1243,7 @@
       "locations": [
         {
           "file": "R/survey_event_settings.R",
-          "line": 17
+          "line": 18
         }
       ]
     },
@@ -1032,12 +1258,52 @@
       ]
     },
     {
+      "id": "fgstudio::terrain_dem_legacy_recipe",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_dem_trial.R",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_dem_mixed_grid_recipe",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_dem_trial.R",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_dem_provenance_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_dem_provenance.R",
+          "line": 3
+        }
+      ]
+    },
+    {
       "id": "fgstudio::terrain_dem_request",
       "exported": false,
       "locations": [
         {
           "file": "R/terrain_dem_request.R",
           "line": 3
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_dem_single_grid_recipe",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_dem_trial.R",
+          "line": 26
         }
       ]
     },
@@ -1057,7 +1323,7 @@
       "locations": [
         {
           "file": "R/terrain_dem_trial.R",
-          "line": 54
+          "line": 86
         }
       ]
     },
@@ -1088,6 +1354,16 @@
         {
           "file": "R/terrain_mosaic_trial.R",
           "line": 26
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_palette",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_palette.R",
+          "line": 2
         }
       ]
     },
@@ -1152,12 +1428,42 @@
       ]
     },
     {
+      "id": "fgstudio::terrain_transform_choices",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_transform_review.R",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_transform_review_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_transform_review.R",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::terrain_transform_review_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/terrain_transform_review.R",
+          "line": 1
+        }
+      ]
+    },
+    {
       "id": "fgstudio::valid_map_bounds",
       "exported": false,
       "locations": [
         {
           "file": "R/mod_boundary.R",
-          "line": 340
+          "line": 343
         }
       ]
     }
@@ -1218,6 +1524,18 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::draw_dem_preview",
+      "to": "fgstudio::terrain_palette",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::draw_terrain_mosaic_trial",
+      "to": "fgstudio::terrain_palette",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::event_masks_server",
       "to": "fgstudio::draw_event_mask",
       "kind": "static-dependency",
@@ -1226,6 +1544,12 @@
     {
       "from": "fgstudio::event_masks_server",
       "to": "fgstudio::mask_recovery_message",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::fgstudio_app",
+      "to": "fgstudio::fg_working_overlay",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1248,6 +1572,96 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::add_opentopomap",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::flowline_dem_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::flowline_smoothing_candidate",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::hydro_error_message",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::load_flowline_review",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::terrain_palette",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::valid_map_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::add_opentopomap",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::hydro_dem_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::hydro_drawn_lines",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::hydro_error_message",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::terrain_dem_sources",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::terrain_palette",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::valid_map_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::launch_drainage_job",
       "to": "fgstudio::drainage_request",
       "kind": "static-dependency",
@@ -1266,8 +1680,38 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::launch_stream_threshold",
+      "to": "fgstudio::reuse_stream_network_threshold",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::local_study_store",
       "to": "fgstudio::study_dem_store",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::local_study_store",
+      "to": "fgstudio::study_hydro_store",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::local_study_store",
+      "to": "fgstudio::study_stream_network_store",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::local_study_store",
+      "to": "fgstudio::study_transform_store",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::local_study_store",
+      "to": "fgstudio::terrain_dem_sources",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1286,6 +1730,12 @@
     {
       "from": "fgstudio::mod_boundary_server",
       "to": "fgstudio::add_network_reference",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::add_opentopomap",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1447,6 +1897,18 @@
     },
     {
       "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::flowline_review_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::hydro_modify_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
       "to": "fgstudio::mod_boundary_server",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
@@ -1501,6 +1963,18 @@
     },
     {
       "from": "fgstudio::mod_study_ui",
+      "to": "fgstudio::flowline_review_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_ui",
+      "to": "fgstudio::hydro_modify_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_ui",
       "to": "fgstudio::mod_survey_collections_ui",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
@@ -1520,6 +1994,12 @@
     {
       "from": "fgstudio::mod_study_ui",
       "to": "fgstudio::survey_event_settings_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_survey_collections_server",
+      "to": "fgstudio::add_opentopomap",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1740,6 +2220,12 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::study_transform_store",
+      "to": "fgstudio::terrain_transform_choices",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::study_vertical_reference_server",
       "to": "fgstudio::compact_table",
       "kind": "static-dependency",
@@ -1788,6 +2274,12 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::survey_event_settings_server",
+      "to": "fgstudio::terrain_transform_review_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::survey_event_settings_ui",
       "to": "fgstudio::event_masks_ui",
       "kind": "static-dependency",
@@ -1800,8 +2292,32 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::survey_event_settings_ui",
+      "to": "fgstudio::terrain_transform_review_ui",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::terrain_dem_request",
       "to": "fgstudio::terrain_dem_sources",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_dem_trial_job",
+      "to": "fgstudio::terrain_dem_legacy_recipe",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_dem_trial_job",
+      "to": "fgstudio::terrain_dem_mixed_grid_recipe",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_dem_trial_job",
+      "to": "fgstudio::terrain_dem_single_grid_recipe",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1820,6 +2336,12 @@
     {
       "from": "fgstudio::terrain_mosaic_trial_server",
       "to": "fgstudio::draw_terrain_mosaic_trial",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::terrain_mosaic_trial_server",
+      "to": "fgstudio::terrain_dem_provenance_ui",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1878,12 +2400,18 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::terrain_transform_review_server",
+      "to": "fgstudio::terrain_transform_choices",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::terrain_dem_trial_job",
       "to": "fgstudio::study_dem_store/publish_dem",
       "kind": "adapter-call",
       "file": "R/terrain_dem_trial.R",
       "anchor": "completed <- store$publish_dem(binding,recipe,directory,completed)",
-      "line": 141,
+      "line": 179,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1901,7 +2429,7 @@
       "kind": "background-worker",
       "file": "R/terrain_dem_trial.R",
       "anchor": "trial$unmasked_result <- fluvgeo::mosaic_terrain_tiles(trial$sources,",
-      "line": 35,
+      "line": 58,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1910,7 +2438,7 @@
       "kind": "background-worker",
       "file": "R/terrain_dem_trial.R",
       "anchor": "trial$masked_result <- fluvgeo::mask_terrain_mosaic(trial$unmasked_result$path,",
-      "line": 38,
+      "line": 61,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -1919,7 +2447,7 @@
       "kind": "background-worker",
       "file": "R/terrain_dem_trial.R",
       "anchor": "trial$result <- fluvgeo::terrain_to_international_feet(trial$masked_result$path,",
-      "line": 40,
+      "line": 63,
       "evidence": "reviewed-source-bridge"
     },
     {
@@ -2158,8 +2686,8 @@
     }
   ],
   "evaluation": {
-    "static_nodes": 100,
-    "static_edges": 119,
+    "static_nodes": 127,
+    "static_edges": 156,
     "reviewed_bridges": 31,
     "storage_closure_detected": false,
     "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]

@@ -3,6 +3,11 @@ flowline_review_ui <- function(id) {
   bslib::card(bslib::card_header("Flowline"),
     shiny::p("FG Studio automatically follows the terrain-derived path that best agrees with the Stream you defined, then retains the longest matching head-to-outlet route. Branching tributaries are excluded without another segment-selection step."),
     shiny::uiOutput(ns("streams")),
+    shiny::radioButtons(ns("bandwidth"),"Smoothing strength",
+      choices=c("Conservative — 2 m (default)"="2","Moderate — 3 m"="3",
+        "Stronger — 4 m"="4","Most aggressive — 5 m"="5"),
+      selected="2",inline=TRUE),
+    shiny::p(class="small","Choose among the legacy 2–5 map-unit range. This changes only the displayed Flowline candidate; terrain processing and mainstem selection are reused."),
     shiny::uiOutput(ns("status")),
     shiny::uiOutput(ns("summary")),
     shiny::div(class="d-flex gap-2 flex-wrap mb-2",
@@ -24,9 +29,17 @@ load_flowline_review <- function(store, selection) {
   reference <- store$stream_segments(selection$key,selection$stream,selection$path)$lines
   result <- fluvgeo::select_stream_mainstem(network,reference)
   result$raw_flowline <- result$flowline
-  result$flowline <- fluvgeo::smooth_flowline(result$raw_flowline)
+  result$smoothing_candidates <- stats::setNames(lapply(2:5,function(bandwidth)
+    fluvgeo::smooth_flowline(result$raw_flowline,bandwidth=bandwidth)),as.character(2:5))
+  result$flowline <- result$smoothing_candidates[["2"]]
   list(record=record,candidate=candidate,network=network,reference=reference,
     result=result,dem=file.path(record$path,record$result$file))
+}
+
+flowline_smoothing_candidate <- function(result,bandwidth=2) {
+  key <- as.character(bandwidth)[1]
+  if(!key %in% names(result$smoothing_candidates)) key <- "2"
+  result$smoothing_candidates[[key]]
 }
 
 flowline_review_server <- function(id,current,context,store,active=function() TRUE) {
@@ -46,6 +59,10 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         stream <- ctx$streams$stream_id[1]
       list(key=ctx$key,event=ctx$group_id,stream=stream,path=ctx$path,
         group=ctx$group_path)
+    })
+    selected_flowline <- shiny::reactive({
+      value <- review();if(is.null(value)) return(NULL)
+      flowline_smoothing_candidate(value$result,input$bandwidth)
     })
     output$streams <- shiny::renderUI({
       ctx <- context()
@@ -90,7 +107,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
       tryCatch({
         value <- load_flowline_review(store,selection)
         review(value)
-        path <- value$result$flowline
+        path <- flowline_smoothing_candidate(value$result,shiny::isolate(input$bandwidth))
         notice(paste0("Flowline selected and smoothed automatically: ",
           format(round(path$length_m),big.mark=",")," m from ",
           path$source_segment_count," network lines. ",nrow(value$result$candidates),
@@ -121,7 +138,8 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         b <- flowline_dem_bounds(value$dem)
         network <- sf::st_transform(value$network,4326)
         reference <- sf::st_transform(value$reference,4326)
-        path <- sf::st_transform(value$result$flowline,4326)
+        path <- sf::st_transform(flowline_smoothing_candidate(value$result,
+          shiny::isolate(input$bandwidth)),4326)
         map <- leaflet::fitBounds(map,b[1],b[2],b[3],b[4]) |>
           leaflet::addRectangles(b[1],b[2],b[3],b[4],group="DEM extent",
             color="#e68a00",weight=2,fill=FALSE,options=leaflet::pathOptions(pane="flowline-lines")) |>
@@ -142,12 +160,22 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"))
     })
 
+    shiny::observeEvent(input$bandwidth,{
+      path <- selected_flowline();if(is.null(path)) return()
+      display <- sf::st_transform(path,4326)
+      leaflet::leafletProxy("map",session) |>
+        leaflet::clearGroup("Selected Flowline") |>
+        leaflet::addPolylines(data=display,group="Selected Flowline",color="#ffd400",
+          weight=7,opacity=1,label=paste0("Selected ",path$smoothing_bandwidth,
+            " m smoothing candidate; ",format(round(path$length_m),big.mark=",")," m"),
+          options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
+    },ignoreInit=TRUE)
+
     output$status <- shiny::renderUI(shiny::tagList(
       shiny::p(role="status",notice()),shiny::p(class="small",view_notice()),
       if(view_busy()) shiny::tags$progress(style="width:100%",`aria-label`="Loading Flowline terrain display")))
     output$summary <- shiny::renderUI({
-      value <- review();if(is.null(value)) return(NULL)
-      path <- value$result$flowline
+      value <- review();path <- selected_flowline();if(is.null(value) || is.null(path)) return(NULL)
       margin <- if(is.na(path$reference_margin_m)) "Only one complete path" else
         paste0(format(round(path$reference_margin_m,1),big.mark=",")," m")
       compact_table(data.frame(Item=c("Selection","Complete paths compared","Smoothed Flowline length",
@@ -157,7 +185,8 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
           paste0(format(round(path$length_m),big.mark=",")," m"),path$source_segment_count,
           paste0(format(round(path$reference_hausdorff_m,1),big.mark=",")," m"),margin,
           paste0(path$smoothing_method,"; ",path$smoothing_bandwidth," ",
-            path$smoothing_unit," bandwidth (historical default)"),
+            path$smoothing_unit," bandwidth",
+            if(path$smoothing_bandwidth==2) " (historical default)" else ""),
           paste0(round(path$maximum_displacement,2)," ",path$smoothing_unit),
           paste0(round(path$length_change_percent,1),"%"))))
     })
@@ -216,7 +245,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
     }
     shiny::observe({shiny::invalidateLater(300,session);poll()})
     session$onSessionEnded(function(){if(!is.null(view_worker))view_worker$kill();unlink(cache,recursive=TRUE)})
-    list(review=review,selected=selected,poll=poll)
+    list(review=review,selected=selected,flowline=selected_flowline,poll=poll)
   })
 }
 

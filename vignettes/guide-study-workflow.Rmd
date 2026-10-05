@@ -520,8 +520,11 @@ flow accumulation.
 Open **Flowline** after saving the synthetic Stream Network. Choose the Stream
 tab to inspect; no tributary or segment selection is required. FG Studio compares
 every complete terrain-derived head-to-outlet route with the NHDPlusV2 Stream
-you previously selected, applies the historical 2-map-unit smoothing default,
-and displays the smoothed longest best-matching route in gold.
+you previously selected, computes the historical 2–5-map-unit smoothing range,
+and displays the conservative 2-map-unit candidate in gold by default. Use
+**Smoothing strength** to select a more aggressive candidate. Changing this
+choice swaps the precomputed gold line and diagnostics immediately; it does not
+repeat terrain processing or mainstem selection.
 The complete network remains visible in muted cyan and the saved reference in
 dashed magenta. Pan and zoom to compare all three against the locally stretched
 Hydro DEM and hillshade.
@@ -530,8 +533,9 @@ The summary reports the path length, source-line count, number of routes compare
 separation from the next reference match, smoothing method, maximum displacement,
 and length change. If prerequisites are missing,
 return to **Hydro Modify** to save the Hydro DEM and synthetic network. This
-review produces the smoothed continuous Stream path; Reach division and saved
-Flowline candidates are not part of the current preview.
+review produces the smoothed continuous Stream path. The current choice is
+session-only; Reach division and saved Flowline candidates are not part of the
+current preview.
 
 Hover over cutlines to see their numbers. A line can be inside the rectangular
 DEM extent but cross only NoData, especially outside the Stream mask. Apply

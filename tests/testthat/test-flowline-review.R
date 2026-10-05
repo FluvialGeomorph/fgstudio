@@ -32,8 +32,10 @@ test_that("Flowline review automatically selects, smooths and displays one path"
     session$setInputs(stream="s1")
     expect_identical(review()$result$selected_segments$stream_line_id,c("B","T"))
     expect_s3_class(review()$result$raw_flowline,"sf")
+    expect_identical(names(review()$result$smoothing_candidates),as.character(2:5))
     expect_true(review()$result$flowline$smoothing_valid)
     expect_equal(review()$result$flowline$smoothing_bandwidth,2)
+    expect_equal(selected_flowline()$smoothing_bandwidth,2)
     expect_match(notice(),"selected and smoothed automatically")
     widget <- jsonlite::fromJSON(output$map,simplifyVector=FALSE)
     calls <- widget$x$calls
@@ -42,6 +44,11 @@ test_that("Flowline review automatically selects, smooths and displays one path"
     expect_match(output$summary$html,"Maximum smoothing displacement",fixed=TRUE)
     expect_false(grepl("type=\"checkbox\"|type=\"radio\"|<select",
       output$summary$html,ignore.case=TRUE))
+    original <- review()$result$raw_flowline
+    session$setInputs(bandwidth="5")
+    expect_equal(selected_flowline()$smoothing_bandwidth,5)
+    expect_identical(review()$result$raw_flowline,original)
+    expect_match(output$summary$html,"5 metre bandwidth",fixed=TRUE)
   })
 })
 
