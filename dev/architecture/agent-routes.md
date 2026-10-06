@@ -4,6 +4,11 @@ For synthetic stream extraction, start with the [project plan](../goals/project-
 Article 15 and the [candidate schema](../schemas/synthetic-stream-network.md).
 The current handoff remains historical orientation, not the implementation route.
 
+For any vector output historically produced by `FluvialGeomorph-toolbox`, read
+the [legacy-derived-feature workflow](../workflows/legacy-derived-feature-compatibility.md)
+before the feature row below. Its compatibility profile is a required producer
+contract even when the future normalized FGDB base schema differs.
+
 For project purpose or audience, read `vignettes/fgstudio.Rmd`; for analyst
 operations, `vignettes/guide-study-workflow.Rmd`. These orient the task without
 replacing the implementation routes below. Article 01 explains the context-routing
@@ -27,6 +32,7 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 | Saved DEM publication / Stream-tab maps / bounded real-data diagnostics | 14; tools | study_dem_store.R, terrain_mosaic_trial.R | test-study-dem-store.R, test-terrain-mosaic-trial.R | External GeoTIFF editions; backend scientific checks remain in fluvgeo |
 | Synthetic stream extraction / review / reopening | 15 | hydro_modify.R, stream_network_store.R, study_store.R | test-hydro-module.R, test-stream-network-store.R | locate_stream_outlet, extract_synthetic_stream_network; compact Priority-Flood/D8 implementation and tests remain in fluvgeo |
 | Automatic Flowline selection / Reach division / immutable save-reopen | 16 | flowline_review.R, flowline_store.R, study_store.R, survey_event_settings.R, mod_study.R | test-flowline-review.R, test-flowline-store.R | select_stream_mainstem, smooth_flowline, derive_reach_flowlines and flowline(direction="preserve"); exact Study/Event/Hydro/network/reference/Reach-mapping fingerprints; local candidate is not governed FGDB publication |
+| Flowline Points or changes to a legacy-derived vector schema | 17 when implemented; compatibility workflow first | flowline_points module/store when implemented; affected producer/store | affected app contract tests plus sibling constructor and `check_*` tests | FGDB legacy-derived-feature compatibility profile; original ArcPy producer; Technical Manual data dictionary; representative legacy data; explicit `fluvgeo` replacement profile |
 | Complete source DEM paging / uncapped transfers / saved availability across refresh | 06 | stream_dem_files.R, stream_dem_download.R, study_store.R | test-stream-dem-files.R, test-stream-dem-download.R | discover_stream_dem_files; run_stream_dem_download; immutable receipts retained; history is not analysis binding |
 | Saved DEMs hidden after metadata revision; Survey Event terminology and suggested choices | 06, 10 | stream_dem_files.R, survey_event_settings.R, study_store.R | test-stream-dem-files.R, test-survey-event-settings.R | Existing Stream geometry/collection compatibility; legacy group API stays internal |
 | Unmounted source-review annotations, priority and overlap rule | tools | terrain_source_review.R, stream_dem_preflight.R, study_store.R | test-terrain-source-review.R | App-owned annotations; terrain-source-review schema; no processing authorization |

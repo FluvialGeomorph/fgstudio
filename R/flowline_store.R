@@ -33,6 +33,21 @@ study_flowline_store <- function(context_path, hydro_read,
     path <- file.path(candidate$path, "flowline")
     fs::dir_create(path); path
   }
+  legacy_flowline_fields <- function(flowlines) {
+    if (!inherits(flowlines, "sf") || !nrow(flowlines) ||
+        !all(c("ReachName", "reach_order") %in% names(flowlines)))
+      stop("Saved Reach Flowlines are missing required identity and order fields.")
+    flowlines <- flowlines[order(flowlines$reach_order), ]
+    if (!"length_m" %in% names(flowlines))
+      flowlines$length_m <- as.numeric(units::set_units(
+        sf::st_length(flowlines), "m"))
+    if (!"from_measure" %in% names(flowlines))
+      flowlines$from_measure <- c(0,
+        head(cumsum(flowlines$length_m / 1000), -1L))
+    if (!"to_measure" %in% names(flowlines))
+      flowlines$to_measure <- cumsum(flowlines$length_m / 1000)
+    flowlines
+  }
   load_revision <- function(directory, result) {
     path <- file.path(directory, result$files$geopackage)
     if (!file.exists(path) || !identical(file_hash(path), result$files$sha256))
@@ -45,7 +60,9 @@ study_flowline_store <- function(context_path, hydro_read,
     result$path <- directory
     result$raw_flowline <- sf::st_read(path, layer = "raw_stream_flowline", quiet = TRUE)
     result$stream_flowline <- sf::st_read(path, layer = "smoothed_stream_flowline", quiet = TRUE)
-    result$flowlines <- sf::st_read(path, layer = "reach_flowlines", quiet = TRUE)
+    result$flowlines <- legacy_flowline_fields(sf::st_read(path,
+      layer = if ("flowline" %in% layers) "flowline" else "reach_flowlines",
+      quiet = TRUE))
     result$selected_segments <- sf::st_read(path, layer = "selected_network_segments", quiet = TRUE)
     result$boundaries <- if ("reach_boundaries" %in% layers)
       sf::st_read(path, layer = "reach_boundaries", quiet = TRUE) else
@@ -90,14 +107,18 @@ study_flowline_store <- function(context_path, hydro_read,
     complete <- FALSE
     on.exit(if (!complete && dir.exists(directory)) unlink(directory, recursive = TRUE),
       add = TRUE)
+    flowlines <- legacy_flowline_fields(flowlines)
+    for (i in seq_len(nrow(flowlines)))
+      fluvgeo::check_flowline(flowlines[i, ], step = "profile_points")
     path <- file.path(directory, "flowlines.gpkg")
     sf::st_write(raw_flowline, path, layer = "raw_stream_flowline", quiet = TRUE)
     sf::st_write(stream_flowline, path, layer = "smoothed_stream_flowline", quiet = TRUE)
     sf::st_write(flowlines, path, layer = "reach_flowlines", quiet = TRUE)
+    sf::st_write(flowlines, path, layer = "flowline", quiet = TRUE)
     sf::st_write(selected_segments, path, layer = "selected_network_segments", quiet = TRUE)
     if (nrow(boundaries))
       sf::st_write(boundaries, path, layer = "reach_boundaries", quiet = TRUE)
-    result <- list(schema = "FGSTUDIO_FLOWLINE_CANDIDATE_1", inputs = fingerprint,
+    result <- list(schema = "FGSTUDIO_FLOWLINE_CANDIDATE_2", inputs = fingerprint,
       smoothing_bandwidth = as.numeric(bandwidth), reach_count = nrow(flowlines),
       reach_ids = as.character(flowlines$reach_id),
       created_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),

@@ -11,6 +11,11 @@ with local data and preserve an explicit storage boundary for later FGDB access.
 The owner approved concrete, reviewable increments, beginning with a saved Study
 Area draft. Progress is governed by use and owner feedback, not an agent-selected
 sequence of ArcPy replacements. Existing applications/toolboxes are unchanged.
+When an owner-selected increment overlaps a legacy ArcPy-derived feature class,
+however, FG Studio is the grounded workflow used to prove the open-source
+`fluvgeo` replacement and inform unfinished FGDB interoperability design. That
+replacement preserves the legacy output contract; implementation evidence flows
+back into FGDB without automatically modifying the production toolbox.
 
 Local means the app host, not the browser device. This first version is a trusted
 single-analyst workstation app, not an authenticated service. Shared deployment,

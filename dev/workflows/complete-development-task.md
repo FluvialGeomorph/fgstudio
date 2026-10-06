@@ -7,7 +7,10 @@ A requested repository change is ready to implement.
 ## Procedure
 
 1. Read the workflow named by the applicable `AGENTS.md` route before choosing the implementation or tools.
-2. Confirm the requested scope and current Git evidence.
+2. Confirm the requested scope and current Git evidence. If the change creates
+   or modifies a vector dataset historically produced by
+   `FluvialGeomorph-toolbox`, complete the legacy-derived-feature compatibility
+   workflow before choosing the implementation.
 3. Define the usable outcome and its acceptance evidence, then implement the cohesive change needed to deliver it while preserving unrelated work. Minimize unnecessary code and scope, not the functionality delivered per turn.
 4. Run checks proportionate to risk.
 5. Edit the existing artifact that owns the changed requirement or procedure; remove conflicting guidance rather than appending a completion narrative. For changed data inputs/outputs, ownership or persistence, apply the function/data completion check in `developer-documentation.md` and update the affected mappings in the same task.
@@ -17,6 +20,12 @@ A requested repository change is ready to implement.
 ## Completion evidence
 
 Report changed behavior, verification performed, remaining risks, and any durable artifacts updated.
+
+For a legacy-tool replacement, completion evidence also identifies the exact
+legacy output profile, the ArcPy/manual/sample/downstream evidence inspected,
+the `fluvgeo::check_*` and constructor tests enforcing it, and every unresolved
+compatibility gap. Do not call an ArcPy capability replaced while known schema,
+unit, geometry, or downstream-consumer gaps remain.
 
 ## Delivery cadence
 

@@ -27,8 +27,14 @@ test_that("Flowline candidates are immutable and bound to exact inputs", {
 
   saved <- adapter$flowline_publish(record,selection,segments,2,raw,stream,
     flowlines,boundaries,network)
-  expect_identical(saved$schema,"FGSTUDIO_FLOWLINE_CANDIDATE_1")
+  expect_identical(saved$schema,"FGSTUDIO_FLOWLINE_CANDIDATE_2")
   expect_equal(nrow(saved$flowlines),1L)
+  expect_true(all(c("ReachName","from_measure","to_measure") %in%
+    names(saved$flowlines)))
+  expect_equal(saved$flowlines$from_measure,0)
+  expect_equal(saved$flowlines$to_measure,.01)
+  expect_true("flowline" %in% sf::st_layers(
+    file.path(saved$path,saved$files$geopackage))$name)
   expect_identical(adapter$flowline_read(record,selection,segments,2)$reach_ids,"reach")
   expect_null(adapter$flowline_read(record,selection,segments,3))
 

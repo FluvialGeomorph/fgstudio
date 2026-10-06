@@ -5,10 +5,21 @@
 Let a browser user define a study and progress to desktop-equivalent L1 analysis
 with less installation and conceptual overhead. Work backward from L1 Report
 inputs, reuse fluvgeo, and design QGIS views alongside the Shiny workflow.
-FG Studio is independent of ohwm2; neither existing apps nor the production
-ArcGIS toolbox are migration test targets. The owner reviews working increments
-and chooses the next functional step. Do not infer authorization for new terrain
-or scientific operations from this roadmap.
+FG Studio is also the grounded implementation loop for replacing legacy ArcPy
+geospatial tools with open-source `fluvgeo` functions. Replacement outputs retain
+the legacy derived feature-class contracts so historical projects and downstream
+tools remain usable. Accepted FGDB invariants constrain development, while
+verified GeoPackage/interoperability requirements discovered here flow back into
+the still-developing FGDB specification. Apply the
+[legacy-derived-feature workflow](../workflows/legacy-derived-feature-compatibility.md)
+before changing a historically produced vector dataset.
+FG Studio is independent of `ohwm2` and does not deploy changes into the
+production ArcGIS toolbox. Nevertheless, existing R-client behavior and the
+ArcPy tools' derived feature-class contracts are mandatory compatibility
+evidence for replacement functions. Inspect those repositories without assuming
+authorization to modify or migrate their production workflows. The owner reviews
+working increments and chooses the next functional step. Do not infer
+authorization for new terrain or scientific operations from this roadmap.
 
 Owner clarification: deliver cohesive, usable functionality per implementation
 turn, including the necessary backend integration and focused verification;
@@ -191,8 +202,11 @@ reference and locally stretched Hydro DEM. The current real-data integration
 produces five mainstem, three east-tributary and three west-tributary Flowlines,
 with exact shared endpoints. Immutable local candidates reopen only while their
 Study, Survey Event, Hydro DEM, Stream Network, reference and Reach mappings still
-match. This completes local Flowline creation. Proceed next to Flowline Points;
-keep stationing calibration,
+match. This completes the analyst-facing local Flowline selection and save/reopen
+workflow. Its portable replacement output must additionally retain the legacy
+`flowline` layer and `ReachName`, `from_measure`, and `to_measure` fields under
+the FGDB compatibility profile. Proceed next to Flowline Points only through
+that compatibility gate; keep governed stationing calibration,
 field thalweg import, governed FGDB publication, and desktop/QGIS migration
 outside this increment.
 

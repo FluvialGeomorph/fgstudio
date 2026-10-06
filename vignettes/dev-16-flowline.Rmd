@@ -95,7 +95,8 @@ Flowline Points workflow.
 | Viewport elevation/hillshade | `prepare_hydro_dem_view()` | Regenerable session display from the Hydro GeoTIFF; analytical terrain is unchanged |
 
 `flowlines.gpkg` contains `raw_stream_flowline`, `smoothed_stream_flowline`,
-`reach_flowlines` and `selected_network_segments`; `reach_boundaries` is present
+internal `reach_flowlines`, legacy-compatible `flowline`, and
+`selected_network_segments`; `reach_boundaries` is present
 when the Stream has more than one Reach. The result index and matching JSON record
 the schema, selected bandwidth, Reach IDs, timestamp, GeoPackage hash and exact
 input fingerprint. That fingerprint covers the Study context and event-setting
@@ -104,12 +105,22 @@ reference hash and serialized Reach-mapping hash. A `PENDING` marker prevents an
 incomplete directory from being treated as published. The store verifies the
 GeoPackage hash and required layers before returning a saved candidate.
 
+The `flowline` layer preserves the legacy production fields `ReachName`,
+`from_measure`, and `to_measure`; measures are continuous kilometres upstream
+from the selected Stream outlet. Modern Reach identity, order and explicit
+length fields are additive. These are local candidate measures until a governed
+FGDB longitudinal frame and calibration exist. Older local candidate revisions
+without the compatibility layer remain readable and receive the same fields in
+memory; they are not rewritten.
+
 The GeoPackage features retain selection, smoothing, direction and source-line
 attributes produced by the backend. The local result index does not create
 governed `flowline_id`, `survey_event_id`, Dataset Edition or acceptance records,
 and it does not preserve every unsaved alternative route or smoothing candidate.
 Those distinctions prevent local preparation evidence from being mistaken for
-the draft FGDB Flowline contract.
+the draft normalized FGDB Flowline contract while retaining the required legacy
+producer schema. See the legacy-derived-feature compatibility workflow and FGDB
+profile before changing this layer.
 
 ## Verification and maintenance routes
 

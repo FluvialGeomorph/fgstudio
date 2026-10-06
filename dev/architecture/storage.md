@@ -41,11 +41,18 @@ Flowline candidates are another local preparation layer, stored beneath the
 exact synthetic-network revision in `flowline/<revision>`. A completed immutable
 revision contains `flowlines.gpkg`, `result.rds` and `provenance.json`.
 The GeoPackage holds `raw_stream_flowline`, `smoothed_stream_flowline`,
-`reach_flowlines`, `selected_network_segments` and, when applicable,
+internal `reach_flowlines`, legacy-compatible `flowline`,
+`selected_network_segments` and, when applicable,
 `reach_boundaries`. `study_flowline_store()` binds the candidate to hashes of the
 Study context, local event setting, Hydro output, network GeoPackage, retained
 reference and Reach mapping. Its `PENDING` marker makes incomplete directories
 unreadable; reopen also verifies the saved GeoPackage hash and required layers.
+
+The `flowline` layer retains exact legacy `ReachName`, `from_measure`, and
+`to_measure` fields with kilometer measures. Additive Reach IDs/order and method
+evidence support the open workflow. This portable producer contract is distinct
+from the future normalized FGDB base table; neither may be used to erase the
+other's requirements.
 
 These candidates are complete inputs for the local Flowline Points step but are
 not governed FGDB Flowlines. The store deliberately creates no `flowline_id`,

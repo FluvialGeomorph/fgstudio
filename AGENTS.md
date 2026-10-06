@@ -10,6 +10,17 @@
 - Keep this file concise; route detailed knowledge into maintained artifacts under `dev/`.
 - Preserve unrelated user changes and keep work within the requested repository scope.
 - Distinguish verified evidence, reasonable inference, and unknowns.
+- Treat `fgstudio` as the implementation-first proving ground for open-source
+  `fluvgeo` replacements of legacy `FluvialGeomorph-toolbox` ArcPy tools. Any
+  historically produced vector output must preserve its legacy entity/layer and
+  field contract while remaining aligned with FGDB roll-up. Additions are
+  allowed; removal, renaming, repurposing, capitalization changes, or unit
+  changes require an explicit reviewed migration decision.
+- FGDB guidance and FG Studio implementation inform each other. Follow accepted
+  FGDB invariants, but route grounded GeoPackage/interoperability requirements
+  discovered in FG Studio back to the owning FGDB contract. Never assume a draft
+  FGDB physical schema is complete, and never promote a local app choice without
+  that reconciliation.
 - Before implementation, read the workflow named by the matching route and use it to choose the change; finding or linking it is not sufficient.
 - For every development task, read `dev/workflows/complete-development-task.md`. Deliver a usable outcome within the authorized scope; routine implementation, integration and verification steps are not separate owner handoffs.
 
@@ -22,6 +33,11 @@
 - Developer-documentation changes: `dev/workflows/developer-documentation.md` and `dev/decisions/adr-0006-dual-mode-developer-documentation.md`.
 - Shiny/session/storage boundaries: `dev/architecture/design.md`
 - Data entities, ownership, persistence or function inputs/outputs: `dev/architecture/storage.md` and the function/data maintenance requirements in `dev/workflows/developer-documentation.md`.
+- New or changed derived vector feature classes: first read the workspace legacy-
+  replacement rule, `dev/workflows/legacy-derived-feature-compatibility.md`, the
+  applicable FGDB compatibility profile, the legacy ArcPy producer, and the
+  Technical Manual data dictionary. Verify the matching `fluvgeo::check_*`
+  contract and downstream consumers before implementation.
 - Raster processing design, implementation, review, or testing: read `dev/workflows/r-spatial.md` for scientific authority, native GIS operations, large-data execution, and Shiny integration.
 - Architecture, dependencies, or ownership boundaries: `dev/architecture/`
 - Consequential and durable choices: `dev/decisions/`

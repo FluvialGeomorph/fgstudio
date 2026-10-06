@@ -44,6 +44,12 @@ operation tables in the workflow articles. Keep internal staging/revision detail
 in schemas. Do not promote draft adapters or local artifacts to governed FGDB
 objects. Verify mappings against FGDB contracts and actual readers/writers.
 
+For a dataset historically produced by `FluvialGeomorph-toolbox`, also apply
+`legacy-derived-feature-compatibility.md`. Document the legacy feature-class/
+layer name and fields as the production output contract, not merely as optional
+aliases. Keep that contract distinct from a normalized future FGDB base table;
+link the applicable compatibility profile and identify additive fields clearly.
+
 ### Completion check
 
 For an affected operation, a developer must be able to answer from the maintained
@@ -55,6 +61,9 @@ article and crosswalk:
   transient output, and which reader/writer implements that boundary?
 - What is implemented, what is intended, and which FGDB binding remains unresolved?
 - Does the change preserve applicable legacy representations and provenance?
+- If it replaces an ArcPy output, are its exact legacy names, capitalization,
+  types, units and meanings still present, and which validator/test enforces
+  them?
 
 Update `vignettes/storage-model.Rmd` when a shared mapping changes and the affected
 article's Data objects and storage table when its operation changes. Maintain
