@@ -43,7 +43,10 @@ no manual tributary pruning is required. This is currently a transient
 Stream-scale preview until the analyst chooses **Save Reach Flowlines**. Saving
 divides the path across the current Reaches and retains an immutable local
 candidate with exact-input fingerprints. Local Flowline creation is complete;
-Flowline Points is the next workflow step.
+Flowline Points now consumes every exact Stream candidate and Hydro DEM, derives
+tributary offsets at their downstream confluences, creates one Study-wide
+one-meter-default kilometer profile with the complete legacy field contract,
+and saves an immutable local result for map/profile review.
 The intended continuation is shared analysis and reports that another analyst
 or customer can review without reconstructing the originating GIS session.
 
@@ -102,6 +105,7 @@ choices as scope and evidence develop; this is not a rigid wizard.
 | Hydro-modify terrain | Saved cutlines and a derived DEM linked to its exact source and method | Map inspection, cutline editing/application, reopening and before/after review implemented locally |
 | Extract a synthetic stream network | Contributing area, explicit channel threshold and a saved network linked to its DEM | Implemented locally with immutable Hydro-revision binding |
 | Create Reach Flowlines | Automatic reference-constrained mainstem selection, selectable smoothing, deterministic Reach division and local save/reopen | Implemented locally; governed FGDB publication remains separate |
+| Create Flowline Points | Terrain-sampled point profile across all connected Study Area Streams and ordered Reaches, referenced to one outlet with exact legacy fields and explicit units | Implemented locally for current/base events at one-meter default spacing; comparison-event calibration and governed FGDB publication remain separate |
 | Analyze and report | Reach-level geometry evidence and a reviewable explanation of the study and its terrain | Shared backend capabilities and reporting designs inform the destination; app execution/report delivery remain future work |
 | Govern and share accepted content | Qualified enterprise records and relationships | Eventual FGDB integration; no Enterprise connection in this app |
 

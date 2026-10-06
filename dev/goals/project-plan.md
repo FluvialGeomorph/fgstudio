@@ -6,7 +6,14 @@ Let a browser user define a study and progress to desktop-equivalent L1 analysis
 with less installation and conceptual overhead. Work backward from L1 Report
 inputs, reuse fluvgeo, and design QGIS views alongside the Shiny workflow.
 FG Studio is also the grounded implementation loop for replacing legacy ArcPy
-geospatial tools with open-source `fluvgeo` functions. Replacement outputs retain
+geospatial tools with open-source `fluvgeo` functions. It builds on the
+successful `ohwm2` refactoring strategy that already moved reusable spatial work
+into `fluvgeo` for Shiny use. `ohwm2` used a manually digitized Flowline as an
+expedient entry point and already drove `flowline_points` and downstream
+integration. FG Studio does not originate or replace that precedent: it closes
+the missing upstream derivation gap and qualifies the existing functions against
+the complete workflow.
+Replacement outputs retain
 the legacy derived feature-class contracts so historical projects and downstream
 tools remain usable. Accepted FGDB invariants constrain development, while
 verified GeoPackage/interoperability requirements discovered here flow back into
@@ -20,6 +27,15 @@ evidence for replacement functions. Inspect those repositories without assuming
 authorization to modify or migrate their production workflows. The owner reviews
 working increments and chooses the next functional step. Do not infer
 authorization for new terrain or scientific operations from this roadmap.
+
+Advance through the L1, L2, and L3 sequence documented by the User Manual, one
+cohesive analyst outcome at a time. This is a workflow-order strategy, not a
+one-for-one script port. For each increment, identify which historical inputs
+express real scientific intent, automate the rest with deterministic defaults,
+add fail-closed integrity checks, and keep reusable logic in `fluvgeo`. The
+long-term desktop target is thin `FluvialGeomorph-toolbox` orchestration of the
+same functions with no ArcPy derivation dependency. Update FGDB contracts with
+the portable representation and interoperability evidence learned here.
 
 Owner clarification: deliver cohesive, usable functionality per implementation
 turn, including the necessary backend integration and focused verification;
@@ -209,6 +225,31 @@ the FGDB compatibility profile. Proceed next to Flowline Points only through
 that compatibility gate; keep governed stationing calibration,
 field thalweg import, governed FGDB publication, and desktop/QGIS migration
 outside this increment.
+
+## Flowline Points: current/base-event increment complete
+
+The User Manual's **Create Flowline Points** step is now implemented for the
+current/base-event case. This was a gap-closing increment around the existing
+`fluvgeo::flowline_points()` capability, not a new implementation from scratch.
+The durable feature record is
+[Flowline Points from saved Reach Flowlines](../features/flowline-points.md).
+The completed audit and implementation automatically consume the exact saved
+Flowlines and Hydro DEMs for every included Stream, identify the one Study
+outlet and tributary confluences from prior Stream Definition, create continuous
+upstream-increasing kilometer stationing across the connected Study Area at a
+default one-meter spacing, sample elevation, review the combined profile, and
+save/reopen a compatible `flowline_points` layer plus connection evidence. They preserve
+`ReachName`, `POINT_X`, `POINT_Y`, `POINT_M`, `POINT_M_uncalibrated`,
+`calibration_diff`, `Z`, and `km_to_mouth` exactly; additive identities and
+provenance are included. Spencer Creek verification places the mainstem at zero,
+the east tributary at 1.523 km, and the west tributary at 7.726 km in the same
+reference frame.
+
+Comparison-event calibration follows within the same feature family when
+multiple eligible governed Survey Events exist. Do not simulate that state in
+the single-event Spencer study. Automate file, field, and tolerance selection
+from saved context while preserving the analyst's explicit base-event and
+comparison-event decision required by the FGDB longitudinal-reference contract.
 
 Resolve routine intermediate steps without separate owner handoffs. Ask only for
 unresolved consequential choices and continue independent authorized work while

@@ -52,6 +52,8 @@ navbar:
           href: articles/dev-15-hydro-modify.html
         - text: "16. Automatic Flowline creation"
           href: articles/dev-16-flowline.html
+        - text: "17. Flowline Points"
+          href: articles/dev-17-flowline-points.html
         - text: Terrain developer tools
           href: articles/terrain-developer-tools.html
 reference:
@@ -86,6 +88,7 @@ articles:
       - dev-14-dem-editions
       - dev-15-hydro-modify
       - dev-16-flowline
+      - dev-17-flowline-points
 
   - title: Developer reference
     desc: Diagnostic and standalone tools outside the application workflow.

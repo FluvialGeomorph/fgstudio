@@ -1,5 +1,17 @@
 function(el, x) {
   var map = this;
+  // Leaflet can be initialized while a workflow tab is hidden. ResizeObserver
+  // corrects the map as soon as its real visible dimensions are available,
+  // without exposing a workflow button for a display lifecycle detail.
+  if (window.ResizeObserver) {
+    if (el.fgResizeObserver) el.fgResizeObserver.disconnect();
+    el.fgResizeObserver = new ResizeObserver(function() {
+      if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+        map.invalidateSize({pan: false});
+      }
+    });
+    el.fgResizeObserver.observe(el);
+  }
   var control = L.control({position: 'bottomleft'});
   control.onAdd = function() {
     var box = L.DomUtil.create('div', 'leaflet-control hydro-opacity');

@@ -11,19 +11,25 @@ flowline_review_ui <- function(id) {
     shiny::uiOutput(ns("status")),
     shiny::uiOutput(ns("summary")),
     shiny::div(class="d-flex gap-2 flex-wrap mb-2",
-      shiny::actionButton(ns("save"),"Save Reach Flowlines",class="btn-success btn-sm"),
-      shiny::actionButton(ns("return_stream"),"Return to Stream",class="btn-outline-secondary btn-sm")),
+      shiny::actionButton(ns("save"),"Save Reach Flowlines",class="btn-success btn-sm")),
     leaflet::leafletOutput(ns("map"),height="650px"),
     shiny::p(class="small","Gold is the automatically selected and smoothed Stream path. Colored lines are the resulting Reach Flowlines, with white dots at shared boundaries. Cyan shows the complete synthetic Stream Network; magenta shows the retained NHDPlusV2 reference. Elevation colors stretch to the current view."))
 }
 
-load_flowline_review <- function(store, selection) {
+resolve_flowline_review_inputs <- function(store,selection) {
   record <- store$hydro_read(selection$key,selection$event,selection$stream,NULL)
   if(is.null(record) || is.null(record$result))
     stop("Apply and save this Stream's Hydro DEM in Hydro Modify first.")
   candidate <- store$stream_network_read(record)
   if(is.null(candidate))
     stop("Extract and save this Stream's synthetic network in Hydro Modify first.")
+  list(record=record,candidate=candidate,key=paste(selection$key,selection$event,
+    selection$stream,selection$path,record$path,candidate$path,sep="\r"))
+}
+
+load_flowline_review <- function(store, selection, inputs=NULL) {
+  if(is.null(inputs)) inputs <- resolve_flowline_review_inputs(store,selection)
+  record <- inputs$record;candidate <- inputs$candidate
   network_path <- file.path(candidate$path,candidate$files$stream_network)
   if(!file.exists(network_path)) stop("The saved synthetic Stream Network is unavailable.")
   network <- sf::st_read(network_path,quiet=TRUE)
@@ -59,7 +65,8 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
     native <- shiny::reactiveVal(FALSE);refreshed <- shiny::reactiveVal(0L)
     view_job <- NULL;view_worker <- NULL;view_dir <- NULL;view_key <- NULL
     worker_ready <- shiny::reactiveVal(FALSE);worker_warming <- FALSE;worker_failed <- FALSE
-    last_view <- NULL;cache <- tempfile("flowline-map-");dir.create(cache)
+    last_view <- NULL;loaded_key <- NULL
+    cache <- tempfile("flowline-map-");dir.create(cache)
 
     selected <- shiny::reactive({
       ctx <- context()
@@ -117,12 +124,16 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
 
     shiny::observeEvent(list(selected(),active()),{
       if(!isTRUE(active())) {stop_view();return()}
-      selection <- selected();review(NULL);last_view <<- NULL;native(FALSE)
+      selection <- selected()
       if(is.null(selection)) return()
-      notice("Selecting the mainstem from the saved Stream Network...")
       tryCatch({
-        value <- load_flowline_review(store,selection)
+        inputs <- resolve_flowline_review_inputs(store,selection)
+        if(identical(inputs$key,loaded_key) && !is.null(review())) return()
+        review(NULL);last_view <<- NULL;native(FALSE)
+        notice("Selecting the mainstem from the saved Stream Network...")
+        value <- load_flowline_review(store,selection,inputs)
         review(value)
+        loaded_key <<- inputs$key
         if(!is.null(value$saved))
           shiny::updateRadioButtons(session,"bandwidth",
             selected=as.character(value$saved$smoothing_bandwidth))
@@ -134,7 +145,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
           nrow(value$result$reach_candidates[["2"]]$flowlines)," Reach Flowlines.",
           if(!is.null(value$saved)) " The latest exact saved candidate was reopened." else ""))
         refreshed(shiny::isolate(refreshed())+1L)
-      },error=function(e) notice(conditionMessage(e)))
+      },error=function(e) {loaded_key <<- NULL;notice(conditionMessage(e))})
     },ignoreNULL=FALSE)
 
     output$map <- leaflet::renderLeaflet({
@@ -263,10 +274,6 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
           if(!is.null(value$saved) && identical(value$saved$smoothing_bandwidth,
             as.numeric(input$bandwidth))) "Saved for these exact inputs" else "Preview - save when satisfied")))
     })
-    fit_stream <- function(){value<-shiny::isolate(review());if(is.null(value))return()
-      b<-flowline_dem_bounds(value$dem);leaflet::fitBounds(leaflet::leafletProxy("map",session),b[1],b[2],b[3],b[4])}
-    shiny::observeEvent(input$return_stream,fit_stream(),ignoreInit=TRUE)
-
     bounds <- shiny::debounce(shiny::reactive(input$map_bounds),350)
     shiny::observe({
       shiny::invalidateLater(200,session)

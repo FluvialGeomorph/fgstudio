@@ -1,0 +1,146 @@
+---
+title: "17. Flowline Points"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{17. Flowline Points}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Purpose and boundary
+
+The Flowline Points step turns exact saved Reach Flowlines into the
+terrain-sampled longitudinal point profile used by later FluvialGeomorph
+analysis. FG Studio automates choices already expressed during Stream and Reach
+definition: the analyst does not select line segments, set direction, choose
+measure fields, or browse for a DEM again.
+
+This implementation qualifies and extends the existing
+`fluvgeo::flowline_points()` path developed through `ohwm2`; it does not replace
+that path. Existing `ohwm2` callers retain their metre `POINT_M` behavior. FG
+Studio calls `study_area_flowline_points()` to obtain the legacy ArcPy-
+replacement profile in kilometers across every connected Stream and ordered
+Reach in one Study Area reference frame.
+
+The present boundary is current/base-event creation and local immutable review.
+Comparison-event calibration, acceptance of an FGDB longitudinal reference
+frame, and governed publication remain later work.
+
+## Function flow
+
+1. `flowline_points_review_server()` resolves the selected Survey Event and
+   every included Stream from the shared study context.
+2. `load_flowline_points_review()` opens each exact saved Hydro revision,
+   Stream segment evidence, and Reach Flowline candidate. Missing prerequisites
+   identify the Stream and route back to the responsible tab.
+3. The create action passes all saved Reach lines, Hydro rasters, and Stream
+   corridors to `fluvgeo::study_area_flowline_points()`. The default maximum
+   spacing is one metre; existing Flowline vertices are retained.
+4. The backend identifies the sole Study outlet, derives each tributary parent
+   from prior Stream Definition, projects tributary outlets onto downstream
+   Flowlines, and propagates confluence measures through the acyclic graph. It
+   samples every point, constructs all legacy fields, and calls
+   `check_flowline_points(..., "fgstudio_replacement")`.
+5. `study_flowline_points_store()` rechecks current inputs, writes an immutable
+   candidate, hashes the GeoPackage, and reopens the result through the same
+   validation boundary used on later sessions.
+6. Stream tabs display the selected Reach lines, bounded point sample, and
+   dynamically stretched Hydro DEM. The longitudinal graph always displays all
+   Study Area Streams and Reaches on their common mouth-based x-axis.
+
+Leaflet can initialize while its tab is hidden and before the map container has
+its final width. A display-only resize observer corrects the map when its visible
+dimensions become available; this browser lifecycle detail does not appear as a
+workflow control.
+
+Changing the advanced spacing input does not rerun sampling. A new candidate is
+created only by the explicit button action. Creation and viewport work expose
+visible progress so a long operation does not appear hung.
+
+## Compatibility profile
+
+The GeoPackage layer name is `flowline_points`. These exact historical fields
+are retained:
+
+- `ReachName`
+- `POINT_X`
+- `POINT_Y`
+- `POINT_M`
+- `POINT_M_uncalibrated`
+- `calibration_diff`
+- `Z`
+
+The existing downstream field `km_to_mouth` is also retained. In the FG Studio
+replacement profile, all measure and calibration fields use kilometers. For an
+uncalibrated base profile, `POINT_M_uncalibrated == POINT_M`,
+`calibration_diff == 0`, and `km_to_mouth == POINT_M`.
+
+Additive fields carry stable Stream and Reach identity/order, the downstream
+Stream, confluence and Stream offsets, distance from each Reach start and Stream
+outlet, station spacing, Study Area origin, frame scope, and explicit units.
+Shared Reach endpoints occur once for each owning Reach with the same measure.
+The validator admits machine-precision roundoff at this equality while rejecting
+a meaningful downstream reversal.
+
+`cross_section()` now uses explicit `POINT_M_units` when supplied. Absence of
+that field retains the established metre assumption, protecting existing
+`ohwm2` behavior; an explicit FG Studio kilometer profile is not multiplied by
+`0.001` a second time.
+
+## Data objects and storage
+
+The operation reads one Study revision, local Survey Event definition, every
+included Stream corridor, Hydro revision, saved Reach Flowline revision, Reach
+mapping, and station spacing. It writes a Study-scoped
+`flowline-points/<revision>` directory containing:
+
+- `flowline-points.gpkg`, layers `flowline_points` and
+  `stream_connections`;
+- `result.rds`, the internal completion/reopen index; and
+- `provenance.json`, the human-readable input and result record.
+
+Study-scoped placement is intentional. The Hydro, Stream Network, and Flowline
+stores already create a deep immutable lineage, and nesting another revision
+there exceeds the 260-character path limit encountered by Windows `fs`/GDAL.
+The candidate remains exactly bound through hashes of the Study, Event, every
+Hydro output and every Flowline GeoPackage plus their revision identities. A
+`PENDING` marker prevents incomplete writes from reopening; the output hash and
+both required layers are verified on read.
+
+This is a durable preparation asset, not an accepted FGDB Dataset Edition or
+longitudinal reference frame. The portable layer contract remains aligned with
+the legacy toolbox while the future FGDB binding is developed.
+
+## Real-data acceptance
+
+The saved Spencer Creek 2019-12 Study was processed through the same backend as
+one connected network:
+
+| Stream | Reaches | Points at 1 m | Start measure | End measure | Connection gap |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Spencer Creek mainstem | 5 | 34,517 | 0.000 km | 20.935 km | outlet |
+| east unnamed trib | 3 | 14,360 | 1.523 km | 10.111 km | 0.166 m |
+| west unnamed trib | 3 | 11,870 | 7.726 km | 14.809 km | 1.910 m |
+
+The 60,747-point result was generated in 13.72 seconds on the development
+workstation. The connections pass the 2.828 m two-cell-diagonal limit for these
+one-meter Hydro DEMs. The combined profile satisfies the replacement validator and
+reopens from immutable storage. Each Stream map limits rendering to a
+deterministic sample of at most 5,000 points; this affects display only, not
+saved content or the full Study Area profile plot.
+
+## Source and test route
+
+- App UI/orchestration: `R/flowline_points_review.R`
+- Persistence: `R/flowline_points_store.R`, composed by `R/study_store.R`
+- Navigation: `R/mod_study.R`
+- App tests: `tests/testthat/test-flowline-points-review.R` and
+  `tests/testthat/test-flowline-points-store.R`
+- Shared producer/validator: `fluvgeo/R/flowline_points.R` and
+  `fluvgeo/R/check_flowline_points.R`
+- Shared regression tests: `test_reach_flowline_points.R`,
+  `test_check_flowline_points.R`, and `test_cross_section.R`
+
+For schema changes, first follow the repository's legacy-derived-feature
+compatibility workflow and the sibling FGDB compatibility profile. New fields
+may be additive; historical fields and meanings are not optional.

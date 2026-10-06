@@ -22,3 +22,9 @@ Describe cohesive user-visible or cross-cutting capabilities here when their beh
 
 - [Stream DEM processing](dem-mosaic-design.md): input, grid, method and output contract.
 - [Terrain execution qualification](terrain-gis-remediation.md): bounded workload measurements and verification limits.
+
+- [Flowline Points](flowline-points.md): implemented current/base-event creation
+  from all saved Study Area Reach Flowlines with one-meter default spacing,
+  automatic outlet/confluence stationing, exact legacy fields, immutable
+  network review candidates, and a staged path to later comparison-event
+  calibration.

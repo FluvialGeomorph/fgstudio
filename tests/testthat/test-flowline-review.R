@@ -20,19 +20,25 @@ flowline_review_fixture <- function(directory) {
     result=list(file="hydro-dem.tif",output_sha256="hydro-sha"))
   candidate <- list(path=network_directory,threshold_ha=1,
     files=list(stream_network="stream-network.gpkg"))
+  segment_reads <- 0L
   store <- list(hydro_read=function(...)record,stream_network_read=function(...)candidate,
-    stream_segments=function(...)list(lines=reference,sha256=paste(rep("a",64),collapse=""),
-      reach_mappings=data.frame(reach_id="r1",selection_id="100",source_id="100")))
-  list(study=study,group=group,store=store,reference=reference)
+    stream_segments=function(...) {
+      segment_reads <<- segment_reads+1L
+      list(lines=reference,sha256=paste(rep("a",64),collapse=""),
+        reach_mappings=data.frame(reach_id="r1",selection_id="100",source_id="100"))
+    })
+  list(study=study,group=group,store=store,reference=reference,
+    segment_reads=function()segment_reads)
 }
 
 test_that("Flowline review automatically selects, smooths and displays one path",{
   fixture <- flowline_review_fixture(withr::local_tempdir())
+  active_state <- shiny::reactiveVal(TRUE)
   context <- list(key="study",path=fixture$study,group_id="event",group_path=fixture$group,
     event_label="2019-12",streams=data.frame(stream_id="s1",stream_name="Stream one"),
     reaches=data.frame(reach_id="r1",stream_id="s1",reach_name="Reach one"))
   shiny::testServer(flowline_review_server,args=list(current=function()list(path=fixture$study),
-    context=function()context,store=fixture$store,active=function()TRUE),{
+    context=function()context,store=fixture$store,active=function()active_state()),{
     expect_identical(selected()$stream,"s1")
     session$setInputs(stream="s1")
     expect_identical(review()$result$selected_segments$stream_line_id,c("B","T"))
@@ -56,6 +62,9 @@ test_that("Flowline review automatically selects, smooths and displays one path"
     expect_equal(selected_flowline()$smoothing_bandwidth,5)
     expect_identical(review()$result$raw_flowline,original)
     expect_match(output$summary$html,"5 metre bandwidth",fixed=TRUE)
+    prepared_reads <- fixture$segment_reads()
+    active_state(FALSE);session$flushReact();active_state(TRUE);session$flushReact()
+    expect_equal(fixture$segment_reads(),prepared_reads)
   })
 })
 

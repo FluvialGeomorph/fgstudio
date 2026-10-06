@@ -11,6 +11,12 @@ The app-wide bslib theme is Bootstrap 5 Bootswatch Flatly. Standard tab navigati
 is used throughout, including the Study Workspace sidebar. Theme colors and tab
 states come from Flatly rather than module-specific CSS overrides.
 
+OpenTopoMap is the default on every interactive map; other offered basemaps are
+analyst-selectable alternatives. Maps correct their dimensions automatically
+when hidden workflow tabs become visible. The delayed app-wide working overlay
+uses the initiating control or active workflow tab to describe the current work
+in analyst language; module status text retains more detailed progress and errors.
+
 ## Session and storage boundaries
 
 `fgstudio_app()` creates the application; `run_app()` supplies the local data root.

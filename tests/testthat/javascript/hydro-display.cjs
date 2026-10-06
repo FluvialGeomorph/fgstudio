@@ -9,17 +9,29 @@ function element() {
     addEventListener(k,v) {this.events[k]=v;}};
 }
 global.document = {createElement: element};
+global.window = {};
+global.ResizeObserver = class {
+  constructor(callback) {this.callback=callback;}
+  observe(el) {this.el=el;el.resizeObserver=this;}
+  disconnect() {this.disconnected=true;}
+};
+global.window.ResizeObserver = global.ResizeObserver;
 global.L = {control: () => ({addTo(map) {map.control=this.onAdd();}}),
   DomUtil: {create: element}, DomEvent: {disableClickPropagation() {}, disableScrollPropagation() {}}};
 const hook = eval('(' + payload.hook + ')');
 const el = element();
 function mount() {
   const panes = {'hydro-elevation':{style:{}},'hydro-hillshade':{style:{}}};
-  const map = {getPane: name => panes[name]};
+  const map = {getPane: name => panes[name],invalidateSize(options) {
+    this.invalidated=options;
+  }};
+  el.offsetWidth=800;el.offsetHeight=600;
   hook.call(map,el,{});
+  el.resizeObserver.callback();
   return {map,panes};
 }
 let {map,panes} = mount();
+assert.deepStrictEqual(map.invalidated,{pan:false});
 const elevation = map.control.children[0].children[1];
 const hill = map.control.children[1].children[1];
 elevation.value='80';elevation.events.input();

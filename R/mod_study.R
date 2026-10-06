@@ -31,7 +31,9 @@ mod_study_ui <- function(id) {
           shiny::actionButton(ns("continue_event"), "Continue to Survey Events", class="btn-primary")),
         shiny::tabPanel("Survey Events",value="Define a Survey Event",survey_event_settings_ui(ns("event_settings"))),
         shiny::tabPanel("Hydro Modify",value="Hydro Modify",hydro_modify_ui(ns("hydro"))),
-        shiny::tabPanel("Flowline",value="Flowline",flowline_review_ui(ns("flowline")))))
+        shiny::tabPanel("Flowline",value="Flowline",flowline_review_ui(ns("flowline"))),
+        shiny::tabPanel("Flowline Points",value="Flowline Points",
+          flowline_points_review_ui(ns("flowline_points")))))
     )
   )
 }
@@ -57,6 +59,8 @@ mod_study_server <- function(id, store) {
       active=function() identical(input$study_task,"Hydro Modify"))
     flowline_review_server("flowline",current,event_settings$context,store,
       active=function() identical(input$study_task,"Flowline"))
+    flowline_points_review_server("flowline_points",current,event_settings$context,
+      store,active=function() identical(input$study_task,"Flowline Points"))
     shiny::observeEvent(input$continue_event,
       shiny::updateTabsetPanel(session,"study_task",selected="Define a Survey Event"),ignoreInit=TRUE)
     analysis_pending <- function() collections$has_pending() || event_settings$has_pending() ||

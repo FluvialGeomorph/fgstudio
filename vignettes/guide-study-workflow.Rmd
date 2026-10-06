@@ -462,8 +462,10 @@ Processing messages appear only while building DEMs or when work is paused or ne
 
 Every interactive map offers **OpenTopoMap** in its upper-right layers control:
 the Study workspace (including boundary, Stream, Reach and drainage exploration),
-Survey Collections/DEM files, and Hydro Modify. The current default basemap
-remains selected until you switch. Basemaps stay below data overlays; OpenTopoMap
+Survey Collections/DEM files, Hydro Modify, Flowline, and Flowline Points.
+**OpenTopoMap is the default basemap**; Imagery and Street map remain available
+where applicable. The selected basemap remains active until you switch. Basemaps
+stay below data overlays; OpenTopoMap
 tiles remain visible when zooming closer for DEM inspection.
 
 ## Inspect channels and draw cutlines
@@ -545,6 +547,38 @@ satisfied**; saving creates another immutable candidate and does not overwrite
 the earlier one. Changed Hydro, network, Stream-reference or Reach-mapping inputs
 require a new save. This is local preparation, not FGDB publication. Flowline
 Points should consume the saved local candidate rather than transient geometry.
+
+## Create Flowline Points
+
+Open **Flowline Points** after saving Reach Flowlines for every Stream. Select
+**Create Study Area Flowline Points**. The default maximum spacing is **1 meter**;
+an advanced spacing control is available, but changing it does not start work
+until you use the create button. FG Studio automatically uses every exact saved
+Reach Flowline and bound Hydro DEM. It finds the one Study Area outlet from the
+existing Stream definitions, derives each tributary's starting station at its
+downstream confluence, retains existing vertices, and samples the DEM elevation
+at every point. No line, Reach, parent Stream, offset, field, or direction
+selection is required.
+
+While creation runs, the app displays progress. Stream tabs change the detailed
+map only: each map shows the colored Reach Flowlines, a red display sample of
+points, its confluence when applicable, and the viewport-stretched Hydro DEM.
+The longitudinal profile always uses every saved Study Area point on one common
+kilometer axis. The summary reports the outlet Stream, Stream/Reach/point counts,
+spacing, measure range, and exact retained legacy fields. Maps automatically
+correct their display dimensions when a hidden workflow tab becomes visible;
+no map-recovery action is required.
+
+Creation saves a new immutable local candidate; it does not overwrite earlier
+candidates. Reopening restores the newest candidate only while the Study,
+Survey Event, every Hydro DEM and Reach Flowline, Stream definitions, and spacing
+still match.
+Changing spacing and creating again saves another candidate. The current output
+is an uncalibrated base profile: `POINT_M`, `POINT_M_uncalibrated`, and
+`km_to_mouth` are identical kilometer measures and `calibration_diff` is zero.
+Those historical fields are intentionally retained for downstream and legacy
+compatibility. Comparison-event calibration and governed FGDB publication are
+later workflow boundaries.
 
 Hover over cutlines to see their numbers. A line can be inside the rectangular
 DEM extent but cross only NoData, especially outside the Stream mask. Apply

@@ -41,8 +41,9 @@ reproduce PAEK vertices.
 
 The complete call and data path is:
 
-1. selecting the **Flowline** tab or another Stream invalidates the module's
-   current review and calls `load_flowline_review()`;
+1. selecting the **Flowline** tab or another Stream resolves the current
+   immutable Hydro/network binding; an unchanged binding reuses the prepared
+   in-session review, while a changed binding calls `load_flowline_review()`;
 2. the adapter uses `hydro_read()`, `stream_network_read()` and
    `stream_segments()` to resolve the exact Hydro DEM, network, reference lines,
    Reach mappings and Reach inventory;

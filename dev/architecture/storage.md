@@ -60,3 +60,24 @@ Reach-owned `survey_event_id`, Dataset Edition or acceptance record. The current
 Spencer event setting is local and must later be reconciled with governed
 Reach-owned Survey Events before enterprise publication. Prior revisions remain
 on disk when inputs or smoothing choice change; only exact matches are current.
+
+Flowline Points candidates are stored at Study scope in
+`flowline-points/<revision>`, rather than beneath the already deep Flowline
+lineage. This keeps paths usable by Windows, `fs`, and GDAL. The location does
+not weaken lineage: `study_flowline_points_store()` fingerprints the exact Study
+and Event files, every included Hydro revision/output, every Flowline
+revision/GeoPackage, and station spacing. Each completed revision contains
+`flowline-points.gpkg` (layers `flowline_points` and `stream_connections`),
+`result.rds`, and `provenance.json`; a `PENDING` marker excludes incomplete
+writes. Reopening verifies the complete Study-wide input fingerprint and output
+hash.
+
+The layer retains the legacy `ReachName`, `POINT_X`, `POINT_Y`, `POINT_M`,
+`POINT_M_uncalibrated`, `calibration_diff`, and `Z` fields and the established
+`km_to_mouth` field. The FG Studio replacement profile declares all four measure
+fields in kilometers. Additive Reach identity/order, local distance, sampling,
+origin, Stream parent/confluence, network-scope, and unit fields do not replace
+that portable contract. Stream corridors determine parentage; only the one
+outlet Stream starts at zero, and tributaries inherit their parent-Flowline
+confluence measure. These are local current/base-event candidates, not accepted
+FGDB longitudinal reference frames.
