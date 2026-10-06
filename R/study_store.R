@@ -523,6 +523,8 @@ local_study_store <- function(data_dir) {
   }
   hydro <- study_hydro_store(context_path)
   network <- study_stream_network_store(context_path,hydro$hydro_read)
+  flowline <- study_flowline_store(context_path,hydro$hydro_read,
+    network$stream_network_read)
   c(list(create = create, read = read, catalog = catalog, save_boundary = save_boundary,
     dem_destination=dem_destination,prepare_dem_download=prepare_dem_download,dem_download=dem_download,
     dem_files=dem_files,save_dem_files=save_dem_files,check_dem_files=check_dem_files,
@@ -540,5 +542,5 @@ local_study_store <- function(data_dir) {
     preview_reach_merge = preview_reach_merge, merge_reaches = merge_reaches,
     rename_feature = rename_feature,preview_reach_split=preview_reach_split,split_reach=split_reach),
     study_dem_store(context_path,acquisition_groups,survey_collections),
-    study_transform_store(transform_request,context_path),hydro,network)
+    study_transform_store(transform_request,context_path),hydro,network,flowline)
 }

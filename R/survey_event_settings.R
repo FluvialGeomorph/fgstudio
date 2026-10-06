@@ -33,7 +33,8 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
       list(key=x$key,path=x$path,selection=selection_path(),group_id=g$settings$group_id,group_path=g$path,
         event_label=paste0(g$settings$year,if(!is.na(g$settings$month)) sprintf("-%02d",g$settings$month) else " (month unknown)"),
         vertical_reference=x$vertical_reference,
-        streams=x$stream_inventory[x$stream_inventory$stream_id %in% g$streams$stream_id,,drop=FALSE])
+        streams=x$stream_inventory[x$stream_inventory$stream_id %in% g$streams$stream_id,,drop=FALSE],
+        reaches=x$reach_inventory[x$reach_inventory$stream_id %in% g$streams$stream_id,,drop=FALSE])
     })
     masks <- event_masks_server("masks",preflight_context,store,
       pending=function() isTRUE(editing()) || selection_pending())

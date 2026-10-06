@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "fgstudio",
-  "package_version": "0.0.0.9083",
+  "package_version": "0.0.0.9084",
   "generator": {
     "pkgnet": "0.6.1",
     "flow": "0.2.0"
@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "8d66170d878e5d32d2d5b4227dbfdaf54154028b39f3e1726abf7973b9dc1413"
+      "sha256": "b3807d9a3606fc12f1da3f03ba82f5aa70adb3195cf76602e74e78d6550bc44f"
     },
     {
       "file": "NAMESPACE",
@@ -42,7 +42,11 @@
     },
     {
       "file": "R/flowline_review.R",
-      "sha256": "af5ce22797a3d452186c2e53de43002b5b9de2dab8ba8d4ca8de471c460e14cd"
+      "sha256": "641972ed3c265ea6f23a52194d0a44c64cccf25fa777c31d663c0507ae7c806c"
+    },
+    {
+      "file": "R/flowline_store.R",
+      "sha256": "76dea6777dfa3d1e92343596f808dbb38c2f934a8dde2be6e8473a98fe847ef8"
     },
     {
       "file": "R/hydro_modify.R",
@@ -146,7 +150,7 @@
     },
     {
       "file": "R/study_store.R",
-      "sha256": "67d4e013d42ce97d6466fe703e7e0aaf5f9018578b6f1b53169ae68bdef489fb"
+      "sha256": "4ef10e2b8bc6a620f2cd7ced10e6f20b7131bac2c5ce5b11774d2090e2f00b33"
     },
     {
       "file": "R/study_transform_store.R",
@@ -162,7 +166,7 @@
     },
     {
       "file": "R/survey_event_settings.R",
-      "sha256": "295613a107b5dd26bdf0c187e5ecd878dd96dc7c597300adb93ffbfe98bbeb97"
+      "sha256": "b6fdf911bb9c3256dfd568cdbca1cb57b646a846faee9ede964eceb0f25abf60"
     },
     {
       "file": "R/terrain_dem_provenance.R",
@@ -458,7 +462,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 252
+          "line": 326
         }
       ]
     },
@@ -468,7 +472,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 45
+          "line": 55
         }
       ]
     },
@@ -488,7 +492,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 39
+          "line": 49
         }
       ]
     },
@@ -708,7 +712,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 19
+          "line": 20
         }
       ]
     },
@@ -1164,6 +1168,16 @@
         {
           "file": "R/study_feature_names.R",
           "line": 2
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::study_flowline_store",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_store.R",
+          "line": 3
         }
       ]
     },
@@ -1688,6 +1702,12 @@
     {
       "from": "fgstudio::local_study_store",
       "to": "fgstudio::study_dem_store",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::local_study_store",
+      "to": "fgstudio::study_flowline_store",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -2686,8 +2706,8 @@
     }
   ],
   "evaluation": {
-    "static_nodes": 127,
-    "static_edges": 156,
+    "static_nodes": 128,
+    "static_edges": 157,
     "reviewed_bridges": 31,
     "storage_closure_detected": false,
     "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]

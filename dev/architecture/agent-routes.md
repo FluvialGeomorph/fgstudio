@@ -26,7 +26,7 @@ reviewed navigation routes, not automatically proven runtime call sequences.
 | Stream DEM queue / same-CRS bilinear resampling / international-foot conversion | 13 | survey_event_dems.R, terrain_dem_request.R, terrain_dem_sources.R, terrain_dem_trial.R | test-survey-event-dems.R, test-terrain-dem-request.R, test-terrain-dem-sources.R, test-terrain-dem-trial.R, test-terrain-dem-resampling.R | mosaic_terrain_tiles(template), mask_terrain_mosaic, terrain_to_international_feet |
 | Saved DEM publication / Stream-tab maps / bounded real-data diagnostics | 14; tools | study_dem_store.R, terrain_mosaic_trial.R | test-study-dem-store.R, test-terrain-mosaic-trial.R | External GeoTIFF editions; backend scientific checks remain in fluvgeo |
 | Synthetic stream extraction / review / reopening | 15 | hydro_modify.R, stream_network_store.R, study_store.R | test-hydro-module.R, test-stream-network-store.R | locate_stream_outlet, extract_synthetic_stream_network; compact Priority-Flood/D8 implementation and tests remain in fluvgeo |
-| Automatic Flowline selection / selectable smoothing / review | 16 | flowline_review.R, mod_study.R | test-flowline-review.R | select_stream_mainstem, smooth_flowline; reads the exact saved network and NHDPlusV2 Stream evidence, precomputes 2–5-map-unit candidates and switches the session display without rerunning terrain |
+| Automatic Flowline selection / Reach division / immutable save-reopen | 16 | flowline_review.R, flowline_store.R, study_store.R, survey_event_settings.R, mod_study.R | test-flowline-review.R, test-flowline-store.R | select_stream_mainstem, smooth_flowline, derive_reach_flowlines and flowline(direction="preserve"); exact Study/Event/Hydro/network/reference/Reach-mapping fingerprints; local candidate is not governed FGDB publication |
 | Complete source DEM paging / uncapped transfers / saved availability across refresh | 06 | stream_dem_files.R, stream_dem_download.R, study_store.R | test-stream-dem-files.R, test-stream-dem-download.R | discover_stream_dem_files; run_stream_dem_download; immutable receipts retained; history is not analysis binding |
 | Saved DEMs hidden after metadata revision; Survey Event terminology and suggested choices | 06, 10 | stream_dem_files.R, survey_event_settings.R, study_store.R | test-stream-dem-files.R, test-survey-event-settings.R | Existing Stream geometry/collection compatibility; legacy group API stays internal |
 | Unmounted source-review annotations, priority and overlap rule | tools | terrain_source_review.R, stream_dem_preflight.R, study_store.R | test-terrain-source-review.R | App-owned annotations; terrain-source-review schema; no processing authorization |
@@ -93,6 +93,16 @@ DEM download review: `R/stream_dem_files.R`, `output$acquisition` summarizes
 checked metadata and saved state. The child `stream_dem_download_server` starts
 the separate transfer/verification worker; article 06
 explains missing sizes/resolution and Stream-versus-Study-Area search scope.
+
+Flowline creation: `flowline_review_server` resolves the active local event
+setting and Stream, then `load_flowline_review` calls the store readers and the
+three `{fluvgeo}` preparation functions. **Save Reach Flowlines** calls
+`store$flowline_publish`, a closure from `study_flowline_store`, which writes one
+immutable candidate beneath the exact network revision and rereads it only after
+the `PENDING` marker is removed. `flowline_read` scans completed revisions newest
+first and returns only an exact input match. Article 16 explains the layer set,
+fingerprints, reactive smoothing switch and FGDB boundary. Tests:
+`test-flowline-review.R`, `test-flowline-store.R`, plus the named backend tests.
 
 `reach_split_server` → `store$split_reach` (returned closure) → local `revise`
 → function argument `writer=fluvgeo::split_study_reach` → `read` → `on_saved`

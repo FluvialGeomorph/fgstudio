@@ -527,15 +527,24 @@ choice swaps the precomputed gold line and diagnostics immediately; it does not
 repeat terrain processing or mainstem selection.
 The complete network remains visible in muted cyan and the saved reference in
 dashed magenta. Pan and zoom to compare all three against the locally stretched
-Hydro DEM and hillshade.
+Hydro DEM and hillshade. Colored lines show the resulting Reach Flowlines and
+white points show their exact shared boundaries.
 
 The summary reports the path length, source-line count, number of routes compared,
 separation from the next reference match, smoothing method, maximum displacement,
-and length change. If prerequisites are missing,
+length change, Reach names and local save state. If prerequisites are missing,
 return to **Hydro Modify** to save the Hydro DEM and synthetic network. This
-review produces the smoothed continuous Stream path. The current choice is
-session-only; Reach division and saved Flowline candidates are not part of the
-current preview.
+review produces the smoothed continuous Stream path and automatically divides it
+using the retained Reach-source transitions. Choose **Save Reach Flowlines** when
+the smoothing candidate is satisfactory. The app writes an immutable local
+candidate containing the raw path, smoothed path, one line per Reach, selected
+network segments, boundaries and exact input fingerprints. Reopening the same
+inputs restores the newest saved candidate and its smoothing choice. Selecting a
+different smoothing strength then returns the display to **Preview - save when
+satisfied**; saving creates another immutable candidate and does not overwrite
+the earlier one. Changed Hydro, network, Stream-reference or Reach-mapping inputs
+require a new save. This is local preparation, not FGDB publication. Flowline
+Points should consume the saved local candidate rather than transient geometry.
 
 Hover over cutlines to see their numbers. A line can be inside the rectangular
 DEM extent but cross only NoData, especially outside the Stream mask. Apply

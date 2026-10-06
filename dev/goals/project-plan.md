@@ -150,17 +150,17 @@ not change FG Studio terrain analysis or its interactive basemap contract. A
 multi-year or multi-provider catalog of sub-metre imagery is deferred as a
 nice-to-have feature rather than extending this completed increment.
 
-## Next feature: automatic Flowline derivation
+## Automatic Flowline derivation: implemented locally
 
 Flowline is the selected feature after the accepted synthetic Stream Network.
 The legacy tool assumed the analyst had already removed tributaries and assigned
-Reach names. FG Studio now performs the first part automatically: its Flowline
-tab selects and displays one smoothed Stream-level path without segment controls.
+Reach names. FG Studio performs that work automatically: its Flowline tab selects
+and displays one smoothed Stream-level path without segment controls.
 It precomputes the historical 2–5-map-unit smoothing candidates, defaults to the
 conservative 2-map-unit result, and lets the analyst switch the displayed
-candidate without rerunning selection or terrain processing. It does not yet
-divide or persist Reach/event-setting
-Flowline candidates.
+candidate without rerunning selection or terrain processing. It divides the
+chosen candidate at ordered retained Reach transitions and persists immutable
+local Reach/event-setting Flowline candidates.
 Follow the canonical backend design in
 [the fluvgeo feature design](../../../fluvgeo/dev/features/stream-network-to-flowline.md)
 and the draft [FGDB Flowline contract](../../../FGDB/dev/schemas/flowline-feature-contract.md).
@@ -168,9 +168,9 @@ and the draft [FGDB Flowline contract](../../../FGDB/dev/schemas/flowline-featur
 The implemented Flowline step opens an exact saved Stream Network revision,
 automatically selects one terrain-derived Stream-level path using retained
 NHDPlusV2 evidence, and displays a bounded candidate from the historical
-2–5-map-unit smoothing range over the Hydro DEM. The remaining feature work will divide that path,
-then save/reopen one candidate for
-every applicable Reach under that event setting. Stream definition already expresses the analyst's
+2–5-map-unit smoothing range over the Hydro DEM, divides that path, and can
+save/reopen one candidate for every applicable Reach under that event setting.
+Stream definition already expresses the analyst's
 choice of Stream, so this step must not ask the analyst to select network heads or
 segments. If the available topology and retained evidence cannot support one
 defensible result, fail with an actionable route back to Stream definition rather
@@ -179,18 +179,22 @@ no governed Reach-owned Survey Event IDs; preserve that fact and do not fabricat
 them. Smoothing and Reach division reuse the saved vector network; they do not
 rerun filling, direction, accumulation, or thresholding.
 
-Synthetic path selection remains separate from the existing
-`fluvgeo::flowline(flowline, reach_name, dem)` preparation function. Pass the one
-assembled line into that established contract so FG Studio gains the DEM-derived
-source while `{ohwm2}` retains its arbitrary user-drawn Flowline workflow without
-behavior or signature changes.
+Synthetic path selection remains separate from the existing `fluvgeo::flowline()`
+preparation function. `derive_reach_flowlines()` splits the chosen Stream-scale
+candidate first, then passes each Reach-owned line and Reach name through that
+contract with `direction="preserve"`. The historical DEM-oriented default and
+arbitrary user-drawn Flowline workflow used by `{ohwm2}` remain unchanged.
 
-The smoothed app review is available for all three Spencer Streams: gold selected
-route, muted cyan network, dashed magenta reference and locally stretched Hydro
-DEM. The next implementation divides the accepted continuous path across all
-eleven current Reaches and persists the local candidates. Keep
-Flowline Points, stationing, field thalweg import, governed FGDB publication,
-and desktop/QGIS migration outside this increment.
+The app review and Reach division are available for all three Spencer Streams:
+gold selected route, colored Reach Flowlines, muted cyan network, dashed magenta
+reference and locally stretched Hydro DEM. The current real-data integration
+produces five mainstem, three east-tributary and three west-tributary Flowlines,
+with exact shared endpoints. Immutable local candidates reopen only while their
+Study, Survey Event, Hydro DEM, Stream Network, reference and Reach mappings still
+match. This completes local Flowline creation. Proceed next to Flowline Points;
+keep stationing calibration,
+field thalweg import, governed FGDB publication, and desktop/QGIS migration
+outside this increment.
 
 Resolve routine intermediate steps without separate owner handoffs. Ask only for
 unresolved consequential choices and continue independent authorized work while

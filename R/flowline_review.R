@@ -4,16 +4,17 @@ flowline_review_ui <- function(id) {
     shiny::p("FG Studio automatically follows the terrain-derived path that best agrees with the Stream you defined, then retains the longest matching head-to-outlet route. Branching tributaries are excluded without another segment-selection step."),
     shiny::uiOutput(ns("streams")),
     shiny::radioButtons(ns("bandwidth"),"Smoothing strength",
-      choices=c("Conservative — 2 m (default)"="2","Moderate — 3 m"="3",
-        "Stronger — 4 m"="4","Most aggressive — 5 m"="5"),
+      choices=c("Conservative - 2 m (default)"="2","Moderate - 3 m"="3",
+        "Stronger - 4 m"="4","Most aggressive - 5 m"="5"),
       selected="2",inline=TRUE),
-    shiny::p(class="small","Choose among the legacy 2–5 map-unit range. This changes only the displayed Flowline candidate; terrain processing and mainstem selection are reused."),
+    shiny::p(class="small","Choose among the legacy 2-5 map-unit range. This changes only the displayed Flowline candidate; terrain processing and mainstem selection are reused."),
     shiny::uiOutput(ns("status")),
     shiny::uiOutput(ns("summary")),
     shiny::div(class="d-flex gap-2 flex-wrap mb-2",
+      shiny::actionButton(ns("save"),"Save Reach Flowlines",class="btn-success btn-sm"),
       shiny::actionButton(ns("return_stream"),"Return to Stream",class="btn-outline-secondary btn-sm")),
     leaflet::leafletOutput(ns("map"),height="650px"),
-    shiny::p(class="small","Gold is the automatically selected and smoothed Flowline. Cyan shows the complete synthetic Stream Network; magenta shows the retained NHDPlusV2 reference. Elevation colors stretch to the current view."))
+    shiny::p(class="small","Gold is the automatically selected and smoothed Stream path. Colored lines are the resulting Reach Flowlines, with white dots at shared boundaries. Cyan shows the complete synthetic Stream Network; magenta shows the retained NHDPlusV2 reference. Elevation colors stretch to the current view."))
 }
 
 load_flowline_review <- function(store, selection) {
@@ -26,14 +27,23 @@ load_flowline_review <- function(store, selection) {
   network_path <- file.path(candidate$path,candidate$files$stream_network)
   if(!file.exists(network_path)) stop("The saved synthetic Stream Network is unavailable.")
   network <- sf::st_read(network_path,quiet=TRUE)
-  reference <- store$stream_segments(selection$key,selection$stream,selection$path)$lines
+  segments <- store$stream_segments(selection$key,selection$stream,selection$path)
+  reference <- segments$lines
   result <- fluvgeo::select_stream_mainstem(network,reference)
   result$raw_flowline <- result$flowline
   result$smoothing_candidates <- stats::setNames(lapply(2:5,function(bandwidth)
     fluvgeo::smooth_flowline(result$raw_flowline,bandwidth=bandwidth)),as.character(2:5))
+  dem_path <- file.path(record$path,record$result$file)
+  dem <- terra::rast(dem_path)
+  division_reference <- sf::st_transform(reference,sf::st_crs(result$raw_flowline))
+  result$reach_candidates <- lapply(result$smoothing_candidates,function(path)
+    fluvgeo::derive_reach_flowlines(result$raw_flowline,path,division_reference,
+      segments$reach_mappings,selection$reaches,dem))
   result$flowline <- result$smoothing_candidates[["2"]]
+  saved <- if(is.function(store$flowline_read))
+    store$flowline_read(record,selection,segments) else NULL
   list(record=record,candidate=candidate,network=network,reference=reference,
-    result=result,dem=file.path(record$path,record$result$file))
+    segments=segments,result=result,dem=dem_path,saved=saved)
 }
 
 flowline_smoothing_candidate <- function(result,bandwidth=2) {
@@ -58,11 +68,17 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
       if(length(stream)!=1L || !stream %in% ctx$streams$stream_id)
         stream <- ctx$streams$stream_id[1]
       list(key=ctx$key,event=ctx$group_id,stream=stream,path=ctx$path,
-        group=ctx$group_path)
+        group=ctx$group_path,reaches=ctx$reaches[ctx$reaches$stream_id==stream,,drop=FALSE])
     })
     selected_flowline <- shiny::reactive({
       value <- review();if(is.null(value)) return(NULL)
       flowline_smoothing_candidate(value$result,input$bandwidth)
+    })
+    selected_reaches <- shiny::reactive({
+      value <- review();if(is.null(value)) return(NULL)
+      key <- as.character(input$bandwidth)[1]
+      if(!key %in% names(value$result$reach_candidates)) key <- "2"
+      value$result$reach_candidates[[key]]
     })
     output$streams <- shiny::renderUI({
       ctx <- context()
@@ -107,11 +123,16 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
       tryCatch({
         value <- load_flowline_review(store,selection)
         review(value)
+        if(!is.null(value$saved))
+          shiny::updateRadioButtons(session,"bandwidth",
+            selected=as.character(value$saved$smoothing_bandwidth))
         path <- flowline_smoothing_candidate(value$result,shiny::isolate(input$bandwidth))
         notice(paste0("Flowline selected and smoothed automatically: ",
           format(round(path$length_m),big.mark=",")," m from ",
           path$source_segment_count," network lines. ",nrow(value$result$candidates),
-          " complete head-to-outlet paths were evaluated."))
+          " complete head-to-outlet paths were evaluated and divided into ",
+          nrow(value$result$reach_candidates[["2"]]$flowlines)," Reach Flowlines.",
+          if(!is.null(value$saved)) " The latest exact saved candidate was reopened." else ""))
         refreshed(shiny::isolate(refreshed())+1L)
       },error=function(e) notice(conditionMessage(e)))
     },ignoreNULL=FALSE)
@@ -131,7 +152,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         add_opentopomap(pane="flowline-basemap") |>
         leaflet::addLayersControl(baseGroups=c("Imagery","Street map","OpenTopoMap"),
           overlayGroups=c("Elevation","Hillshade","Selected Flowline","Synthetic Stream Network",
-            "NHDPlusV2 reference","DEM extent"),
+            "Reach Flowlines","Reach boundaries","NHDPlusV2 reference","DEM extent"),
           options=leaflet::layersControlOptions(collapsed=TRUE),position="topright") |>
         leaflet::addScaleBar(position="bottomleft")
       if(!is.null(value)) {
@@ -140,6 +161,13 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         reference <- sf::st_transform(value$reference,4326)
         path <- sf::st_transform(flowline_smoothing_candidate(value$result,
           shiny::isolate(input$bandwidth)),4326)
+        reach_key <- as.character(shiny::isolate(input$bandwidth))[1]
+        if(!length(reach_key) || is.na(reach_key) ||
+           !reach_key %in% names(value$result$reach_candidates)) reach_key <- "2"
+        divided <- value$result$reach_candidates[[reach_key]]
+        reaches <- sf::st_transform(divided$flowlines,4326)
+        boundaries <- sf::st_transform(divided$boundaries,4326)
+        colors <- grDevices::hcl.colors(max(3,nrow(reaches)),"Dark 3")[seq_len(nrow(reaches))]
         map <- leaflet::fitBounds(map,b[1],b[2],b[3],b[4]) |>
           leaflet::addRectangles(b[1],b[2],b[3],b[4],group="DEM extent",
             color="#e68a00",weight=2,fill=FALSE,options=leaflet::pathOptions(pane="flowline-lines")) |>
@@ -154,33 +182,75 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
           leaflet::addPolylines(data=path,group="Selected Flowline",color="#ffd400",
             weight=7,opacity=1,label=paste0("Automatically selected and smoothed Flowline; ",
               format(round(path$length_m),big.mark=",")," m"),
+            options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines")) |>
+          leaflet::addPolylines(data=reaches,group="Reach Flowlines",color=colors,
+            weight=4,opacity=1,label=paste0(reaches$ReachName," — ",
+              format(round(reaches$length_m),big.mark=",")," m"),
             options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
+        if(nrow(boundaries)) map <- leaflet::addCircleMarkers(map,data=boundaries,
+          group="Reach boundaries",radius=5,color="#222222",weight=2,
+          fillColor="#ffffff",fillOpacity=1,
+          label=paste0("Boundary: ",substr(boundaries$downstream_reach_id,1,8),
+            " / ",substr(boundaries$upstream_reach_id,1,8)),
+          options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
       }
       htmlwidgets::onRender(map,paste(readLines(system.file("www","hydro-display.js",
         package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"))
     })
 
     shiny::observeEvent(input$bandwidth,{
-      path <- selected_flowline();if(is.null(path)) return()
+      path <- selected_flowline();divided <- selected_reaches();if(is.null(path) || is.null(divided)) return()
       display <- sf::st_transform(path,4326)
-      leaflet::leafletProxy("map",session) |>
+      reaches <- sf::st_transform(divided$flowlines,4326)
+      boundaries <- sf::st_transform(divided$boundaries,4326)
+      colors <- grDevices::hcl.colors(max(3,nrow(reaches)),"Dark 3")[seq_len(nrow(reaches))]
+      proxy <- leaflet::leafletProxy("map",session) |>
         leaflet::clearGroup("Selected Flowline") |>
+        leaflet::clearGroup("Reach Flowlines") |>
+        leaflet::clearGroup("Reach boundaries") |>
         leaflet::addPolylines(data=display,group="Selected Flowline",color="#ffd400",
           weight=7,opacity=1,label=paste0("Selected ",path$smoothing_bandwidth,
             " m smoothing candidate; ",format(round(path$length_m),big.mark=",")," m"),
+          options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines")) |>
+        leaflet::addPolylines(data=reaches,group="Reach Flowlines",color=colors,
+          weight=4,opacity=1,label=paste0(reaches$ReachName," — ",
+            format(round(reaches$length_m),big.mark=",")," m"),
           options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
+      if(nrow(boundaries)) leaflet::addCircleMarkers(proxy,data=boundaries,
+        group="Reach boundaries",radius=5,color="#222222",weight=2,
+        fillColor="#ffffff",fillOpacity=1,
+        label="Shared Reach boundary",
+        options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
+    },ignoreInit=TRUE)
+
+    shiny::observeEvent(input$save,{
+      value <- review();selection <- selected();path <- selected_flowline()
+      divided <- selected_reaches()
+      if(is.null(value) || is.null(selection) || is.null(path) || is.null(divided)) return()
+      notice("Saving an immutable local Flowline candidate...")
+      tryCatch({
+        saved <- store$flowline_publish(value$record,selection,value$segments,
+          as.numeric(input$bandwidth),value$result$raw_flowline,path,
+          divided$flowlines,divided$boundaries,value$result$selected_segments)
+        value$saved <- saved;review(value)
+        notice(paste0("Saved ",nrow(saved$flowlines)," Reach Flowline",
+          if(nrow(saved$flowlines)==1) "" else "s",
+          " as an immutable local candidate. Reopening this exact input revision restores it."))
+      },error=function(e) notice(paste("Flowlines were not saved:",conditionMessage(e))))
     },ignoreInit=TRUE)
 
     output$status <- shiny::renderUI(shiny::tagList(
       shiny::p(role="status",notice()),shiny::p(class="small",view_notice()),
       if(view_busy()) shiny::tags$progress(style="width:100%",`aria-label`="Loading Flowline terrain display")))
     output$summary <- shiny::renderUI({
-      value <- review();path <- selected_flowline();if(is.null(value) || is.null(path)) return(NULL)
+      value <- review();path <- selected_flowline();divided <- selected_reaches()
+      if(is.null(value) || is.null(path) || is.null(divided)) return(NULL)
       margin <- if(is.na(path$reference_margin_m)) "Only one complete path" else
         paste0(format(round(path$reference_margin_m,1),big.mark=",")," m")
       compact_table(data.frame(Item=c("Selection","Complete paths compared","Smoothed Flowline length",
         "Source network lines","Reference mismatch","Next-best reference margin",
-        "Smoothing","Maximum smoothing displacement","Length change from raw path"),
+        "Smoothing","Maximum smoothing displacement","Length change from raw path",
+        "Reach Flowlines","Local candidate"),
         Value=c("Automatic reference-constrained longest path",nrow(value$result$candidates),
           paste0(format(round(path$length_m),big.mark=",")," m"),path$source_segment_count,
           paste0(format(round(path$reference_hausdorff_m,1),big.mark=",")," m"),margin,
@@ -188,7 +258,10 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
             path$smoothing_unit," bandwidth",
             if(path$smoothing_bandwidth==2) " (historical default)" else ""),
           paste0(round(path$maximum_displacement,2)," ",path$smoothing_unit),
-          paste0(round(path$length_change_percent,1),"%"))))
+          paste0(round(path$length_change_percent,1),"%"),
+          paste(divided$flowlines$ReachName,collapse="; "),
+          if(!is.null(value$saved) && identical(value$saved$smoothing_bandwidth,
+            as.numeric(input$bandwidth))) "Saved for these exact inputs" else "Preview - save when satisfied")))
     })
     fit_stream <- function(){value<-shiny::isolate(review());if(is.null(value))return()
       b<-flowline_dem_bounds(value$dem);leaflet::fitBounds(leaflet::leafletProxy("map",session),b[1],b[2],b[3],b[4])}
@@ -245,7 +318,8 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
     }
     shiny::observe({shiny::invalidateLater(300,session);poll()})
     session$onSessionEnded(function(){if(!is.null(view_worker))view_worker$kill();unlink(cache,recursive=TRUE)})
-    list(review=review,selected=selected,flowline=selected_flowline,poll=poll)
+    list(review=review,selected=selected,flowline=selected_flowline,
+      reach_flowlines=selected_reaches,poll=poll)
   })
 }
 

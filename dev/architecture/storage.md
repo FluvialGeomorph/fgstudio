@@ -36,3 +36,20 @@ contains routing, fill-depth, direction and accumulation GeoTIFFs,
 provenance. `study_stream_network_store()` rejects reopening or publication when
 the Hydro output SHA-256 no longer matches. Candidates are not accepted FGDB
 `stream_network` content merely because extraction completes.
+
+Flowline candidates are another local preparation layer, stored beneath the
+exact synthetic-network revision in `flowline/<revision>`. A completed immutable
+revision contains `flowlines.gpkg`, `result.rds` and `provenance.json`.
+The GeoPackage holds `raw_stream_flowline`, `smoothed_stream_flowline`,
+`reach_flowlines`, `selected_network_segments` and, when applicable,
+`reach_boundaries`. `study_flowline_store()` binds the candidate to hashes of the
+Study context, local event setting, Hydro output, network GeoPackage, retained
+reference and Reach mapping. Its `PENDING` marker makes incomplete directories
+unreadable; reopen also verifies the saved GeoPackage hash and required layers.
+
+These candidates are complete inputs for the local Flowline Points step but are
+not governed FGDB Flowlines. The store deliberately creates no `flowline_id`,
+Reach-owned `survey_event_id`, Dataset Edition or acceptance record. The current
+Spencer event setting is local and must later be reconciled with governed
+Reach-owned Survey Events before enterprise publication. Prior revisions remain
+on disk when inputs or smoothing choice change; only exact matches are current.

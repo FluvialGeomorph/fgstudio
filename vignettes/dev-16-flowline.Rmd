@@ -1,17 +1,19 @@
 ---
-title: "16. Automatic Flowline selection"
+title: "16. Automatic Flowline creation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{16. Automatic Flowline selection}
+  %\VignetteIndexEntry{16. Automatic Flowline creation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 Flowline follows Hydro Modify in the Study workspace. Opening the tab uses the
-selected Survey Event and Stream, reads the exact saved Hydro revision and its
-current synthetic Stream Network candidate, and selects one raw Stream-level
+selected local Survey Event setting and Stream, reads the exact saved Hydro
+revision and synthetic Stream Network candidate, and selects one raw Stream-level
 path without asking the analyst to choose network heads or segments. Stream
 definition already records that intent.
+
+## From the tab to Reach Flowlines
 
 `flowline_review_server()` resolves the saved inputs through
 `hydro_read()`, `stream_network_read()` and `stream_segments()`. The ordinary
@@ -24,17 +26,31 @@ longest route; stable upstream-cell ordering resolves a remaining exact tie.
 Reference geometry identifies the selected Stream but never supplies output
 coordinates.
 
-The selection result includes one downstream-to-upstream raw `sf` Flowline, the ordered source
-`stream_line_id` rows and every candidate route with length, reference mismatch,
-rank and selection flags. This raw result can enter the existing
-`fluvgeo::flowline(flowline, reach_name, dem)` preparation contract. That function
-continues to accept arbitrary browser-drawn lines for `{ohwm2}`; correctly defined
-projected terrain lines now pass through its historical WGS84/Web Mercator CRS
-repair unchanged. `smooth_flowline()` then applies Gaussian kernel regression at
+The selection result includes one downstream-to-upstream raw `sf` line, the
+ordered source `stream_line_id` rows and every candidate route with length, reference mismatch,
+rank and selection flags. `derive_reach_flowlines()` projects the ordered retained
+Reach transitions onto the raw path, transfers them to the selected smoothed path,
+and passes each divided line through the existing `fluvgeo::flowline()` contract
+with its Reach name. Its explicit topology-preserving mode keeps known network
+direction; the historical DEM-oriented default and arbitrary browser-drawn lines
+used by `{ohwm2}` are unchanged. `smooth_flowline()` applies Gaussian kernel regression at
 2, 3, 4 and 5 map-unit bandwidths, with fixed endpoints, simple/valid geometry
 checks and a maximum-displacement guard equal to each bandwidth. The conservative
 2-map-unit candidate remains the default. This portable method is not claimed to
 reproduce PAEK vertices.
+
+The complete call and data path is:
+
+1. selecting the **Flowline** tab or another Stream invalidates the module's
+   current review and calls `load_flowline_review()`;
+2. the adapter uses `hydro_read()`, `stream_network_read()` and
+   `stream_segments()` to resolve the exact Hydro DEM, network, reference lines,
+   Reach mappings and Reach inventory;
+3. `select_stream_mainstem()`, `smooth_flowline()` and
+   `derive_reach_flowlines()` perform the reusable scientific work in
+   `{fluvgeo}`; and
+4. **Save Reach Flowlines** calls the store's `flowline_publish()` closure,
+   implemented by `study_flowline_store()`, then rereads the published revision.
 
 The app map displays the selected and smoothed path in gold, the complete synthetic
 network in muted cyan and saved NHDPlusV2 evidence in dashed magenta over the
@@ -43,36 +59,69 @@ summary reports the routes evaluated, source-line count, path length, reference
 mismatch, next-best reference margin and smoothing diagnostics. There is no
 manual branch control. The analyst can switch among the four precomputed
 smoothing candidates without rerunning mainstem selection or terrain processing;
-the selected gold line and diagnostics update immediately. This is a review-only
-result: the choice is session-only and no Reach split or candidate publication is
-implemented in this slice. Missing or incompatible prerequisites fail with a route back to
-Hydro Modify instead of inventing geometry.
+the selected gold line, Reach divisions and diagnostics update immediately.
+Colored lines show one
+candidate per Reach and white points show exact shared endpoints. **Save Reach
+Flowlines** publishes the chosen result as a local immutable revision. The
+viewport-stretched elevation display is prepared asynchronously from the saved
+GeoTIFF and is regenerable; it never modifies analytical terrain. Missing Hydro
+or network prerequisites route the analyst back to Hydro Modify. Invalid network
+topology, unsupported Reach mappings, ambiguous boundary projections and changed
+inputs fail explicitly instead of inventing geometry or silently reusing stale
+work.
+
+## Local completion and governance boundary
+
+The screen completes local Flowline creation. A saved candidate contains one
+continuous downstream-to-upstream line per current Reach plus the common raw and
+smoothed Stream paths, selected network segments and boundary evidence. It reopens
+only while the Study context, Survey Event setting, Hydro revision, synthetic
+network, retained reference and Reach mapping fingerprints remain exact. A changed
+input leaves the prior immutable directory intact but excludes it from current
+review. On reopen, the newest exact matching revision is loaded and its smoothing
+bandwidth is selected. Choosing another bandwidth returns the screen to preview
+state; saving it creates another immutable revision rather than changing the old
+one. Enterprise publication and governed Reach-owned Survey Event/Dataset
+Edition identities remain a later boundary and are not required for the local
+Flowline Points workflow.
 
 | Data object / preparation asset | Operation | Storage and ownership |
 | --- | --- | --- |
 | Saved Hydro DEM revision | `hydro_read()` | Existing Hydro-revision external GeoTIFF; read-only |
 | Synthetic Stream Network revision | `stream_network_read()` | Existing Hydro-revision-local `stream-network.gpkg`; read-only |
 | Retained NHDPlusV2 Stream evidence | `stream_segments()` | Hash-linked Stream selection/piece GeoPackage; read-only reference evidence |
-| Automatically selected Stream path | `select_stream_mainstem()` then `smooth_flowline()` at 2–5 map units | Transient raw and four smoothed `sf` results with ordered source-line, candidate-score and smoothing evidence; the displayed choice is not yet a saved or governed Flowline |
+| Automatically selected Stream path | `select_stream_mainstem()` then `smooth_flowline()` at 2–5 map units | Transient raw path, candidate scores and four smoothed `sf` previews; only the chosen smoothing is saved |
+| Reach Flowline candidates | `derive_reach_flowlines()` and `study_flowline_store()` | Immutable network-revision-local `flowline/<revision>/flowlines.gpkg`, `result.rds` and `provenance.json`; local preparation product, not governed FGDB acceptance |
 | Viewport elevation/hillshade | `prepare_hydro_dem_view()` | Regenerable session display from the Hydro GeoTIFF; analytical terrain is unchanged |
 
-On the saved Spencer Creek inputs, the current candidates contain 15, 16 and 15
-complete paths. Selection took 1.38, 0.44 and 0.31 seconds respectively on the
-development workstation. The selected route was also the longest complete route
-for all three Streams. The mainstem and east tributary had next-best Hausdorff
-margins of 447.8 and 475.9 metres. The west tributary's two best reference
-distances tied, and the longer of those routes was selected as specified. These
-measurements qualify the current review examples, not all terrain forms.
+`flowlines.gpkg` contains `raw_stream_flowline`, `smoothed_stream_flowline`,
+`reach_flowlines` and `selected_network_segments`; `reach_boundaries` is present
+when the Stream has more than one Reach. The result index and matching JSON record
+the schema, selected bandwidth, Reach IDs, timestamp, GeoPackage hash and exact
+input fingerprint. That fingerprint covers the Study context and event-setting
+files, Hydro revision/output hash, network revision/GeoPackage hash, retained
+reference hash and serialized Reach-mapping hash. A `PENDING` marker prevents an
+incomplete directory from being treated as published. The store verifies the
+GeoPackage hash and required layers before returning a saved candidate.
 
-The legacy ArcGIS toolbox's stored default is 2 map units, within its documented
-acceptable 2–5 range. Applied as Gaussian bandwidths on the three Spencer paths,
-the 2 m candidates had 0.54–0.57 m maximum displacement and 5.9–6.2 percent
-length reduction. The 5 m candidates had 1.05–1.25 m maximum displacement and
-9.4–10.6 percent length reduction. Endpoints were unchanged and all outputs
-remained valid and simple. Each candidate took 0.14–0.48 seconds per Stream on
-the development workstation.
+The GeoPackage features retain selection, smoothing, direction and source-line
+attributes produced by the backend. The local result index does not create
+governed `flowline_id`, `survey_event_id`, Dataset Edition or acceptance records,
+and it does not preserve every unsaved alternative route or smoothing candidate.
+Those distinctions prevent local preparation evidence from being mistaken for
+the draft FGDB Flowline contract.
 
-Verification routes are `test-flowline-review.R` in FG Studio and
-`test_select_stream_mainstem.R` plus `test_flowline.R` in `{fluvgeo}`. The next
-feature increment divides the accepted continuous Stream path at ordered
-Reach-source boundaries and publishes immutable local candidates.
+## Verification and maintenance routes
+
+Verification starts with `test-flowline-review.R` and `test-flowline-store.R` in
+FG Studio and `test_select_stream_mainstem.R`, `test_smooth_flowline.R`,
+`test_flowline_reaches.R` plus `test_flowline.R` in `{fluvgeo}`. Real Spencer
+integration produces five mainstem, three east-tributary and three west-tributary
+Reach Flowlines, with four, two and two exact shared boundaries respectively.
+These real-data counts verify the current Study configuration; they are not a
+general qualification across terrain forms. If reopening fails, inspect
+`R/flowline_store.R` and its fingerprints first. If selection or smoothing is
+wrong, inspect the corresponding `{fluvgeo}` function and test. If Reach division
+fails, inspect the retained `reach_mappings` and `derive_reach_flowlines()`.
+Flowline Points is the next workflow feature and must consume a saved candidate,
+not transient session geometry.

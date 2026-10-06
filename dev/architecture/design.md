@@ -62,6 +62,12 @@ The map search changes viewport only.
 6. The worker calls fluvgeo crop/merge, mask and international-foot conversion.
    `study_dem_store()` publishes immutable local editions. Display-only Stream
    tabs reopen their own eligible edition.
+7. Hydro Modify saves cutline-adjusted Hydro revisions and derives immutable
+   synthetic Stream Network candidates without changing the source DEM edition.
+8. Flowline reads one exact Hydro/network pair, uses retained NHDPlusV2 evidence
+   to select the intended terrain path, prepares bounded smoothing candidates,
+   divides the chosen path by ordered Reach evidence and saves one immutable
+   local Reach-Flowline candidate revision.
 
 The integrated DEM path requires aligned grids and NAVD88 metre sources with an
 international-foot target. Differing-grid and other vertical operations remain
@@ -85,13 +91,18 @@ annotations are developer facilities, not analyst prerequisites or processing in
 Use [the storage crosswalk](../../vignettes/storage-model.Rmd) to relate operations
 to FGDB entities, GeoPackage feature layers/tables and external GeoTIFF products.
 The intended terrain design processes Stream DEMs and shares explicit editions
-with Reach analyses. FGDB's existing hydro DEM ownership rule requires revision
-for that sharing; exact relationship and delivery bindings remain to be defined.
+with Reach analyses. Synthetic networks and Flowline candidates are immutable
+local children of the exact Hydro/network revisions they consume. FGDB's existing
+hydro DEM ownership rule requires revision for Stream-scale sharing, and local
+Flowline candidates still require governed Reach-owned Survey Event and Dataset
+Edition identities before delivery.
 
 ## Durable data
 
 FGDB ADR-0025 requires filesystem GeoTIFF DEMs and GeoPackage vectors/tables with
-linked metadata. The internal DEM edition RDS index supports local reuse; portable
-folder binding and enterprise transfer remain unfinished. Source originals and
-prior output editions are preserved. Detailed contracts live in the schemas;
-method evidence lives in feature records, not this architecture overview.
+linked metadata. The internal DEM edition RDS index supports local reuse; network
+and Flowline stores add hashed GeoPackage revisions with RDS/JSON indexes.
+Portable folder binding and enterprise transfer remain unfinished. Source
+originals and prior output editions are preserved. Detailed contracts live in
+the schemas; method evidence lives in feature records, not this architecture
+overview.

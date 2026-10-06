@@ -113,7 +113,7 @@ new FGDB domain entity. Preserve the distinction in both code and documentation.
 | Assembled Stream DEM | External Float32 GeoTIFF in international feet on the Event grid | `mosaic_terrain_tiles(template=...)` (same-CRS bilinear resampling) -> `mask_terrain_mosaic()` -> `terrain_to_international_feet()` | Shared Stream terrain consumed by local Hydro Modify; downstream Reach delivery binding remains pending |
 | Local DEM execution evidence | Additive `execution` record inside the edition's `edition.rds`; retained backend result metadata for older editions | `launch_terrain_dem_trial()` captures methods, WKT and software; `study_dem_store()` persists; `terrain_dem_provenance_ui()` reads | Bound to the displayed Stream/Event edition; separate from planned operations and not yet portable FGDB delivery metadata |
 | Synthetic stream candidate | Hydro-revision-local GeoTIFF routing evidence plus `stream-network.gpkg`, outlet record and provenance | `locate_stream_outlet()` and `extract_synthetic_stream_network()` produce; `study_stream_network_store()` publishes/reopens | Historical first-cut vector for analyst review; not accepted governed network content merely because processing succeeds |
-| Automatically selected Stream path | Transient raw and four smoothed `sf` Flowlines plus ordered source-line, candidate-route score and smoothing evidence | `select_stream_mainstem()` derives from the exact synthetic network and retained NHDPlusV2 Stream lines; `smooth_flowline()` computes bounded 2–5-map-unit candidates; `flowline_review_server()` displays the session choice | Review-only preparation result in the current slice; no GeoPackage Flowline candidate or FGDB object is written yet |
+| Local Flowline candidate | Hydro/network-revision-local immutable directory with `flowlines.gpkg`, `result.rds` and `provenance.json`; GeoPackage layers retain raw/smoothed Stream paths, one line per Reach, selected network segments and shared boundaries | `select_stream_mainstem()` and `smooth_flowline()` prepare candidates; `derive_reach_flowlines()` divides the chosen path; `study_flowline_store()` fingerprints, publishes and reopens the local revision | Complete local preparation candidate for Flowline Points; not a governed FGDB Flowline or Dataset Edition until the separate delivery contract is implemented |
 
 Study/Stream terrain may support several Reach Events. FGDB's folder requirements
 allow explicitly associated shared project assets; they do not require copying
@@ -193,12 +193,17 @@ This local preparation result does not complete the governed FGDB hydro DEM or
 portable delivery binding.
 See [Hydro modification](dev-15-hydro-modify.html) for operation and storage routes.
 
-The Flowline tab reads those immutable inputs, derives one transient raw Stream
-path, and computes the historical 2–5-map-unit candidates with 2 as the default.
-Switching candidates changes only transient session display state. It does not
-write a new object, mutate terrain or alter the saved network. See
-[Automatic Flowline selection](dev-16-flowline.html). Reach division and local
-Flowline-candidate persistence remain the next binding.
+The Flowline tab reads those immutable inputs, derives one raw Stream path, and
+computes the historical 2–5-map-unit candidates with 2 as the default. Switching
+candidates changes only transient display state. **Save Reach Flowlines** divides
+the chosen path at retained Reach transitions and writes a new immutable local
+revision without mutating terrain or the saved network. Exact Study, Event, Hydro,
+network, reference and Reach-mapping fingerprints govern reopening. See
+[Automatic Flowline creation](dev-16-flowline.html). The revision contains
+`flowlines.gpkg`, `result.rds` and `provenance.json`; its required layers are the
+raw path, chosen smoothed path, Reach Flowlines and selected network segments,
+with a boundary layer when applicable. Flowline Points can consume
+the saved local Reach candidates; governed FGDB publication remains separate.
 
 Synthetic stream revisions live below that exact Hydro revision. Their result
 record repeats the Hydro output hash, cutline revision, threshold in hectares,

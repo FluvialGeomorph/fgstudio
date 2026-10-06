@@ -54,6 +54,7 @@ cannot be understood by looking only for a top-level function named `create`.
 | Edit Study Area name/Purpose | modal save → `store$rename` / `store$set_purpose` → local `revise` | `fluvgeo::revise_study_context`; new immutable revision |
 | Save drawn boundary | `mod_boundary_server` → `store$save_boundary` | Containment check, then context revision |
 | Rename Stream/Reach | `study_feature_names` → `store$rename_feature` → local `revise` | `fluvgeo::rename_study_feature`; identity and geometry retained |
+| Save Reach Flowlines | Flowline module → `store$flowline_publish` | Exact-input local child revision with GeoPackage geometry and RDS/JSON provenance; no Study context revision or governed FGDB publication |
 
 `revise` accepts a **function-valued writer**. Its default is
 `fluvgeo::revise_study_context`, but Stream and Reach operations inject other
@@ -87,6 +88,14 @@ validation results or previews. Both CRS forms show saved definitions and status
 their local messages distinguish failed validation from a completed save. Test
 `test-study-reload.R` uses a fresh storage adapter and session against saved files.
 
+Some workflow assets have their own immutable revision trees rather than becoming
+Study context layers. Hydro output owns synthetic-network revisions, and each
+network revision owns local Flowline candidate revisions. Opening Flowline
+recomputes the deterministic previews, then `flowline_read()` restores the newest
+candidate whose Study, event setting, Hydro, network, reference and Reach-mapping
+fingerprints all match. A mismatched candidate remains preserved but is not shown
+as current. Article 16 documents this child-asset lifecycle.
+
 Boundary saves reject exclusion of existing child areas; they do not automatically
 move children. Name/Purpose saves do not authorize scientific or geometry changes.
 Stream/Reach rename lists display names for selection but submit stable IDs.
@@ -99,6 +108,7 @@ Stream/Reach rename lists display names for selection but submit stable IDs.
 | Unsaved work lost on task change | `R/mod_boundary.R` | `test-task-navigation.R` |
 | Name save or sorting wrong | `R/study_feature_names.R`, `R/saved_feature_display.R` | `test-feature-names.R`, `test-saved-feature-display.R` |
 | Boundary publication rejected | `store$check_boundary` and fluvgeo containment | `test-boundary.R` |
+| Saved Flowline not reopened or rejected as changed | `R/flowline_store.R`, then Article 16 input bindings | `test-flowline-store.R` |
 
 Test files live under `tests/testthat`. Never start the analyst preview in an R
 process that ran mocked tests. Use `dev/scripts/run-dev.ps1` for a fresh process.
@@ -113,6 +123,7 @@ See [Data objects and local storage](storage-model.html) for the FGDB ownership 
 | Store `create` -> `start_study_context()` | Creates local Study Area identity/name/Purpose | GeoPackage `study_area` and context metadata; geometry can be added during definition |
 | Store `read` -> `read_study_context()` | Reads Study Area, Streams, Reaches and available reference/Event records | GeoPackage hierarchy feature layers/tables with explicit parent IDs |
 | Store `revise` -> context writer | Updates the selected object while retaining identity and other context | New local GeoPackage context revision; this is the implementation of a logical update, not a new FGDB entity |
+| Store `flowline_publish` -> local Flowline writer | Creates one chosen raw/smoothed Stream path and one line per current Reach | Network-revision-local immutable GeoPackage plus RDS/JSON index; preparation asset, not a context revision or governed Flowline |
 
 FGDB Collection membership and full delivery conformance are separate from local
 Study creation. Session state and map previews are not geodatabase objects.

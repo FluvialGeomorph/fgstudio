@@ -39,7 +39,11 @@ Flowline then selects the reference-supported longest complete path, computes
 bounded smoothing candidates across the historical 2–5-map-unit range, and
 displays the conservative 2-map-unit result by default. The analyst can switch
 to a more aggressive candidate without rerunning path selection or terrain work;
-no manual tributary pruning is required.
+no manual tributary pruning is required. This is currently a transient
+Stream-scale preview until the analyst chooses **Save Reach Flowlines**. Saving
+divides the path across the current Reaches and retains an immutable local
+candidate with exact-input fingerprints. Local Flowline creation is complete;
+Flowline Points is the next workflow step.
 The intended continuation is shared analysis and reports that another analyst
 or customer can review without reconstructing the originating GIS session.
 
@@ -96,7 +100,8 @@ choices as scope and evidence develop; this is not a rigid wizard.
 | Specify analysis references | Explicit horizontal and vertical targets and units | Implemented as checked, saved specifications; no elevation conversion on save |
 | Develop analysis terrain | One consistent Stream DEM per Survey Event, aligned grids and hierarchical masks | Event settings, chosen cell size, automatic masks, same-CRS bilinear assembly of mixed source grids and saved Stream editions implemented; cross-CRS integration remains open |
 | Hydro-modify terrain | Saved cutlines and a derived DEM linked to its exact source and method | Map inspection, cutline editing/application, reopening and before/after review implemented locally |
-| Extract a synthetic stream network | Contributing area, explicit channel threshold and a saved network linked to its DEM | Owner-selected next feature; not yet implemented |
+| Extract a synthetic stream network | Contributing area, explicit channel threshold and a saved network linked to its DEM | Implemented locally with immutable Hydro-revision binding |
+| Create Reach Flowlines | Automatic reference-constrained mainstem selection, selectable smoothing, deterministic Reach division and local save/reopen | Implemented locally; governed FGDB publication remains separate |
 | Analyze and report | Reach-level geometry evidence and a reviewable explanation of the study and its terrain | Shared backend capabilities and reporting designs inform the destination; app execution/report delivery remain future work |
 | Govern and share accepted content | Qualified enterprise records and relationships | Eventual FGDB integration; no Enterprise connection in this app |
 
