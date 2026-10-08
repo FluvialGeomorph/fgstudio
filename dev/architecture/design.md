@@ -13,9 +13,18 @@ states come from Flatly rather than module-specific CSS overrides.
 
 OpenTopoMap is the default on every interactive map; other offered basemaps are
 analyst-selectable alternatives. Maps correct their dimensions automatically
-when hidden workflow tabs become visible. The delayed app-wide working overlay
-uses the initiating control or active workflow tab to describe the current work
-in analyst language; module status text retains more detailed progress and errors.
+when hidden workflow tabs become visible. Hydro Modify, Flowline and Flowline
+Points use the saved Stream feature as their shared fit target, with the Stream
+DEM extent only as a fallback. They refit with a small edge margin after each
+Stream selection and whenever the map returns from a hidden workflow tab; later
+container resizes within the visible tab preserve analyst zoom and pan. The
+delayed app-wide working overlay is reserved for opening or restoring a saved
+Study Area, when the workspace is not yet usable. Background work within a
+workflow tab uses that module's analyst-language status and blue activity bar;
+tab navigation and task actions do not also show the blocking overlay. These two
+progress representations are mutually exclusive.
+Hydro Modify, Flowline and Flowline Points expose the same linked Survey Event
+selector. Changing it once changes the active Event context across those tabs.
 
 ## Session and storage boundaries
 
@@ -70,10 +79,23 @@ The map search changes viewport only.
    tabs reopen their own eligible edition.
 7. Hydro Modify saves cutline-adjusted Hydro revisions and derives immutable
    synthetic Stream Network candidates without changing the source DEM edition.
+   Its apply control exists only for pending nonempty cutlines; extraction carries
+   the original DEM forward unchanged when no cutline is needed.
 8. Flowline reads one exact Hydro/network pair, uses retained NHDPlusV2 evidence
-   to select the intended terrain path, prepares bounded smoothing candidates,
-   divides the chosen path by ordered Reach evidence and saves one immutable
-   local Reach-Flowline candidate revision.
+   to select the intended terrain path, prepares the requested bounded smoothing
+   candidate, divides it by ordered Reach evidence and saves the conservative
+   default or explicit smoothing choice automatically as an immutable local
+   Reach-Flowline candidate revision.
+9. Flowline Points creates the one-metre Study Area candidate automatically when
+   no exact saved result exists. Alternate spacing remains an explicit advanced
+   recreation action.
+
+Prepared Hydro, Flowline and Flowline Points reviews remain in their module for
+the current session. Merely hiding and showing a tab does not reopen files or
+recompute geometry. Exact saved Flowlines reopen directly; alternative smoothing
+strengths are prepared lazily and retained in a small per-Stream session cache.
+Hydro and Flowline saves advance explicit downstream revision signals so this
+reuse cannot conceal changed inputs.
 
 The integrated DEM path requires aligned grids and NAVD88 metre sources with an
 international-foot target. Differing-grid and other vertical operations remain

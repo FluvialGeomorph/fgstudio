@@ -1,23 +1,23 @@
 flowline_points_review_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::card(bslib::card_header("Flowline Points"),
-    shiny::p("Create one Study Area longitudinal profile from every saved Stream and Reach Flowline. FG Studio uses one-meter spacing, identifies the one outlet Stream, and starts each tributary at its mainstem confluence station."),
-    shiny::uiOutput(ns("streams")),
+    shiny::p("Choose a Survey Event. FG Studio creates one-meter Flowline Points automatically after every Stream has saved Reach Flowlines, then displays all Streams and Reaches on the shared profile."),
+    shiny::uiOutput(ns("events")),shiny::uiOutput(ns("streams")),
     shiny::tags$details(class="small mb-2",
       shiny::tags$summary("Advanced spacing"),
       shiny::numericInput(ns("station_distance"),"Maximum point spacing (meters)",
         value=1,min=.1,step=.1),
-      shiny::p("One meter is the FG Studio default. Changing this value does not recalculate until you create a new candidate.")),
-    shiny::div(class="d-flex gap-2 flex-wrap mb-2",
-      shiny::actionButton(ns("create"),"Create Study Area Flowline Points",
-        class="btn-primary btn-sm")),
+      shiny::p("One meter is the FG Studio default. Use this only to replace the saved candidate with a different spacing."),
+      shiny::actionButton(ns("create"),"Recreate Flowline Points",
+        class="btn-outline-primary btn-sm")),
     shiny::uiOutput(ns("status")),
-    shiny::uiOutput(ns("summary")),
+    shiny::tags$details(class="small mb-2",shiny::tags$summary("Profile details"),
+      shiny::uiOutput(ns("summary"))),
     bslib::layout_columns(col_widths=c(7,5),
       leaflet::leafletOutput(ns("map"),height="600px"),
       bslib::card(bslib::card_header("Study Area longitudinal elevation profile"),
         shiny::plotOutput(ns("profile"),height="520px"))),
-    shiny::p(class="small mt-2","Choose a Stream tab to review its Flowline Points over its Hydro DEM. The profile always uses every saved Study Area Stream and Reach; distance increases upstream from the one Study Area outlet."))
+    shiny::p(class="small mt-2","Stream tabs change the map. The profile always includes every Stream and Reach, measured upstream from the Study Area outlet."))
 }
 
 load_flowline_points_review <- function(store,context) {
@@ -36,8 +36,8 @@ load_flowline_points_review <- function(store,context) {
     segments <- store$stream_segments(selection$key,selection$stream,selection$path)
     flowline <- store$flowline_read(record,selection,segments)
     if(is.null(flowline))
-      stop(paste0("Save Reach Flowlines for ",stream$stream_name[[1]],
-        " on the Flowline tab first."))
+      stop(paste0("Open the Flowline tab for ",stream$stream_name[[1]],
+        " so its Reach Flowlines can be created first."))
     dem <- file.path(record$path,record$result$file)
     if(!file.exists(dem)) stop("A saved Hydro DEM is unavailable.")
     list(stream_id=selection$stream,stream_name=stream$stream_name[[1]],
@@ -56,7 +56,8 @@ flowline_points_display_sample <- function(points,maximum=5000L) {
 }
 
 flowline_points_review_server <- function(id,current,context,store,
-                                          active=function() TRUE) {
+                                          active=function() TRUE,events=NULL,
+                                          revision=function() 0L) {
   shiny::moduleServer(id,function(input,output,session) {
     review <- shiny::reactiveVal(NULL);points <- shiny::reactiveVal(NULL)
     notice <- shiny::reactiveVal("");busy <- shiny::reactiveVal(FALSE)
@@ -65,6 +66,7 @@ flowline_points_review_server <- function(id,current,context,store,
     loaded_key <- NULL;view_job <- NULL;view_worker <- NULL;view_dir <- NULL
     worker_ready <- shiny::reactiveVal(FALSE);worker_warming <- FALSE;worker_failed <- FALSE
     cache <- tempfile("flowline-points-map-");dir.create(cache)
+    linked_survey_event_selector(input,output,session,events,context)
 
     selected_id <- shiny::reactive({
       ctx <- context();if(is.null(ctx) || !nrow(ctx$streams)) return(NULL)
@@ -78,16 +80,44 @@ flowline_points_review_server <- function(id,current,context,store,
       if(is.null(value) || is.null(id)) return(NULL)
       value$bundle[[id]]
     })
+    shiny::observeEvent(input$stream,{
+      ctx <- context();stream_id <- input$stream
+      fit_stream_map(session,ctx,stream_id)
+      session$onFlushed(function() fit_stream_map(session,ctx,stream_id),once=TRUE)
+    },ignoreInit=TRUE,priority=10)
     output$streams <- shiny::renderUI({
       ctx <- context()
       if(is.null(ctx)) return(shiny::p("Create a Survey Event before creating Flowline Points."))
       panels <- lapply(seq_len(nrow(ctx$streams)),function(i)
         bslib::nav_panel(ctx$streams$stream_name[i],value=ctx$streams$stream_id[i]))
-      shiny::tagList(if(!is.null(ctx$event_label))
-        shiny::p(shiny::strong(paste("Survey Event:",ctx$event_label))),
-        shiny::p(class="small","Stream tabs change the map review only; the saved profile includes all Streams."),
-        do.call(bslib::navset_tab,c(panels,list(id=session$ns("stream")))))
+      do.call(bslib::navset_tab,c(panels,list(id=session$ns("stream"))))
     })
+
+    create_points <- function(value,spacing,automatic=FALSE) {
+      if(length(spacing)!=1L || !is.finite(spacing) || spacing<=0)
+        stop("Maximum point spacing must be one positive value in meters.")
+      busy(TRUE);on.exit(busy(FALSE),add=TRUE)
+      notice(if(automatic)
+        "Creating the default one-meter Flowline Points..." else
+        "Recreating Flowline Points at the selected spacing...")
+      saved <- shiny::withProgress(message="Creating Flowline Points",value=0,{
+        shiny::incProgress(.1,detail="Connecting tributaries to the outlet Stream")
+        result <- fluvgeo::study_area_flowline_points(
+          flowlines=lapply(value$bundle,function(x)x$flowline$flowlines),
+          dems=lapply(value$bundle,function(x)terra::rast(x$dem)),
+          stream_corridors=value$context$streams,station_distance=spacing)
+        shiny::incProgress(.75,detail="Validating shared kilometer stationing")
+        fluvgeo::check_flowline_points(result$points,"fgstudio_replacement")
+        shiny::incProgress(.1,detail="Saving the review candidate")
+        store$flowline_points_publish(value$context,value$bundle,spacing,
+          result$points,result$connections)
+      })
+      value$saved <- saved;review(value);points(saved$points)
+      notice(paste0("Saved ",format(saved$point_count,big.mark=","),
+        " Flowline Points across ",saved$stream_count," Streams at ",
+        format(saved$station_distance_m,trim=TRUE)," m maximum spacing."))
+      value
+    }
 
     stop_view <- function(){view_busy(FALSE)}
     shiny::observe({
@@ -114,24 +144,22 @@ flowline_points_review_server <- function(id,current,context,store,
       },error=function(e){worker_failed <<- TRUE;stop_view();view_notice(hydro_error_message(e))})
     })
 
-    shiny::observeEvent(list(context(),active()),{
+    shiny::observeEvent(list(context(),active(),revision()),{
       if(!isTRUE(active())) {stop_view();return()}
       ctx <- context();if(is.null(ctx)) return()
-      notice("Opening the saved Study Area Flowlines and Hydro DEMs...")
+      key <- paste(ctx$path,ctx$group_path,shiny::isolate(revision()),sep="\r")
+      if(identical(key,loaded_key) && !is.null(review())) return()
+      notice("Opening this Survey Event's saved Flowline Points...")
       tryCatch({
         value <- load_flowline_points_review(store,ctx)
-        if(identical(value$key,loaded_key) && !is.null(review())) return()
-        review(value);loaded_key <<- value$key;last_view <<- NULL
+        review(value);loaded_key <<- key;last_view <<- NULL
         if(!is.null(value$saved)) {
           points(value$saved$points)
           shiny::updateNumericInput(session,"station_distance",
             value=value$saved$station_distance_m)
-          notice(paste0("Reopened ",format(value$saved$point_count,big.mark=","),
-            " saved Flowline Points for ",value$saved$stream_count,
-            " Streams in one Study Area reference frame."))
+          notice("Saved Flowline Points are ready for review and downstream analysis.")
         } else {
-          points(NULL)
-          notice("Ready to create one Study Area profile from all saved Reach Flowlines.")
+          value <- create_points(value,1,automatic=TRUE)
         }
         refreshed(shiny::isolate(refreshed())+1L)
       },error=function(e){loaded_key <<- NULL;review(NULL);points(NULL);
@@ -141,35 +169,15 @@ flowline_points_review_server <- function(id,current,context,store,
     shiny::observeEvent(input$create,{
       value <- review();spacing <- as.numeric(input$station_distance)
       if(is.null(value)) return()
-      if(length(spacing)!=1L || !is.finite(spacing) || spacing<=0) {
-        notice("Maximum point spacing must be one positive value in meters.");return()
-      }
-      busy(TRUE);on.exit(busy(FALSE),add=TRUE)
-      notice("Connecting Streams and sampling their Hydro DEM elevations...")
       tryCatch({
-        saved <- shiny::withProgress(message="Creating the Study Area profile",value=0,{
-          shiny::incProgress(.1,detail="Connecting tributaries to the outlet Stream")
-          result <- fluvgeo::study_area_flowline_points(
-            flowlines=lapply(value$bundle,function(x)x$flowline$flowlines),
-            dems=lapply(value$bundle,function(x)terra::rast(x$dem)),
-            stream_corridors=value$context$streams,
-            station_distance=spacing)
-          shiny::incProgress(.75,detail="Validating shared kilometer stationing")
-          fluvgeo::check_flowline_points(result$points,"fgstudio_replacement")
-          shiny::incProgress(.1,detail="Saving the review candidate")
-          store$flowline_points_publish(value$context,value$bundle,spacing,
-            result$points,result$connections)
-        })
-        value$saved <- saved;review(value);points(saved$points)
-        notice(paste0("Saved ",format(saved$point_count,big.mark=","),
-          " Flowline Points across ",saved$stream_count," Streams at ",
-          format(saved$station_distance_m,trim=TRUE)," m maximum spacing."))
+        create_points(value,spacing)
       },error=function(e) notice(paste("Flowline Points were not created:",
         conditionMessage(e))))
     },ignoreInit=TRUE)
 
     output$map <- leaflet::renderLeaflet({
       value <- selected()
+      target_bounds <- NULL
       map <- leaflet::leaflet(options=leaflet::leafletOptions(maxZoom=23,
         preferCanvas=TRUE)) |>
         leaflet::addMapPane("flowline-points-basemap",zIndex=200) |>
@@ -190,6 +198,7 @@ flowline_points_review_server <- function(id,current,context,store,
         leaflet::addScaleBar(position="bottomleft")
       if(!is.null(value)) {
         b <- flowline_dem_bounds(value$dem)
+        target_bounds <- stream_map_bounds(context(),value$stream_id,b)
         lines <- sf::st_transform(value$flowline$flowlines,4326)
         colors <- grDevices::hcl.colors(max(3,nrow(lines)),"Dark 3")[seq_len(nrow(lines))]
         map <- leaflet::fitBounds(map,b[1],b[2],b[3],b[4]) |>
@@ -218,7 +227,8 @@ flowline_points_review_server <- function(id,current,context,store,
         }
       }
       htmlwidgets::onRender(map,paste(readLines(system.file("www","hydro-display.js",
-        package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"))
+        package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"),
+        data=list(bounds=target_bounds))
     })
 
     output$profile <- shiny::renderPlot({

@@ -470,9 +470,10 @@ tiles remain visible when zooming closer for DEM inspection.
 
 ## Inspect channels and draw cutlines
 
-Open **Hydro Modify** beside **Survey Events**. The first saved Survey Event is
-selected automatically, and its date appears above the Stream tabs. If you have
-chosen another Event in **Survey Events**, that choice carries through here.
+Open **Hydro Modify** beside **Survey Events**. Choose the Survey Event above the
+Stream tabs; the first saved Event is the initial default. The same selection is
+used by Survey Events, Hydro Modify, Flowline and Flowline Points, so changing it
+on any of those screens carries through to the others.
 Choose a Stream tab and zoom along its channel. The map updates the elevation
 stretch for each view and combines the standard terrain colors with hillshade.
 Zoom until the fine-scale message enables the line tool, then pan to inspect
@@ -481,16 +482,18 @@ channel elevations on both sides. Double-click to finish; completed cutlines sav
 automatically. Use the edit/delete tools to revise them. Reopening restores the
 drawings for the same Stream DEM edition.
 
-Choose **Apply cutlines** to create the hydro-modified DEM. Each cutline's
+When saved cutlines have not yet been applied, choose the contextual **Apply
+saved cutlines to DEM** control. It disappears after that drawing revision is
+processed. Each cutline's
 intersected cells are lowered to their minimum elevation, without widening;
 earlier cutlines take priority where cells are shared. NoData stays NoData.
 Switch between **Original DEM** and **Hydro-modified DEM** to review the result.
 Editing a drawing saves a new revision; apply it to update the result. Original
-DEMs and earlier drawing/results are retained. **Return to Stream** restores the
-Stream view if you pan away from its DEM.
+DEMs and earlier drawing/results are retained.
 
-The map opens at the Stream DEM's raster extent. Use the layers control in the
-upper right to select Imagery, Street map or OpenTopoMap and toggle elevation, hillshade, cutlines or the
+The map opens at the full saved Stream extent with a small margin, and returns to
+that extent whenever its Stream tab is selected. Use the layers control in the
+upper right to keep the default OpenTopoMap or select Imagery or Street map, and toggle elevation, hillshade, cutlines or the
 DEM extent. The elevation legend is at the lower right. Use the lower-left
 Elevation and Hillshade opacity sliders to adjust each layer from transparent
 to opaque, with immediate feedback and no raster reload. Existing display pyramids
@@ -500,7 +503,10 @@ stay beneath the DEM and cutlines when switched. Applying cutlines limits zone
 calculations to their surrounding area, then saves a complete Stream Hydro DEM;
 writing and checking this full-resolution result can still take several seconds.
 
-After the Hydro DEM is saved, use the **Synthetic Stream** card below the map.
+If no cutlines are needed, proceed directly to **Extract stream network**; FG
+Studio carries the original Stream DEM forward unchanged as the Hydro DEM before
+starting extraction. Otherwise, after the modified Hydro DEM is saved, use the
+**Synthetic Stream** card below the map.
 Start with the default **1 hectare** initiation area and choose **Extract stream
 network**. The work continues in the background. When it finishes, the cyan line
 shows the derived candidate network over the Hydro DEM. Pan and zoom to use the
@@ -519,14 +525,14 @@ flow accumulation.
 
 ## Review the automatically selected Flowline
 
-Open **Flowline** after saving the synthetic Stream Network. Choose the Stream
-tab to inspect; no tributary or segment selection is required. FG Studio compares
+Open **Flowline** after saving the synthetic Stream Network. Choose the Survey
+Event and Stream to inspect; no tributary or segment selection is required. FG Studio compares
 every complete terrain-derived head-to-outlet route with the NHDPlusV2 Stream
-you previously selected, computes the historical 2–5-map-unit smoothing range,
-and displays the conservative 2-map-unit candidate in gold by default. Use
-**Smoothing strength** to select a more aggressive candidate. Changing this
-choice swaps the precomputed gold line and diagnostics immediately; it does not
-repeat terrain processing or mainstem selection.
+you previously selected and displays the conservative 2-map-unit candidate in
+gold by default. Use **Smoothing strength** to select a more aggressive candidate.
+The requested candidate is prepared once and retained for the session; this does
+not repeat terrain processing or mainstem selection. An exact saved candidate
+opens directly without recreating the other smoothing strengths.
 The complete network remains visible in muted cyan and the saved reference in
 dashed magenta. Pan and zoom to compare all three against the locally stretched
 Hydro DEM and hillshade. Colored lines show the resulting Reach Flowlines and
@@ -537,32 +543,36 @@ separation from the next reference match, smoothing method, maximum displacement
 length change, Reach names and local save state. If prerequisites are missing,
 return to **Hydro Modify** to save the Hydro DEM and synthetic network. This
 review produces the smoothed continuous Stream path and automatically divides it
-using the retained Reach-source transitions. Choose **Save Reach Flowlines** when
-the smoothing candidate is satisfactory. The app writes an immutable local
+using the retained Reach-source transitions. The conservative default is saved
+automatically. Selecting another **Smoothing strength** is itself the decision to
+prepare, validate and save that candidate. The app writes an immutable local
 candidate containing the raw path, smoothed path, one line per Reach, selected
 network segments, boundaries and exact input fingerprints. Reopening the same
 inputs restores the newest saved candidate and its smoothing choice. Selecting a
-different smoothing strength then returns the display to **Preview - save when
-satisfied**; saving creates another immutable candidate and does not overwrite
-the earlier one. Changed Hydro, network, Stream-reference or Reach-mapping inputs
-require a new save. This is local preparation, not FGDB publication. Flowline
+different smoothing strength creates another immutable candidate and does not
+overwrite the earlier one. Changed Hydro, network, Stream-reference or
+Reach-mapping inputs create a new exact-input result. This is local preparation,
+not FGDB publication. Flowline
 Points should consume the saved local candidate rather than transient geometry.
 
 ## Create Flowline Points
 
-Open **Flowline Points** after saving Reach Flowlines for every Stream. Select
-**Create Study Area Flowline Points**. The default maximum spacing is **1 meter**;
-an advanced spacing control is available, but changing it does not start work
-until you use the create button. FG Studio automatically uses every exact saved
+Open **Flowline Points** after FG Studio has saved Reach Flowlines for every
+Stream and choose the Survey Event to review. When no matching point candidate
+exists, FG Studio automatically creates it at the **1 meter** default and uses
+every exact saved
 Reach Flowline and bound Hydro DEM. It finds the one Study Area outlet from the
 existing Stream definitions, derives each tributary's starting station at its
 downstream confluence, retains existing vertices, and samples the DEM elevation
 at every point. No line, Reach, parent Stream, offset, field, or direction
-selection is required.
+selection is required. To use a nondefault spacing, expand **Advanced spacing**,
+enter the maximum distance and choose **Recreate Flowline Points**.
 
 While creation runs, the app displays progress. Stream tabs change the detailed
 map only: each map shows the colored Reach Flowlines, a red display sample of
 points, its confluence when applicable, and the viewport-stretched Hydro DEM.
+Selecting a Stream, including after returning from another top-level workflow
+tab, fits its complete saved extent with a small margin.
 The longitudinal profile always uses every saved Study Area point on one common
 kilometer axis. The summary reports the outlet Stream, Stream/Reach/point counts,
 spacing, measure range, and exact retained legacy fields. Maps automatically

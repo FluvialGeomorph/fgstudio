@@ -1,12 +1,11 @@
 hydro_modify_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::card(bslib::card_header("Hydro Modify"),
-    shiny::p("The first Survey Event opens by default; a choice made in Survey Events carries through here. Scan each Stream for flow blockages, then draw a cutline across each blockage, extending to lower channel elevations on both sides."),
-    shiny::uiOutput(ns("streams")),shiny::uiOutput(ns("status")),
+    shiny::p("Choose a Survey Event and Stream. Inspect road crossings and other false flow barriers, and draw cutlines only where water should pass. When the Hydro DEM routes correctly, extract its Stream Network."),
+    shiny::uiOutput(ns("events")),shiny::uiOutput(ns("streams")),shiny::uiOutput(ns("status")),
     shiny::div(class="d-flex gap-3 flex-wrap align-items-center",
       shiny::radioButtons(ns("surface"),NULL,c("Original DEM"="original","Hydro-modified DEM"="hydro"),inline=TRUE),
-      shiny::actionButton(ns("apply"),"Apply cutlines",class="btn-primary"),
-      shiny::actionButton(ns("return_stream"),"Return to Stream",class="btn-outline-secondary")),
+      shiny::uiOutput(ns("apply_control"))),
     shiny::p(class="small","Each cutline lowers its intersected cells to their minimum elevation, without widening. Original DEMs and previous cutline revisions are retained."),
     leaflet::leafletOutput(ns("map"),height="650px"),
     shiny::p(class="small","Zoom in until drawing is enabled, then pan along the channel. Use the line tool to draw; double-click to finish. Use the edit/delete tools to revise cutlines. Completed drawings save automatically. Colors stretch to elevations in the current view; hillshade reveals relief."),
@@ -19,7 +18,9 @@ hydro_modify_ui <- function(id) {
 }
 
 hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
-  launch_burn=launch_hydro_burn,launch_extract=launch_stream_extraction,
+  events=NULL,on_changed=function() NULL,
+  launch_burn=launch_hydro_burn,launch_passthrough=launch_hydro_passthrough,
+  launch_extract=launch_stream_extraction,
   launch_threshold=launch_stream_threshold) {
   shiny::moduleServer(id,function(input,output,session) {
     source <- shiny::reactiveVal(NULL); record <- shiny::reactiveVal(NULL)
@@ -31,9 +32,11 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
     view_job <- NULL; view_worker <- NULL; view_dir <- NULL; burn_job <- NULL; burn_dir <- NULL; burn_record <- NULL
     stream_job <- NULL; stream_dir <- NULL; stream_record <- NULL; stream_context <- NULL
     worker_ready <- shiny::reactiveVal(FALSE); worker_warming <- FALSE; worker_failed <- FALSE
-    burn_source <- NULL;burn_context <- NULL
-    view_key <- NULL; last_view <- NULL
+    burn_source <- NULL;burn_context <- NULL;burn_passthrough <- FALSE
+    burn_continue_stream <- FALSE;burn_threshold <- NULL
+    view_key <- NULL; last_view <- NULL; loaded_key <- NULL
     cache <- tempfile("hydro-map-");dir.create(cache)
+    linked_survey_event_selector(input,output,session,events,context)
     # Do not compete with initial Study restoration. Start the display worker
     # when Hydro Modify is actually opened, before browser bounds are processed.
     shiny::observe({
@@ -69,6 +72,7 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
       if(!is.null(burn_job)) {if(burn_job$is_alive()) burn_job$kill();burn_job <<- NULL}
       if(!is.null(burn_dir)) unlink(burn_dir,recursive=TRUE)
       burn_dir <<- NULL;burn_record <<- NULL;burn_source <<- NULL;burn_context <<- NULL
+      burn_passthrough <<- FALSE;burn_continue_stream <<- FALSE;burn_threshold <<- NULL
       burn_busy(FALSE)
     }
     stop_stream <- function() {
@@ -77,23 +81,17 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
       stream_dir <<- NULL;stream_record <<- NULL;stream_context <<- NULL
       stream_busy(FALSE)
     }
-    fit_stream <- function() {
-      dem <- shiny::isolate(source());if(is.null(dem)) return()
-      b <- hydro_dem_bounds(dem)
-      leaflet::fitBounds(leaflet::leafletProxy("map",session),b[1],b[2],b[3],b[4])
-    }
-    shiny::observeEvent(input$return_stream,fit_stream(),ignoreInit=TRUE)
     output$streams <- shiny::renderUI({
       ctx <- context()
       if(is.null(ctx)) return(shiny::p("Create a Survey Event in Survey Events, or finish any pending settings or source-selection edits."))
       panels <- lapply(seq_len(nrow(ctx$streams)),function(i)
         bslib::nav_panel(ctx$streams$stream_name[i],value=ctx$streams$stream_id[i]))
-      shiny::tagList(if(!is.null(ctx$event_label)) shiny::p(shiny::strong(paste("Survey Event:",ctx$event_label))),
-        do.call(bslib::navset_tab,c(panels,list(id=session$ns("stream")))) )
+      do.call(bslib::navset_tab,c(panels,list(id=session$ns("stream"))))
     })
     output$map <- leaflet::renderLeaflet({
       dem <- source()
       candidate <- network()
+      target_bounds <- NULL
       map <- leaflet::leaflet(options=leaflet::leafletOptions(maxZoom=23)) |>
         leaflet::addMapPane("hydro-basemap",zIndex=200) |>
         leaflet::addMapPane("hydro-hillshade",zIndex=300) |>
@@ -111,6 +109,7 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
           circleMarkerOptions=FALSE,editOptions=leaflet.extras::editToolbarOptions(edit=FALSE,remove=FALSE))
       if(!is.null(dem)) {
         b <- hydro_dem_bounds(dem)
+        target_bounds <- stream_map_bounds(context(),input$stream,b)
         map <- leaflet::fitBounds(map,b[1],b[2],b[3],b[4]) |>
           leaflet::addRectangles(b[1],b[2],b[3],b[4],group="DEM extent",color="#e68a00",weight=2,fill=FALSE)
         saved <- shiny::isolate(record())
@@ -123,22 +122,31 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
         }
       }
       htmlwidgets::onRender(map,paste(readLines(system.file("www","hydro-display.js",
-        package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"))
+        package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"),
+        data=list(bounds=target_bounds))
     })
     selected <- shiny::reactive({
       ctx <- context();if(is.null(ctx) || length(input$stream)!=1L || !input$stream %in% ctx$streams$stream_id) return(NULL)
       list(key=ctx$key,event=ctx$group_id,stream=input$stream,path=ctx$path,group=ctx$group_path)
     })
+    shiny::observeEvent(input$stream,{
+      ctx <- context();stream_id <- input$stream
+      fit_stream_map(session,ctx,stream_id)
+      session$onFlushed(function() fit_stream_map(session,ctx,stream_id),once=TRUE)
+    },ignoreInit=TRUE,priority=10)
     shiny::observeEvent(network(),shiny::updateActionButton(session,"extract_stream",
       label=if(is.null(network())) "Extract stream network" else "Update stream threshold"),
       ignoreNULL=FALSE)
     shiny::observeEvent(list(selected(),active()),{
       if(!isTRUE(active())) {stop_view();return()}
-      s <- selected();stop_view();stop_burn();stop_stream();source(NULL);record(NULL);network(NULL);native(FALSE);last_view <<- NULL
+      s <- selected()
+      if(is.null(s)) return()
+      key <- paste(s$key,s$event,s$stream,s$path,s$group,sep="\r")
+      if(identical(key,loaded_key) && !is.null(source())) return()
+      stop_view();stop_burn();stop_stream();source(NULL);record(NULL);network(NULL);native(FALSE);last_view <<- NULL
       # source() recreates the widget, discarding the old editable group itself.
       # A queued proxy clear can arrive AFTER that replacement and erase the
       # saved cutlines just restored by renderLeaflet().
-      if(is.null(s)) return()
       tryCatch({
         binding <- store$dem_request(s$key,s$event,s$path,s$group)
         dem <- store$find_dem(binding,stream_id=s$stream,scope="stream")
@@ -161,8 +169,9 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
         stream_notice(if(is.null(candidate)) "No synthetic stream has been extracted from this Hydro DEM." else
           paste0("Saved candidate: ",candidate$stream_lines," lines, ",format(round(candidate$stream_length_m),big.mark=","),
             " m at ",candidate$threshold_ha," ha."))
+        loaded_key <<- key
         refreshed(shiny::isolate(refreshed())+1L)
-      },error=function(e) notice(conditionMessage(e)))
+      },error=function(e) {loaded_key <<- NULL;notice(conditionMessage(e))})
     },ignoreNULL=FALSE)
     surface <- shiny::reactive({
       dem <- source();if(is.null(dem)) return(NULL)
@@ -227,6 +236,7 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
         saved <- store$hydro_save(s$key,s$event,s$stream,dem$saved_dem$id,lines,
           expected=record()$id,context=s$path)
         stop_burn();stop_stream();record(saved);network(NULL)
+        on_changed()
         shiny::updateRadioButtons(session,"surface",selected="original")
         notice(paste(nrow(lines),"cutlines saved."))
       },error=function(e) notice(paste("Cutlines were not saved:",conditionMessage(e))))
@@ -237,59 +247,94 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
         `aria-label`=if(burn_busy()) "Applying cutlines" else "Loading terrain display"),
       if(!is.null(source())) shiny::p(class=if(draw_ready()) "text-success" else "text-body-secondary",
         if(draw_ready()) "Fine-scale inspection: cutline drawing is enabled." else "Zoom in further and wait for elevation detail to enable cutline drawing.")))
+    output$apply_control <- shiny::renderUI({
+      rec <- record()
+      if(is.null(rec) || is.null(rec$lines) || !nrow(rec$lines) ||
+          !is.null(rec$result) || burn_busy()) return(NULL)
+      count <- nrow(rec$lines)
+      shiny::actionButton(session$ns("apply"),paste0("Apply ",count," saved cutline",
+        if(count==1) "" else "s"," to DEM"),class="btn-primary")
+    })
     output$stream_status <- shiny::renderUI({
       rec <- record();candidate <- network()
       shiny::tagList(shiny::p(role="status",stream_notice()),
         if(stream_busy()) shiny::tags$progress(style="width:100%",`aria-label`="Extracting stream network"),
         if(!is.null(candidate)) shiny::p(class="small",
           "Cyan lines are the extracted candidate. The Hydro DEM remains unchanged."),
-        if(is.null(rec) || is.null(rec$result)) shiny::p(class="small text-body-secondary",
-          "Apply and save the Hydro DEM before extracting a stream network."))
+        if(is.null(rec)) shiny::p(class="small text-body-secondary",
+          "No cutlines are saved. Extraction will use the original Stream DEM unchanged.")
+        else if(is.null(rec$result) && nrow(rec$lines)) shiny::p(class="small text-body-secondary",
+          "Apply the saved cutlines before extracting a stream network.")
+        else if(is.null(rec$result)) shiny::p(class="small text-body-secondary",
+          "Extraction will preserve the original Stream DEM."))
     })
+    begin_hydro <- function(rec,dem,s,passthrough=FALSE,
+                            continue_stream=FALSE,threshold=NULL) {
+      burn_record <<- rec;burn_source <<- dem;burn_context <<- s
+      burn_passthrough <<- passthrough;burn_continue_stream <<- continue_stream
+      burn_threshold <<- threshold;burn_dir <<- store$hydro_prepare(rec)
+      filename <- file.path(burn_dir,"hydro-dem.tif")
+      burn_job <<- if(passthrough) launch_passthrough(dem$result$path,filename) else
+        launch_burn(dem$result$path,rec$lines,filename)
+      burn_busy(TRUE)
+      notice(if(passthrough)
+        "Preparing the unchanged Stream DEM for extraction..." else
+        "Applying the saved cutlines. You can continue inspecting the map.")
+    }
+    begin_stream <- function(rec,s,threshold) {
+      stream_record <<- rec;stream_context <<- s
+      stream_dir <<- store$stream_network_prepare(rec)
+      candidate <- shiny::isolate(network())
+      if(!is.null(candidate)) {
+        if(isTRUE(all.equal(threshold,candidate$threshold_ha))) {
+          store$stream_network_discard(stream_dir);stream_dir <<- NULL
+          stream_record <<- NULL;stream_context <<- NULL
+          stream_notice("The saved candidate already uses this initiation threshold.")
+          return(invisible(FALSE))
+        }
+        stream_job <<- launch_threshold(candidate,stream_dir,threshold)
+        stream_notice("Updating the candidate from the saved flow-routing results...")
+      } else {
+        reference <- store$stream_segments(s$key,s$stream,s$path)$lines
+        stream_job <<- launch_extract(file.path(rec$path,rec$result$file),reference,
+          stream_dir,threshold,getOption("fgstudio.stream_memory_mb",3072))
+        stream_notice("Locating the outlet and extracting the terrain-derived network in the background...")
+      }
+      stream_busy(TRUE)
+      invisible(TRUE)
+    }
     shiny::observeEvent(input$apply,{
       if(!is.null(burn_job)) return()
       tryCatch({
         rec <- record();dem <- source()
         if(is.null(rec) || !nrow(rec$lines) || is.null(dem)) stop("Draw at least one cutline first.")
-        if(!is.null(rec$result)) {
-          shiny::updateRadioButtons(session,"surface",selected="hydro")
-          notice("Showing the saved hydro-modified DEM.");return()
-        }
-        burn_record <<- rec;burn_source <<- dem;burn_context <<- selected();burn_dir <<- store$hydro_prepare(rec)
-        burn_job <<- launch_burn(dem$result$path,rec$lines,file.path(burn_dir,"hydro-dem.tif"))
-        burn_busy(TRUE)
-        notice("Applying cutlines. You can continue inspecting the map.")
+        if(!is.null(rec$result)) return()
+        begin_hydro(rec,dem,selected())
       },error=function(e) {stop_burn();notice(conditionMessage(e))})
     },ignoreInit=TRUE)
     shiny::observeEvent(input$extract_stream,{
       if(!is.null(stream_job)) return()
       tryCatch({
-        rec <- record();s <- selected()
-        if(is.null(rec) || is.null(rec$result) || is.null(s))
-          stop("Apply and save the Hydro DEM first.")
+        rec <- record();s <- selected();dem <- source()
+        if(is.null(s) || is.null(dem)) stop("Open a Stream with a saved DEM first.")
         threshold <- input$threshold_ha
         if(length(threshold)!=1L || !is.finite(threshold) || threshold<=0)
           stop("Enter a positive initiation area in hectares.")
-        stream_record <<- rec;stream_context <<- s
-        stream_dir <<- store$stream_network_prepare(rec)
-        candidate <- shiny::isolate(network())
-        if(!is.null(candidate)) {
-          if(isTRUE(all.equal(threshold,candidate$threshold_ha))) {
-            store$stream_network_discard(stream_dir);stream_dir <<- NULL
-            stream_record <<- NULL;stream_context <<- NULL
-            stream_notice("The saved candidate already uses this initiation threshold.")
-            return()
-          }
-          stream_job <<- launch_threshold(candidate,stream_dir,threshold)
-          stream_notice("Updating the candidate from the saved flow-routing results...")
-        } else {
-          reference <- store$stream_segments(s$key,s$stream,s$path)$lines
-          stream_job <<- launch_extract(file.path(rec$path,rec$result$file),reference,
-            stream_dir,threshold,getOption("fgstudio.stream_memory_mb",3072))
-          stream_notice("Locating the outlet and extracting the terrain-derived network in the background...")
+        if(is.null(rec)) {
+          empty <- sf::st_sf(cutline_id=integer(),geometry=sf::st_sfc(crs=4326))
+          rec <- store$hydro_save(s$key,s$event,s$stream,dem$saved_dem$id,empty,
+            expected=NULL,context=s$path)
+          record(rec)
         }
-        stream_busy(TRUE)
-      },error=function(e) {stop_stream();stream_notice(conditionMessage(e))})
+        if(is.null(rec$result)) {
+          if(nrow(rec$lines)) stop("Apply the saved cutlines before extracting a stream network.")
+          begin_hydro(rec,dem,s,passthrough=TRUE,continue_stream=TRUE,
+            threshold=threshold)
+          stream_notice("Preparing the unchanged Stream DEM before extraction...")
+          return()
+        }
+        begin_stream(rec,s,threshold)
+      },error=function(e) {stop_burn();stop_stream();stream_notice(conditionMessage(e))})
     },ignoreInit=TRUE)
     session$onSessionEnded(function() {
       if(!is.null(view_worker)) view_worker$kill()
@@ -309,6 +354,7 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
           saved <- store$stream_network_publish(stream_record,stream_dir,answer$result,answer$outlet)
           stream_dir <<- NULL;stream_record <<- NULL;stream_context <<- NULL
           network(saved)
+          on_changed()
           stream_notice(paste0("Candidate saved: ",saved$stream_lines," lines, ",
             format(round(saved$stream_length_m),big.mark=",")," m at ",saved$threshold_ha,
             " ha. Review the cyan line on the map."))
@@ -318,6 +364,9 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
         job <- burn_job;burn_job <<- NULL
         burn_busy(FALSE)
         tryCatch({
+          passthrough <- burn_passthrough
+          continue_stream <- burn_continue_stream
+          threshold <- burn_threshold
           result <- job$get_result();s <- shiny::isolate(selected())
           if(!identical(s,burn_context)) stop("Study, Survey Event or Stream changed while applying cutlines.")
           rec <- shiny::isolate(record())
@@ -331,10 +380,15 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
           result$source_execution <- latest$execution
           saved <- store$hydro_publish(burn_record,burn_dir,result)
           record(saved);network(NULL);burn_dir <<- NULL;burn_record <<- NULL
+          burn_passthrough <<- FALSE;burn_continue_stream <<- FALSE;burn_threshold <<- NULL
+          on_changed()
           shiny::updateRadioButtons(session,"surface",selected="hydro")
-          notice("Hydro-modified DEM saved. Switch between Original DEM and Hydro-modified DEM to review the cuts.")
+          notice(if(passthrough)
+            "No cutlines were needed; the original Stream DEM is ready for extraction." else
+            "Hydro-modified DEM saved. Switch between Original DEM and Hydro-modified DEM to review the cuts.")
           if(length(result$skipped_nodata_cutlines)) notice(paste0("Hydro-modified DEM saved. Cutline(s) ",
             paste(result$skipped_nodata_cutlines,collapse=", ")," were not applied: no elevation cells in this Stream DEM. Hover over cutlines to identify them; choose the correct Stream or edit those lines."))
+          if(continue_stream) begin_stream(saved,s,threshold)
         },error=function(e) {stop_burn();notice(paste("Hydro modification failed:",hydro_error_message(e)))})
       }
       if(!is.null(view_job) && !view_job$is_alive()) {
@@ -372,6 +426,19 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
 launch_hydro_burn <- function(source,lines,filename) {
   callr::r_bg(function(source,lines,filename) fluvgeo::burn_hydro_cutlines(source,lines,filename),
     args=list(source=source,lines=lines,filename=filename),libpath=.libPaths(),supervise=TRUE,
+    stdout=NULL,stderr=NULL,user_profile=FALSE,system_profile=FALSE)
+}
+
+launch_hydro_passthrough <- function(source,filename) {
+  callr::r_bg(function(source,filename) {
+    if(!file.exists(source) || file.exists(filename) ||
+        !file.copy(source,filename,overwrite=FALSE))
+      stop("The original Stream DEM could not be prepared for extraction.")
+    con <- file(filename,"rb");on.exit(close(con),add=TRUE)
+    list(path=filename,method="unchanged_source",cutline_count=0L,
+      changed_cells=0L,skipped_nodata_cutlines=integer(),
+      output_sha256=unclass(as.character(openssl::sha256(con))))
+  },args=list(source=source,filename=filename),libpath=.libPaths(),supervise=TRUE,
     stdout=NULL,stderr=NULL,user_profile=FALSE,system_profile=FALSE)
 }
 

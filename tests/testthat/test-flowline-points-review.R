@@ -43,8 +43,6 @@ test_that("Flowline Points review creates the one-meter compatible profile", {
     store=fixture$store,active=function()TRUE),{
     session$setInputs(stream="s1",station_distance=1)
     session$flushReact()
-    session$setInputs(create=1)
-    session$flushReact()
     expect_gt(nrow(points()),10)
     expect_equal(unique(points()$station_distance_m),1)
     expect_true(all(c("POINT_M_uncalibrated","calibration_diff","km_to_mouth") %in%
@@ -52,6 +50,10 @@ test_that("Flowline Points review creates the one-meter compatible profile", {
     expect_match(output$status$html,"Saved",fixed=TRUE)
     expect_match(output$summary$html,"1 m",fixed=TRUE)
     expect_match(output$summary$html,"Stream one",fixed=TRUE)
+    session$setInputs(station_distance=2,create=1)
+    session$flushReact()
+    expect_equal(unique(points()$station_distance_m),2)
+    expect_match(output$status$html,"2 m",fixed=TRUE)
   })
 })
 
@@ -62,13 +64,15 @@ test_that("Flowline Points review requires a saved Flowline", {
   context <- list(key="study",group_id="event",group_path="event.rds",
     path="study.gpkg",streams=data.frame(stream_id="s1",stream_name="Stream one"),
     reaches=data.frame(stream_id="s1"))
-  expect_error(load_flowline_points_review(store,context),"Save.*Reach Flowlines")
+  expect_error(load_flowline_points_review(store,context),"Flowline tab.*Reach Flowlines")
 })
 
-test_that("Flowline Points review exposes deliberate creation without display recovery controls", {
+test_that("Flowline Points review keeps only spacing overrides in Advanced controls", {
   html <- as.character(flowline_points_review_ui("points"))
-  expect_match(html,"Create Study Area Flowline Points",fixed=TRUE)
+  expect_false(grepl("Create Study Area Flowline Points",html,fixed=TRUE))
+  expect_match(html,"Recreate Flowline Points",fixed=TRUE)
   expect_false(grepl("Return to Stream",html,fixed=TRUE))
   expect_match(html,"Advanced spacing",fixed=TRUE)
-  expect_match(html,"one Study Area longitudinal profile",fixed=TRUE)
+  expect_match(html,"shared profile",fixed=TRUE)
+  expect_match(html,"(?s)<details[^>]*>.*Recreate Flowline Points.*</details>",perl=TRUE)
 })

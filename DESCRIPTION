@@ -1,6 +1,6 @@
 Package: fgstudio
 Title: FluvialGeomorph Studio
-Version: 0.0.0.9088
+Version: 0.0.0.9090
 Authors@R: c(
     person("Michael", "Dougherty", , "Michael.P.Dougherty@usace.army.mil", role = "aut",
            comment = c(ORCID = "0000-0002-1465-5927")),
@@ -17,7 +17,8 @@ Description: A developing browser workspace for defining stream studies and
     specification. Includes analyst guidance and paired human and agent
     developer documentation for tracing implementation and evidence.
 License: CC0
-URL: https://github.com/FluvialGeomorph/fgstudio
+URL: https://fluvialgeomorph.github.io/fgstudio/,
+    https://github.com/FluvialGeomorph/fgstudio
 BugReports: https://github.com/FluvialGeomorph/fgstudio/issues
 Encoding: UTF-8
 Depends: R (>= 4.1.0)

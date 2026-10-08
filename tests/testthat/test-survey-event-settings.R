@@ -41,6 +41,8 @@ test_that("Event context defaults before its dropdown renders and preserves expl
     selection_path=function() f$selection,selection_pending=pending),{
     session$flushReact()
     ids <- names(saved()$groups)
+    expect_setequal(unname(session$returned$choices()),ids)
+    expect_true(all(grepl("202[01]-0[23]",names(session$returned$choices()))))
     expect_null(input$group)
     expect_identical(session$returned$context()$group_id,ids[[1]])
     expect_match(session$returned$context()$event_label,"202[01]-0[23]")

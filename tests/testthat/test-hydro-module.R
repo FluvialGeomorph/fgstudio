@@ -15,7 +15,7 @@ test_that("Hydro Modify binds the selected Event and restores its Stream cutline
     expect_false(draw_ready())
     expect_match(output$streams$html,"Stream one")
     session$setInputs(stream="missing")
-    expect_null(source())
+    expect_identical(source()$saved_dem$id,"dem1")
   })
 })
 
@@ -29,7 +29,8 @@ test_that("reopening restores saved lines without queuing a destructive map clea
   saved <- store$hydro_save("study","event","s1","dem1",lines,NULL,path)
   ctx <- list(key="study",path=path,group_id="event",group_path="event.gpkg",
     streams=data.frame(stream_id="s1",stream_name="Stream one"))
-  testthat::local_mocked_bindings(hydro_dem_bounds=function(...) c(-93,40,-92.99,40.01))
+  testthat::local_mocked_bindings(hydro_dem_bounds=function(...) c(-93,40,-92.99,40.01),
+    .package="fgstudio")
   shiny::testServer(hydro_modify_server,args=list(current=function() list(key="study"),
     context=function() ctx,store=store),{
     messages <- list()
@@ -67,6 +68,7 @@ test_that("Apply publishes a completed worker result and exposes its saved surfa
   shiny::testServer(hydro_modify_server,args=list(current=function() list(key="study"),
     context=function() ctx,store=store,active=function() TRUE,launch_burn=launch),{
     session$setInputs(stream="s1",surface="original")
+    expect_match(output$apply_control$html,"Apply 1 saved cutline to DEM",fixed=TRUE)
     session$setInputs(apply=1)
     # A newly available edition must not invalidate cuts made on the displayed DEM.
     store$find_dem <- function(...) list(saved_dem=list(id="newer-edition"))
@@ -75,8 +77,47 @@ test_that("Apply publishes a completed worker result and exposes its saved surfa
     session$setInputs(surface="hydro")
     expect_true(file.exists(surface()))
     expect_match(notice(),"saved")
-    session$setInputs(apply=2)
-    expect_match(notice(),"Showing the saved")
+    expect_null(output$apply_control)
+  })
+})
+
+test_that("extraction carries an unchanged DEM forward when no cutlines are needed",{
+  directory <- withr::local_tempdir();path <- file.path(directory,"study.gpkg");file.create(path)
+  source_path <- file.path(directory,"source.tif")
+  raster <- terra::rast(matrix(9:1,nrow=3),extent=terra::ext(0,3,0,3),crs="EPSG:26915")
+  terra::writeRaster(raster,source_path)
+  dem <- list(saved_dem=list(id="dem1"),result=list(path=source_path,resolution=c(1,1)))
+  hydro <- study_hydro_store(function(key) path)
+  network_store <- study_stream_network_store(function(key) path,hydro$hydro_read)
+  reference <- sf::st_sf(source_id="1",geometry=sf::st_sfc(
+    sf::st_linestring(matrix(c(0,3,3,0),ncol=2,byrow=TRUE)),crs=26915))
+  store <- c(hydro,network_store,list(dem_request=function(...) list(),
+    find_dem=function(...) dem,stream_segments=function(...) list(lines=reference)))
+  passthrough <- function(source,filename) {
+    file.copy(source,filename)
+    list(is_alive=function() FALSE,get_result=function() list(path=filename,
+      method="unchanged_source",output_sha256="same-sha",
+      skipped_nodata_cutlines=integer()))
+  }
+  extraction_calls <- 0L
+  extraction <- function(...) {
+    extraction_calls <<- extraction_calls+1L
+    list(is_alive=function() TRUE,kill=function() NULL)
+  }
+  ctx <- list(key="study",path=path,group_id="event",group_path="event.gpkg",
+    streams=data.frame(stream_id="s1",stream_name="Stream one"))
+  shiny::testServer(hydro_modify_server,args=list(current=function() list(key="study"),
+    context=function() ctx,store=store,active=function() TRUE,
+    launch_passthrough=passthrough,launch_extract=extraction),{
+    session$setInputs(stream="s1",surface="original",threshold_ha=1)
+    expect_null(record())
+    expect_null(output$apply_control)
+    session$setInputs(extract_stream=1)
+    poll()
+    expect_identical(record()$result$method,"unchanged_source")
+    expect_equal(nrow(record()$lines),0L)
+    expect_equal(extraction_calls,1L)
+    expect_true(stream_busy())
   })
 })
 

@@ -39,9 +39,9 @@ Flowline then selects the reference-supported longest complete path, computes
 bounded smoothing candidates across the historical 2–5-map-unit range, and
 displays the conservative 2-map-unit result by default. The analyst can switch
 to a more aggressive candidate without rerunning path selection or terrain work;
-no manual tributary pruning is required. This is currently a transient
-Stream-scale preview until the analyst chooses **Save Reach Flowlines**. Saving
-divides the path across the current Reaches and retains an immutable local
+no manual tributary pruning or separate save action is required. The conservative
+default and every explicit smoothing choice are divided across the current
+Reaches and retained automatically as an immutable local
 candidate with exact-input fingerprints. Local Flowline creation is complete;
 Flowline Points now consumes every exact Stream candidate and Hydro DEM, derives
 tributary offsets at their downstream confluences, creates one Study-wide

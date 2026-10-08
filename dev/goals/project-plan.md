@@ -130,8 +130,9 @@ edition-bound cutline drawing, background application and saved-result review
 are implemented in article 15. The owner authorized comparable terra cell
 assignment: touched cells, first-drawn shared-cell priority, and no widening in
 this version. Preserve legacy minimum-elevation conditioning and source NoData.
-The first saved Survey Event supplies context without visiting its settings tab;
-an explicit valid selection is preserved. Synthetic stream extraction is also
+Each terrain workflow tab exposes the shared Survey Event selector; the first
+saved Event remains the initial default and an explicit valid selection is
+preserved across tabs. Synthetic stream extraction is also
 complete locally. Do not resume optional hydro polish or unrelated transform
 probes by default.
 
@@ -183,9 +184,10 @@ Flowline is the selected feature after the accepted synthetic Stream Network.
 The legacy tool assumed the analyst had already removed tributaries and assigned
 Reach names. FG Studio performs that work automatically: its Flowline tab selects
 and displays one smoothed Stream-level path without segment controls.
-It precomputes the historical 2–5-map-unit smoothing candidates, defaults to the
-conservative 2-map-unit result, and lets the analyst switch the displayed
-candidate without rerunning selection or terrain processing. It divides the
+It defaults to the historical conservative 2-map-unit result and prepares other
+2–5-map-unit candidates only when the analyst selects them, without rerunning
+mainstem selection or terrain processing. Prepared candidates remain cached for
+the session. It divides the
 chosen candidate at ordered retained Reach transitions and persists immutable
 local Reach/event-setting Flowline candidates.
 Follow the canonical backend design in
@@ -221,10 +223,15 @@ Study, Survey Event, Hydro DEM, Stream Network, reference and Reach mappings sti
 match. This completes the analyst-facing local Flowline selection and save/reopen
 workflow. Its portable replacement output must additionally retain the legacy
 `flowline` layer and `ReachName`, `from_measure`, and `to_measure` fields under
-the FGDB compatibility profile. Proceed next to Flowline Points only through
-that compatibility gate; keep governed stationing calibration,
-field thalweg import, governed FGDB publication, and desktop/QGIS migration
-outside this increment.
+the FGDB compatibility profile. That compatibility gate is implemented for the
+current local workflow. Governed stationing calibration, field thalweg import,
+governed FGDB publication, and desktop/QGIS migration remain outside this
+increment.
+
+Exact saved Flowlines now reopen as the primary review artifact instead of
+recomputing every smoothing alternative. On the Spencer mainstem this reduced
+the measured saved-review preparation from about 42 seconds to 0.59 seconds;
+returning to an unchanged tab uses the in-session review without disk reopening.
 
 ## Flowline Points: current/base-event increment complete
 
@@ -236,8 +243,9 @@ The durable feature record is
 The completed audit and implementation automatically consume the exact saved
 Flowlines and Hydro DEMs for every included Stream, identify the one Study
 outlet and tributary confluences from prior Stream Definition, create continuous
-upstream-increasing kilometer stationing across the connected Study Area at a
-default one-meter spacing, sample elevation, review the combined profile, and
+upstream-increasing kilometer stationing across the connected Study Area
+automatically at the default one-meter spacing, sample elevation, review the
+combined profile, and
 save/reopen a compatible `flowline_points` layer plus connection evidence. They preserve
 `ReachName`, `POINT_X`, `POINT_Y`, `POINT_M`, `POINT_M_uncalibrated`,
 `calibration_diff`, `Z`, and `km_to_mouth` exactly; additive identities and
@@ -250,6 +258,10 @@ multiple eligible governed Survey Events exist. Do not simulate that state in
 the single-event Spencer study. Automate file, field, and tolerance selection
 from saved context while preserving the analyst's explicit base-event and
 comparison-event decision required by the FGDB longitudinal-reference contract.
+The current Hydro Modify, Flowline and Flowline Points screens nevertheless
+support any number of locally defined Survey Events through one synchronized
+selector and keep each Event's saved candidates separate. That navigation does
+not itself designate a base/comparison pair or perform calibration.
 
 Resolve routine intermediate steps without separate owner handoffs. Ask only for
 unresolved consequential choices and continue independent authorized work while

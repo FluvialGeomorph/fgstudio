@@ -4,6 +4,10 @@ test_that("workspace separates create and open forms without duplicating inputs"
   expect_match(html, 'data-value="open"', fixed = TRUE)
   expect_match(html, "Purpose / customer question (optional)", fixed = TRUE)
   expect_equal(length(gregexpr('id="study-name"', html, fixed=TRUE)[[1]]), 1L)
+  expect_match(html,"study-hydro-events",fixed=TRUE)
+  expect_match(html,"study-flowline-events",fixed=TRUE)
+  expect_match(html,"study-flowline_points-events",fixed=TRUE)
+  expect_match(html,"fg-open-study",fixed=TRUE)
 })
 
 test_that("module saves once, resets explicitly and opens saved records", {
@@ -53,14 +57,16 @@ test_that("UI escapes study content and shows a clear next step", {
   expect_s3_class(fgstudio_app(withr::local_tempdir()), "shiny.appobj")
 })
 
-test_that("the app includes delayed visual feedback for blocking work",{
+test_that("the app limits delayed blocking feedback to opening a saved study",{
   rendered <- htmltools::renderTags(fg_working_overlay())
   html <- paste(rendered$head,rendered$html)
   expect_match(html,"fg-working-overlay",fixed=TRUE)
   expect_match(html,"fg-working-detail",fixed=TRUE)
   expect_match(html,"<progress",fixed=TRUE)
   expect_match(html,"shiny:busy",fixed=TRUE)
-  expect_match(html,"Opening the terrain-derived Flowline review",fixed=TRUE)
-  expect_match(html,"Create(?: Study Area)? Flowline Points",fixed=TRUE)
-  expect_match(html,"checking shared stationing",fixed=TRUE)
+  expect_match(html,"closest('.fg-open-study')",fixed=TRUE)
+  expect_match(html,"pendingOpen || initialRestore",fixed=TRUE)
+  expect_match(html,"Opening the saved Study Area",fixed=TRUE)
+  expect_false(grepl("activeContext",html,fixed=TRUE))
+  expect_false(grepl("Opening the terrain-derived Flowline review",html,fixed=TRUE))
 })

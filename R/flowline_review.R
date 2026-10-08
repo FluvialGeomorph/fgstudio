@@ -1,17 +1,16 @@
 flowline_review_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::card(bslib::card_header("Flowline"),
-    shiny::p("FG Studio automatically follows the terrain-derived path that best agrees with the Stream you defined, then retains the longest matching head-to-outlet route. Branching tributaries are excluded without another segment-selection step."),
-    shiny::uiOutput(ns("streams")),
+    shiny::p("Choose a Survey Event and Stream. FG Studio saves the conservative Flowline automatically; choose another smoothing strength only when the terrain calls for it."),
+    shiny::uiOutput(ns("events")),shiny::uiOutput(ns("streams")),
     shiny::radioButtons(ns("bandwidth"),"Smoothing strength",
       choices=c("Conservative - 2 m (default)"="2","Moderate - 3 m"="3",
         "Stronger - 4 m"="4","Most aggressive - 5 m"="5"),
       selected="2",inline=TRUE),
-    shiny::p(class="small","Choose among the legacy 2-5 map-unit range. This changes only the displayed Flowline candidate; terrain processing and mainstem selection are reused."),
+    shiny::p(class="small","Changing the smoothing strength automatically saves that candidate. The selected terrain path is reused."),
     shiny::uiOutput(ns("status")),
-    shiny::uiOutput(ns("summary")),
-    shiny::div(class="d-flex gap-2 flex-wrap mb-2",
-      shiny::actionButton(ns("save"),"Save Reach Flowlines",class="btn-success btn-sm")),
+    shiny::tags$details(class="small mb-2",shiny::tags$summary("Selection details"),
+      shiny::uiOutput(ns("summary"))),
     leaflet::leafletOutput(ns("map"),height="650px"),
     shiny::p(class="small","Gold is the automatically selected and smoothed Stream path. Colored lines are the resulting Reach Flowlines, with white dots at shared boundaries. Cyan shows the complete synthetic Stream Network; magenta shows the retained NHDPlusV2 reference. Elevation colors stretch to the current view."))
 }
@@ -35,38 +34,69 @@ load_flowline_review <- function(store, selection, inputs=NULL) {
   network <- sf::st_read(network_path,quiet=TRUE)
   segments <- store$stream_segments(selection$key,selection$stream,selection$path)
   reference <- segments$lines
-  result <- fluvgeo::select_stream_mainstem(network,reference)
-  result$raw_flowline <- result$flowline
-  result$smoothing_candidates <- stats::setNames(lapply(2:5,function(bandwidth)
-    fluvgeo::smooth_flowline(result$raw_flowline,bandwidth=bandwidth)),as.character(2:5))
   dem_path <- file.path(record$path,record$result$file)
-  dem <- terra::rast(dem_path)
-  division_reference <- sf::st_transform(reference,sf::st_crs(result$raw_flowline))
-  result$reach_candidates <- lapply(result$smoothing_candidates,function(path)
-    fluvgeo::derive_reach_flowlines(result$raw_flowline,path,division_reference,
-      segments$reach_mappings,selection$reaches,dem))
-  result$flowline <- result$smoothing_candidates[["2"]]
   saved <- if(is.function(store$flowline_read))
     store$flowline_read(record,selection,segments) else NULL
-  list(record=record,candidate=candidate,network=network,reference=reference,
-    segments=segments,result=result,dem=dem_path,saved=saved)
+  if(!is.null(saved)) {
+    key <- as.character(saved$smoothing_bandwidth)
+    result <- list(raw_flowline=saved$raw_flowline,
+      selected_segments=saved$selected_segments,candidates=NULL,
+      smoothing_candidates=stats::setNames(list(saved$stream_flowline),key),
+      reach_candidates=stats::setNames(list(list(flowlines=saved$flowlines,
+        boundaries=saved$boundaries)),key),flowline=saved$stream_flowline,
+      reopened=TRUE)
+    return(list(record=record,candidate=candidate,network=network,
+      reference=reference,segments=segments,result=result,dem=dem_path,
+      saved=saved,selection=selection))
+  }
+  result <- fluvgeo::select_stream_mainstem(network,reference)
+  result$raw_flowline <- result$flowline
+  result$smoothing_candidates <- list();result$reach_candidates <- list()
+  value <- list(record=record,candidate=candidate,network=network,
+    reference=reference,segments=segments,result=result,dem=dem_path,
+    saved=NULL,selection=selection)
+  prepare_flowline_bandwidth(value,2)
+}
+
+prepare_flowline_bandwidth <- function(value,bandwidth) {
+  key <- as.character(as.numeric(bandwidth)[1])
+  if(key %in% names(value$result$smoothing_candidates) &&
+      key %in% names(value$result$reach_candidates)) return(value)
+  first_candidate <- !length(value$result$smoothing_candidates)
+  path <- fluvgeo::smooth_flowline(value$result$raw_flowline,
+    bandwidth=as.numeric(key))
+  reference <- sf::st_transform(value$reference,
+    sf::st_crs(value$result$raw_flowline))
+  divided <- fluvgeo::derive_reach_flowlines(value$result$raw_flowline,path,
+    reference,value$segments$reach_mappings,value$selection$reaches,
+    terra::rast(value$dem))
+  value$result$smoothing_candidates[[key]] <- path
+  value$result$reach_candidates[[key]] <- divided
+  if(first_candidate) value$result$flowline <- path
+  value
 }
 
 flowline_smoothing_candidate <- function(result,bandwidth=2) {
   key <- as.character(bandwidth)[1]
-  if(!key %in% names(result$smoothing_candidates)) key <- "2"
+  if(!key %in% names(result$smoothing_candidates))
+    key <- names(result$smoothing_candidates)[1]
   result$smoothing_candidates[[key]]
 }
 
-flowline_review_server <- function(id,current,context,store,active=function() TRUE) {
+flowline_review_server <- function(id,current,context,store,active=function() TRUE,
+                                   events=NULL,revision=function() 0L,
+                                   on_changed=function() NULL) {
   shiny::moduleServer(id,function(input,output,session) {
     review <- shiny::reactiveVal(NULL);notice <- shiny::reactiveVal("")
+    busy <- shiny::reactiveVal(FALSE)
     view_notice <- shiny::reactiveVal("");view_busy <- shiny::reactiveVal(FALSE)
     native <- shiny::reactiveVal(FALSE);refreshed <- shiny::reactiveVal(0L)
     view_job <- NULL;view_worker <- NULL;view_dir <- NULL;view_key <- NULL
     worker_ready <- shiny::reactiveVal(FALSE);worker_warming <- FALSE;worker_failed <- FALSE
     last_view <- NULL;loaded_key <- NULL
+    review_cache <- new.env(parent=emptyenv())
     cache <- tempfile("flowline-map-");dir.create(cache)
+    linked_survey_event_selector(input,output,session,events,context)
 
     selected <- shiny::reactive({
       ctx <- context()
@@ -77,6 +107,11 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
       list(key=ctx$key,event=ctx$group_id,stream=stream,path=ctx$path,
         group=ctx$group_path,reaches=ctx$reaches[ctx$reaches$stream_id==stream,,drop=FALSE])
     })
+    shiny::observeEvent(input$stream,{
+      ctx <- context();stream_id <- input$stream
+      fit_stream_map(session,ctx,stream_id)
+      session$onFlushed(function() fit_stream_map(session,ctx,stream_id),once=TRUE)
+    },ignoreInit=TRUE,priority=10)
     selected_flowline <- shiny::reactive({
       value <- review();if(is.null(value)) return(NULL)
       flowline_smoothing_candidate(value$result,input$bandwidth)
@@ -84,7 +119,8 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
     selected_reaches <- shiny::reactive({
       value <- review();if(is.null(value)) return(NULL)
       key <- as.character(input$bandwidth)[1]
-      if(!key %in% names(value$result$reach_candidates)) key <- "2"
+      if(!key %in% names(value$result$reach_candidates))
+        key <- names(value$result$reach_candidates)[1]
       value$result$reach_candidates[[key]]
     })
     output$streams <- shiny::renderUI({
@@ -92,10 +128,26 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
       if(is.null(ctx)) return(shiny::p("Create a Survey Event before deriving a Flowline."))
       panels <- lapply(seq_len(nrow(ctx$streams)),function(i)
         bslib::nav_panel(ctx$streams$stream_name[i],value=ctx$streams$stream_id[i]))
-      shiny::tagList(if(!is.null(ctx$event_label))
-        shiny::p(shiny::strong(paste("Survey Event:",ctx$event_label))),
-        do.call(bslib::navset_tab,c(panels,list(id=session$ns("stream")))))
+      do.call(bslib::navset_tab,c(panels,list(id=session$ns("stream"))))
     })
+
+    publish_candidate <- function(value,bandwidth) {
+      key <- as.character(as.numeric(bandwidth)[1])
+      if(!key %in% names(value$result$smoothing_candidates) ||
+          !key %in% names(value$result$reach_candidates))
+        stop("Prepare the selected smoothing strength before saving it.")
+      if(!is.null(value$saved) &&
+          identical(as.numeric(value$saved$smoothing_bandwidth),as.numeric(key)))
+        return(value)
+      path <- value$result$smoothing_candidates[[key]]
+      divided <- value$result$reach_candidates[[key]]
+      saved <- store$flowline_publish(value$record,value$selection,value$segments,
+        as.numeric(key),value$result$raw_flowline,path,divided$flowlines,
+        divided$boundaries,value$result$selected_segments)
+      value$saved <- saved
+      on_changed()
+      value
+    }
 
     stop_view <- function() {native(FALSE);view_busy(FALSE)}
     shiny::observe({
@@ -122,34 +174,57 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
       },error=function(e){worker_failed <<- TRUE;stop_view();view_notice(hydro_error_message(e))})
     })
 
-    shiny::observeEvent(list(selected(),active()),{
+    shiny::observeEvent(list(selected(),active(),revision()),{
       if(!isTRUE(active())) {stop_view();return()}
       selection <- selected()
       if(is.null(selection)) return()
+      key <- paste(selection$key,selection$event,selection$stream,
+        selection$path,selection$group,shiny::isolate(revision()),sep="\r")
+      if(identical(key,loaded_key) && !is.null(review())) return()
+      if(exists(key,envir=review_cache,inherits=FALSE)) {
+        value <- get(key,envir=review_cache,inherits=FALSE)
+        if(is.null(value$saved)) {
+          busy(TRUE);on.exit(busy(FALSE),add=TRUE)
+          notice("Saving the conservative Flowline...")
+          value <- tryCatch(publish_candidate(value,2),error=function(e) {
+            notice(paste("The default Flowline was not saved:",conditionMessage(e)));value})
+          assign(key,value,envir=review_cache)
+        }
+        review(value);loaded_key <<- key;last_view <<- NULL
+        if(!is.null(value$saved)) shiny::updateRadioButtons(session,"bandwidth",
+          selected=as.character(value$saved$smoothing_bandwidth))
+        notice(if(!is.null(value$saved))
+          paste0("Reach Flowlines are saved automatically at ",
+            value$saved$smoothing_bandwidth," m smoothing.") else notice())
+        refreshed(shiny::isolate(refreshed())+1L)
+        return()
+      }
+      busy(TRUE);on.exit(busy(FALSE),add=TRUE)
       tryCatch({
         inputs <- resolve_flowline_review_inputs(store,selection)
-        if(identical(inputs$key,loaded_key) && !is.null(review())) return()
         review(NULL);last_view <<- NULL;native(FALSE)
-        notice("Selecting the mainstem from the saved Stream Network...")
+        notice("Preparing the selected Stream path...")
         value <- load_flowline_review(store,selection,inputs)
+        if(is.null(value$saved)) {
+          notice("Saving the conservative Flowline...")
+          value <- publish_candidate(value,2)
+        }
         review(value)
-        loaded_key <<- inputs$key
+        loaded_key <<- key;assign(key,value,envir=review_cache)
         if(!is.null(value$saved))
           shiny::updateRadioButtons(session,"bandwidth",
             selected=as.character(value$saved$smoothing_bandwidth))
-        path <- flowline_smoothing_candidate(value$result,shiny::isolate(input$bandwidth))
-        notice(paste0("Flowline selected and smoothed automatically: ",
-          format(round(path$length_m),big.mark=",")," m from ",
-          path$source_segment_count," network lines. ",nrow(value$result$candidates),
-          " complete head-to-outlet paths were evaluated and divided into ",
-          nrow(value$result$reach_candidates[["2"]]$flowlines)," Reach Flowlines.",
-          if(!is.null(value$saved)) " The latest exact saved candidate was reopened." else ""))
+        notice(if(!is.null(value$saved))
+          paste0("Reach Flowlines are saved automatically at ",
+            value$saved$smoothing_bandwidth," m smoothing.") else
+          "The Flowline could not be saved.")
         refreshed(shiny::isolate(refreshed())+1L)
       },error=function(e) {loaded_key <<- NULL;notice(conditionMessage(e))})
     },ignoreNULL=FALSE)
 
     output$map <- leaflet::renderLeaflet({
       value <- review()
+      target_bounds <- NULL
       map <- leaflet::leaflet(options=leaflet::leafletOptions(maxZoom=23)) |>
         leaflet::addMapPane("flowline-basemap",zIndex=200) |>
         leaflet::addMapPane("hydro-hillshade",zIndex=300) |>
@@ -168,13 +243,15 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         leaflet::addScaleBar(position="bottomleft")
       if(!is.null(value)) {
         b <- flowline_dem_bounds(value$dem)
+        target_bounds <- stream_map_bounds(context(),value$selection$stream,b)
         network <- sf::st_transform(value$network,4326)
         reference <- sf::st_transform(value$reference,4326)
         path <- sf::st_transform(flowline_smoothing_candidate(value$result,
           shiny::isolate(input$bandwidth)),4326)
         reach_key <- as.character(shiny::isolate(input$bandwidth))[1]
         if(!length(reach_key) || is.na(reach_key) ||
-           !reach_key %in% names(value$result$reach_candidates)) reach_key <- "2"
+           !reach_key %in% names(value$result$reach_candidates))
+          reach_key <- names(value$result$reach_candidates)[1]
         divided <- value$result$reach_candidates[[reach_key]]
         reaches <- sf::st_transform(divided$flowlines,4326)
         boundaries <- sf::st_transform(divided$boundaries,4326)
@@ -206,10 +283,31 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
           options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
       }
       htmlwidgets::onRender(map,paste(readLines(system.file("www","hydro-display.js",
-        package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"))
+        package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"),
+        data=list(bounds=target_bounds))
     })
 
     shiny::observeEvent(input$bandwidth,{
+      value <- review();if(is.null(value)) return()
+      key <- as.character(input$bandwidth)[1]
+      busy(TRUE);on.exit(busy(FALSE),add=TRUE)
+      if(!key %in% names(value$result$smoothing_candidates)) {
+        notice("Preparing the selected smoothing strength...")
+        value <- tryCatch(prepare_flowline_bandwidth(value,key),error=function(e) {
+          notice(conditionMessage(e));NULL})
+        if(is.null(value)) return()
+      }
+      if(is.null(value$saved) ||
+          !identical(as.numeric(value$saved$smoothing_bandwidth),as.numeric(key))) {
+        notice("Saving the selected smoothing strength...")
+        value <- tryCatch(publish_candidate(value,key),error=function(e) {
+          notice(paste("The selected Flowline was not saved:",conditionMessage(e)));NULL})
+        if(is.null(value)) return()
+      }
+      review(value)
+      if(!is.null(loaded_key)) assign(loaded_key,value,envir=review_cache)
+      notice(paste0("Reach Flowlines are saved automatically at ",key,
+        " m smoothing."))
       path <- selected_flowline();divided <- selected_reaches();if(is.null(path) || is.null(divided)) return()
       display <- sf::st_transform(path,4326)
       reaches <- sf::st_transform(divided$flowlines,4326)
@@ -234,35 +332,22 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
     },ignoreInit=TRUE)
 
-    shiny::observeEvent(input$save,{
-      value <- review();selection <- selected();path <- selected_flowline()
-      divided <- selected_reaches()
-      if(is.null(value) || is.null(selection) || is.null(path) || is.null(divided)) return()
-      notice("Saving an immutable local Flowline candidate...")
-      tryCatch({
-        saved <- store$flowline_publish(value$record,selection,value$segments,
-          as.numeric(input$bandwidth),value$result$raw_flowline,path,
-          divided$flowlines,divided$boundaries,value$result$selected_segments)
-        value$saved <- saved;review(value)
-        notice(paste0("Saved ",nrow(saved$flowlines)," Reach Flowline",
-          if(nrow(saved$flowlines)==1) "" else "s",
-          " as an immutable local candidate. Reopening this exact input revision restores it."))
-      },error=function(e) notice(paste("Flowlines were not saved:",conditionMessage(e))))
-    },ignoreInit=TRUE)
-
     output$status <- shiny::renderUI(shiny::tagList(
       shiny::p(role="status",notice()),shiny::p(class="small",view_notice()),
-      if(view_busy()) shiny::tags$progress(style="width:100%",`aria-label`="Loading Flowline terrain display")))
+      if(busy() || view_busy()) shiny::tags$progress(style="width:100%",
+        `aria-label`=if(busy()) "Preparing Flowline review" else "Loading Flowline terrain display")))
     output$summary <- shiny::renderUI({
       value <- review();path <- selected_flowline();divided <- selected_reaches()
       if(is.null(value) || is.null(path) || is.null(divided)) return(NULL)
       margin <- if(is.na(path$reference_margin_m)) "Only one complete path" else
         paste0(format(round(path$reference_margin_m,1),big.mark=",")," m")
+      paths_compared <- if(is.null(value$result$candidates)) "Reused saved selection" else
+        nrow(value$result$candidates)
       compact_table(data.frame(Item=c("Selection","Complete paths compared","Smoothed Flowline length",
         "Source network lines","Reference mismatch","Next-best reference margin",
         "Smoothing","Maximum smoothing displacement","Length change from raw path",
         "Reach Flowlines","Local candidate"),
-        Value=c("Automatic reference-constrained longest path",nrow(value$result$candidates),
+        Value=c("Automatic reference-constrained longest path",paths_compared,
           paste0(format(round(path$length_m),big.mark=",")," m"),path$source_segment_count,
           paste0(format(round(path$reference_hausdorff_m,1),big.mark=",")," m"),margin,
           paste0(path$smoothing_method,"; ",path$smoothing_bandwidth," ",
@@ -272,7 +357,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
           paste0(round(path$length_change_percent,1),"%"),
           paste(divided$flowlines$ReachName,collapse="; "),
           if(!is.null(value$saved) && identical(value$saved$smoothing_bandwidth,
-            as.numeric(input$bandwidth))) "Saved for these exact inputs" else "Preview - save when satisfied")))
+            as.numeric(input$bandwidth))) "Saved automatically for these exact inputs" else "Not saved")))
     })
     bounds <- shiny::debounce(shiny::reactive(input$map_bounds),350)
     shiny::observe({
@@ -335,4 +420,26 @@ flowline_dem_bounds <- function(path) {
   bounds <- sf::st_bbox(c(xmin=extent[1],ymin=extent[3],xmax=extent[2],ymax=extent[4]),
     crs=sf::st_crs(terra::crs(raster)))
   unname(sf::st_transform(bounds,4326))
+}
+
+stream_map_bounds <- function(context,stream_id,fallback=NULL) {
+  if(is.null(context) || is.null(context$streams)) return(fallback)
+  streams <- context$streams
+  if(!inherits(streams,"sf") || length(stream_id)!=1L ||
+      !"stream_id" %in% names(streams) || !stream_id %in% streams$stream_id)
+    return(fallback)
+  feature <- streams[streams$stream_id==stream_id,,drop=FALSE]
+  if(!nrow(feature) || all(sf::st_is_empty(feature))) return(fallback)
+  bounds <- unname(sf::st_bbox(sf::st_transform(feature,4326))[
+    c("xmin","ymin","xmax","ymax")])
+  if(length(bounds)!=4L || any(!is.finite(bounds)) ||
+      bounds[1]>=bounds[3] || bounds[2]>=bounds[4]) fallback else bounds
+}
+
+fit_stream_map <- function(session,context,stream_id,map_id="map") {
+  bounds <- stream_map_bounds(context,stream_id)
+  if(is.null(bounds)) return(invisible(FALSE))
+  leaflet::fitBounds(leaflet::leafletProxy(map_id,session),bounds[1],bounds[2],
+    bounds[3],bounds[4],options=list(animate=FALSE,padding=c(16,16)))
+  invisible(TRUE)
 }

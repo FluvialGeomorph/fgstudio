@@ -54,17 +54,20 @@ definition matters even when a project does not use FGDB.
 - Automatically select and review a smoothed mainstem Flowline from a saved
   synthetic Stream Network using the previously chosen NHDPlusV2 Stream as
   reference evidence, with a conservative 2 m default and selectable 2–5 m
-  smoothing candidates; divide the selected path into Reach Flowlines and save
-  an immutable local candidate bound to the exact inputs.
+  smoothing candidates; divide and save the selected path as exact-input Reach
+  Flowlines automatically.
+- Create and reopen one-metre Flowline Points across every connected Stream and
+  Reach in a Survey Event, with legacy-compatible fields, Study-wide
+  `km_to_mouth` stationing, sampled elevations, and combined profile review.
 - Retain saved revisions and source evidence as the study evolves.
 
 The current release is a **trusted, single-analyst local development preview**.
 Synthetic Stream extraction and local Flowline creation are available, including
-Reach division and immutable save/reopen. Flowline Points is the next workflow
-step. Datum-operation
-review and explicit selection are available, but execution of selected cross-CRS
-pipelines remains pending. Level 1 execution, report delivery and governed FGDB
-delivery are not yet exposed by this app.
+Reach division and immutable save/reopen. Current/base-event Flowline Points are
+also implemented; comparison-event calibration remains later work.
+Datum-operation review and explicit selection are available, but execution of
+selected cross-CRS pipelines remains pending. Level 1 execution, report delivery
+and governed FGDB delivery are not yet exposed by this app.
 Saving a CRS specification does not transform elevations or establish data fitness.
 
 ## Documentation as part of development

@@ -195,10 +195,10 @@ portable delivery binding.
 See [Hydro modification](dev-15-hydro-modify.html) for operation and storage routes.
 
 The Flowline tab reads those immutable inputs, derives one raw Stream path, and
-computes the historical 2–5-map-unit candidates with 2 as the default. Switching
-candidates changes only transient display state. **Save Reach Flowlines** divides
-the chosen path at retained Reach transitions and writes a new immutable local
-revision without mutating terrain or the saved network. Exact Study, Event, Hydro,
+computes the historical 2–5-map-unit candidates with 2 as the default. The
+default is divided at retained Reach transitions and saved automatically;
+selecting another smoothing strength prepares and saves that candidate without
+mutating terrain or the saved network. Exact Study, Event, Hydro,
 network, reference and Reach-mapping fingerprints govern reopening. See
 [Automatic Flowline creation](dev-16-flowline.html). The revision contains
 `flowlines.gpkg`, `result.rds` and `provenance.json`; its required layers are the
@@ -207,7 +207,8 @@ with a boundary layer when applicable. Flowline Points can consume
 the saved local Reach candidates; governed FGDB publication remains separate.
 
 The Flowline Points tab consumes every exact saved Stream candidate and bound
-Hydro DEM in the Survey Event. At creation, it retains existing vertices,
+Hydro DEM in the Survey Event. When no matching candidate exists it automatically
+creates the one-metre default. Creation retains existing vertices,
 inserts points no farther than the chosen spacing (one metre by default), finds
 the one Study outlet and tributary confluences from prior Stream definitions,
 carries a common kilometer measure upstream, and samples elevation. The

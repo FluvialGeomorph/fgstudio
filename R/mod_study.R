@@ -14,7 +14,7 @@ mod_study_ui <- function(id) {
         shiny::tabPanel("Open", value = "open",
           shiny::selectInput(ns("saved"), "Saved studies", choices = character()),
           shiny::div(class = "d-flex gap-2 flex-wrap",
-            shiny::actionButton(ns("open"), "Open study", class = "btn-primary btn-sm"),
+            shiny::actionButton(ns("open"), "Open study", class = "btn-primary btn-sm fg-open-study"),
             shiny::actionButton(ns("refresh"), "Refresh list", class = "btn-outline-secondary btn-sm")),
           shiny::uiOutput(ns("catalog_note")))),
       shiny::uiOutput(ns("message"))
@@ -52,15 +52,22 @@ mod_study_server <- function(id, store) {
     editor_key <- NULL
     generation <- 0L
     pending_selection <- NULL
+    hydro_revision <- shiny::reactiveVal(0L)
+    flowline_revision <- shiny::reactiveVal(0L)
+    advance <- function(value) value(shiny::isolate(value()) + 1L)
     collections <- mod_survey_collections_server("survey_collections",current,store)
     event_settings <- survey_event_settings_server("event_settings",current,store,
       collections$selection_path,collections$has_pending)
     hydro_modify_server("hydro",current,event_settings$context,store,
-      active=function() identical(input$study_task,"Hydro Modify"))
+      active=function() identical(input$study_task,"Hydro Modify"),events=event_settings,
+      on_changed=function() {advance(hydro_revision);advance(flowline_revision)})
     flowline_review_server("flowline",current,event_settings$context,store,
-      active=function() identical(input$study_task,"Flowline"))
+      active=function() identical(input$study_task,"Flowline"),events=event_settings,
+      revision=hydro_revision,on_changed=function() advance(flowline_revision))
     flowline_points_review_server("flowline_points",current,event_settings$context,
-      store,active=function() identical(input$study_task,"Flowline Points"))
+      store,active=function() identical(input$study_task,"Flowline Points"),
+      events=event_settings,revision=shiny::reactive(paste(hydro_revision(),
+        flowline_revision(),sep=":")))
     shiny::observeEvent(input$continue_event,
       shiny::updateTabsetPanel(session,"study_task",selected="Define a Survey Event"),ignoreInit=TRUE)
     analysis_pending <- function() collections$has_pending() || event_settings$has_pending() ||

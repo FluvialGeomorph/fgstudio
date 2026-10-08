@@ -1,17 +1,44 @@
-function(el, x) {
+function(el, x, data) {
   var map = this;
+  var targetBounds = data && data.bounds;
+  var fittedTarget = false;
+  var wasVisible = false;
+  var fitTimer = null;
+  function fitTarget() {
+    var visible = el.offsetWidth > 0 && el.offsetHeight > 0;
+    if (!visible) {
+      wasVisible = false;
+      if (fitTimer !== null) window.clearTimeout(fitTimer);
+      fitTimer = null;
+      return;
+    }
+    map.invalidateSize({pan: false});
+    if ((!wasVisible || !fittedTarget) && Array.isArray(targetBounds) &&
+        targetBounds.length === 4 && targetBounds.every(Number.isFinite)) {
+      if (fitTimer !== null) window.clearTimeout(fitTimer);
+      fitTimer = window.setTimeout(function() {
+        fitTimer = null;
+        if (el.offsetWidth <= 0 || el.offsetHeight <= 0) return;
+        map.invalidateSize({pan: false});
+        map.fitBounds([[targetBounds[1], targetBounds[0]],
+          [targetBounds[3], targetBounds[2]]],
+          {animate: false, padding: [16, 16]});
+        fittedTarget = true;
+      }, 60);
+    }
+    wasVisible = true;
+  }
   // Leaflet can be initialized while a workflow tab is hidden. ResizeObserver
-  // corrects the map as soon as its real visible dimensions are available,
-  // without exposing a workflow button for a display lifecycle detail.
+  // corrects its dimensions and applies the newly selected Stream extent once
+  // the map is visible. Later resizes do not override the analyst's own zoom.
   if (window.ResizeObserver) {
     if (el.fgResizeObserver) el.fgResizeObserver.disconnect();
     el.fgResizeObserver = new ResizeObserver(function() {
-      if (el.offsetWidth > 0 && el.offsetHeight > 0) {
-        map.invalidateSize({pan: false});
-      }
+      fitTarget();
     });
     el.fgResizeObserver.observe(el);
   }
+  fitTarget();
   var control = L.control({position: 'bottomleft'});
   control.onAdd = function() {
     var box = L.DomUtil.create('div', 'leaflet-control hydro-opacity');

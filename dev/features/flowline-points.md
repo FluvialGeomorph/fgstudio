@@ -1,7 +1,7 @@
 # Flowline Points capability qualification and FG Studio integration
 
 - Status: current/base-event creation implemented and verified; comparison-event calibration deferred
-- Updated: 2026-10-06
+- Updated: 2026-10-07
 - Workflow position: after saved Flowline and before Features, REM, and Cross
   Sections
 - Legacy producer: `FluvialGeomorph-toolbox/tools/_06_FlowlinePoints.py`
@@ -118,11 +118,20 @@ the replacement profile explicitly.
 
 The **Flowline Points** tab now opens the exact saved Reach Flowline revisions
 and bound Hydro DEMs for every Stream in the Survey Event, defaults to one-metre
-maximum spacing, and exposes spacing only as an advanced override. Stream tabs
+maximum spacing, and creates that default automatically when no exact candidate
+exists. Spacing and **Recreate Flowline Points** appear only as advanced override
+controls. Stream tabs
 change only the detailed map review; the graph and saved candidate always
 include the entire Study Area network. Creation validates topology, direction,
 CRS, coverage, finite elevations, legacy fields, units and continuous shared
 stationing. Long work uses the standard progress cue.
+
+A linked Survey Event selector appears on Hydro Modify, Flowline and Flowline
+Points. It supports any number of locally defined Events and keeps their
+candidates separate. Returning to the unchanged Flowline Points tab reuses its
+in-session review before reopening any of the full point or Flowline layers;
+Hydro and Flowline saves explicitly invalidate that reuse. Multi-Event navigation
+does not yet perform comparison-event calibration or accept a governed frame.
 
 `fluvgeo::study_area_flowline_points()` uses prior Stream Definition as the
 topology authority. A Stream whose downstream endpoint lies in another Stream's

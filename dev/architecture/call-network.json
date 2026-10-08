@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "fgstudio",
-  "package_version": "0.0.0.9084",
+  "package_version": "0.0.0.9090",
   "generator": {
     "pkgnet": "0.6.1",
     "flow": "0.2.0"
@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "b3807d9a3606fc12f1da3f03ba82f5aa70adb3195cf76602e74e78d6550bc44f"
+      "sha256": "1094df0d62e1f7fba2f17d046382172b78873b6237328f40a10aeb2f51d81b17"
     },
     {
       "file": "NAMESPACE",
@@ -18,7 +18,7 @@
     },
     {
       "file": "R/app.R",
-      "sha256": "dc2988a25d031446718210dc7561e097a6b61bee83841551f555786309dbd312"
+      "sha256": "a14d219f72baddd108ad0da9fcda3961891d2282253d7a2f9122634a0ac65330"
     },
     {
       "file": "R/compact_table.R",
@@ -41,16 +41,24 @@
       "sha256": "5d11e6ba4f71105ad282efdc2d777ff250f107345f662681d5d6fd49637c251d"
     },
     {
+      "file": "R/flowline_points_review.R",
+      "sha256": "727787bf9ee395b4fda70341e87f9bc6354e3edd1195698a0d6f6f2dacf5203e"
+    },
+    {
+      "file": "R/flowline_points_store.R",
+      "sha256": "d391676926f91f8bb9343346e7879c6ef49376d00f3aedca2c608d80a2bb3e32"
+    },
+    {
       "file": "R/flowline_review.R",
-      "sha256": "641972ed3c265ea6f23a52194d0a44c64cccf25fa777c31d663c0507ae7c806c"
+      "sha256": "75873ff1476083ea6c6db9d782463b64df46e7e679f92059f5ce324c4cc8b8dd"
     },
     {
       "file": "R/flowline_store.R",
-      "sha256": "76dea6777dfa3d1e92343596f808dbb38c2f934a8dde2be6e8473a98fe847ef8"
+      "sha256": "2bc4c426a93ba35517a5008f58c28dada1dcf9c6eed3e917de2e1569941d8751"
     },
     {
       "file": "R/hydro_modify.R",
-      "sha256": "835e4d09c407a122169ef9819f922050d861102ec4d23e8156904af1ba7e7e0f"
+      "sha256": "b2dcda05d76c4741e28105771235a7d5d7d9d187db0cb102d374f45b3eefcbb2"
     },
     {
       "file": "R/hydro_store.R",
@@ -58,7 +66,7 @@
     },
     {
       "file": "R/map_basemaps.R",
-      "sha256": "88ea72937133435961ed14f6eb822b10cd64e3b16622d7070fd610c52a750d10"
+      "sha256": "713e87d2662aee4bc6c7ca1299eef67003b6796bc6bf1e4b035e215cab9634d6"
     },
     {
       "file": "R/map_search.R",
@@ -74,7 +82,7 @@
     },
     {
       "file": "R/mod_study.R",
-      "sha256": "cd4f6aa77f2f1ec6fadaa7722db470a417834be7ca670024a1f91c94dc4f0474"
+      "sha256": "ed31208d430fc7663b287ec1aa816c84e3f62479eaa86a38ec31a1ae1fb89f5e"
     },
     {
       "file": "R/mod_survey_collections.R",
@@ -150,7 +158,7 @@
     },
     {
       "file": "R/study_store.R",
-      "sha256": "4ef10e2b8bc6a620f2cd7ced10e6f20b7131bac2c5ce5b11774d2090e2f00b33"
+      "sha256": "9ed4d983cedb968bab507e7f2cc0f1b03468090ec6c54b76170266a71d8bb77e"
     },
     {
       "file": "R/study_transform_store.R",
@@ -166,7 +174,7 @@
     },
     {
       "file": "R/survey_event_settings.R",
-      "sha256": "b6fdf911bb9c3256dfd568cdbca1cb57b646a846faee9ede964eceb0f25abf60"
+      "sha256": "5a820229f9321923cb38241caa98d33d02500c8f53156b6cb07b4c49789cb581"
     },
     {
       "file": "R/terrain_dem_provenance.R",
@@ -222,7 +230,7 @@
       "locations": [
         {
           "file": "R/map_basemaps.R",
-          "line": 2
+          "line": 4
         }
       ]
     },
@@ -452,7 +460,17 @@
       "locations": [
         {
           "file": "R/app.R",
-          "line": 20
+          "line": 23
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::fit_stream_map",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 439
         }
       ]
     },
@@ -462,7 +480,37 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 326
+          "line": 418
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::flowline_points_display_sample",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_points_review.R",
+          "line": 53
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::flowline_points_review_server",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_points_review.R",
+          "line": 58
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::flowline_points_review_ui",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_points_review.R",
+          "line": 1
         }
       ]
     },
@@ -472,7 +520,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 55
+          "line": 86
         }
       ]
     },
@@ -492,7 +540,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 49
+          "line": 79
         }
       ]
     },
@@ -522,7 +570,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 437
+          "line": 504
         }
       ]
     },
@@ -542,7 +590,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 432
+          "line": 499
         }
       ]
     },
@@ -552,7 +600,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 21
+          "line": 20
         }
       ]
     },
@@ -592,7 +640,17 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 372
+          "line": 426
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::launch_hydro_passthrough",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/hydro_modify.R",
+          "line": 432
         }
       ]
     },
@@ -642,7 +700,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 378
+          "line": 445
         }
       ]
     },
@@ -652,7 +710,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 390
+          "line": 457
         }
       ]
     },
@@ -707,12 +765,32 @@
       ]
     },
     {
+      "id": "fgstudio::linked_survey_event_selector",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/survey_event_settings.R",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::load_flowline_points_review",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_points_review.R",
+          "line": 23
+        }
+      ]
+    },
+    {
       "id": "fgstudio::load_flowline_review",
       "exported": false,
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 20
+          "line": 29
         }
       ]
     },
@@ -782,7 +860,7 @@
       "locations": [
         {
           "file": "R/mod_study.R",
-          "line": 39
+          "line": 41
         }
       ]
     },
@@ -853,6 +931,16 @@
         {
           "file": "R/polygon_selection.R",
           "line": 26
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::prepare_flowline_bandwidth",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 61
         }
       ]
     },
@@ -937,12 +1025,22 @@
       ]
     },
     {
+      "id": "fgstudio::resolve_flowline_review_inputs",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 18
+        }
+      ]
+    },
+    {
       "id": "fgstudio::reuse_stream_network_threshold",
       "exported": false,
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 399
+          "line": 466
         }
       ]
     },
@@ -952,7 +1050,7 @@
       "locations": [
         {
           "file": "R/app.R",
-          "line": 49
+          "line": 52
         }
       ]
     },
@@ -1102,6 +1200,16 @@
       ]
     },
     {
+      "id": "fgstudio::stream_map_bounds",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_review.R",
+          "line": 425
+        }
+      ]
+    },
+    {
       "id": "fgstudio::stream_names_input",
       "exported": false,
       "locations": [
@@ -1172,6 +1280,16 @@
       ]
     },
     {
+      "id": "fgstudio::study_flowline_points_store",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_points_store.R",
+          "line": 3
+        }
+      ]
+    },
+    {
       "id": "fgstudio::study_flowline_store",
       "exported": false,
       "locations": [
@@ -1232,6 +1350,16 @@
       ]
     },
     {
+      "id": "fgstudio::survey_event_choice_labels",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/survey_event_settings.R",
+          "line": 18
+        }
+      ]
+    },
+    {
       "id": "fgstudio::survey_event_dems_server",
       "exported": false,
       "locations": [
@@ -1257,7 +1385,7 @@
       "locations": [
         {
           "file": "R/survey_event_settings.R",
-          "line": 18
+          "line": 57
         }
       ]
     },
@@ -1586,6 +1714,78 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::fit_stream_map",
+      "to": "fgstudio::stream_map_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::add_opentopomap",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::fit_stream_map",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::flowline_dem_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::flowline_points_display_sample",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::hydro_error_message",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::linked_survey_event_selector",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::load_flowline_points_review",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::stream_map_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::terrain_palette",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::valid_map_bounds",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::flowline_review_server",
       "to": "fgstudio::add_opentopomap",
       "kind": "static-dependency",
@@ -1594,6 +1794,12 @@
     {
       "from": "fgstudio::flowline_review_server",
       "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::fit_stream_map",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1617,7 +1823,31 @@
     },
     {
       "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::linked_survey_event_selector",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
       "to": "fgstudio::load_flowline_review",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::prepare_flowline_bandwidth",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::resolve_flowline_review_inputs",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::stream_map_bounds",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1641,6 +1871,12 @@
     },
     {
       "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::fit_stream_map",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
       "to": "fgstudio::hydro_dem_bounds",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
@@ -1654,6 +1890,18 @@
     {
       "from": "fgstudio::hydro_modify_server",
       "to": "fgstudio::hydro_error_message",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::linked_survey_event_selector",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::stream_map_bounds",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1700,8 +1948,26 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::load_flowline_review",
+      "to": "fgstudio::prepare_flowline_bandwidth",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::load_flowline_review",
+      "to": "fgstudio::resolve_flowline_review_inputs",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::local_study_store",
       "to": "fgstudio::study_dem_store",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::local_study_store",
+      "to": "fgstudio::study_flowline_points_store",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1917,6 +2183,12 @@
     },
     {
       "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::flowline_points_review_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
       "to": "fgstudio::flowline_review_server",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
@@ -1978,6 +2250,12 @@
     {
       "from": "fgstudio::mod_study_server",
       "to": "fgstudio::survey_event_settings_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_ui",
+      "to": "fgstudio::flowline_points_review_ui",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -2284,6 +2562,12 @@
     {
       "from": "fgstudio::survey_event_settings_server",
       "to": "fgstudio::event_masks_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::survey_event_settings_server",
+      "to": "fgstudio::survey_event_choice_labels",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -2706,8 +2990,8 @@
     }
   ],
   "evaluation": {
-    "static_nodes": 128,
-    "static_edges": 157,
+    "static_nodes": 140,
+    "static_edges": 183,
     "reviewed_bridges": 31,
     "storage_closure_detected": false,
     "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]

@@ -15,17 +15,63 @@ survey_event_settings_ui <- function(id) {
       event_masks_ui(ns("masks")),survey_event_dems_ui(ns("dems"))))
 }
 
+survey_event_choice_labels <- function(groups) {
+  if (!length(groups)) return(character())
+  labels <- vapply(groups, function(g) paste0(g$settings$year,
+    if (!is.na(g$settings$month)) sprintf("-%02d", g$settings$month) else
+      " (month unknown)"), character(1))
+  duplicate <- duplicated(labels) | duplicated(labels, fromLast = TRUE)
+  labels[duplicate] <- paste(labels[duplicate], vapply(groups[duplicate],
+    function(g) paste(g$members$title, collapse = ", "), character(1)), sep = " | ")
+  stats::setNames(as.character(names(groups)), labels)
+}
+
+linked_survey_event_selector <- function(input, output, session, events, context) {
+  output$events <- shiny::renderUI({
+    if (is.null(events)) {
+      ctx <- context()
+      if (is.null(ctx)) return(shiny::p("Create a Survey Event to continue."))
+      return(shiny::p(shiny::strong(paste("Survey Event:", ctx$event_label))))
+    }
+    choices <- events$choices()
+    if (!length(choices)) return(shiny::p("Create a Survey Event to continue."))
+    shiny::selectInput(session$ns("event"), "Survey Event",
+      choices = choices, selected = events$selected(), selectize = FALSE,
+      width = "18rem")
+  })
+  if (!is.null(events)) {
+    shiny::observeEvent(input$event, {
+      id <- input$event
+      if (length(id) == 1L && nzchar(id) && !identical(id, events$selected()))
+        events$select(id)
+    }, ignoreInit = TRUE)
+    shiny::observeEvent(events$selected(), {
+      id <- events$selected()
+      if (length(id) == 1L && nzchar(id))
+        shiny::updateSelectInput(session, "event", selected = id)
+    }, ignoreInit = TRUE)
+  }
+  invisible(NULL)
+}
+
 survey_event_settings_server <- function(id,current,store,selection_path,selection_pending) {
   shiny::moduleServer(id,function(input,output,session) {
     saved <- shiny::reactiveVal(list(path=NULL,groups=list()))
     discovery <- shiny::reactiveVal(NULL); editing <- shiny::reactiveVal(FALSE)
+    active_group <- shiny::reactiveVal(NULL)
     status <- shiny::reactiveVal("Save Survey Collection selections and the Study Area analysis CRS first.")
     edit_id <- NULL; expected <- NULL
     selected_group <- shiny::reactive({
       ids <- names(saved()$groups)
-      if(length(input$group)==1L && input$group %in% ids) return(input$group)
+      if(length(active_group())==1L && active_group() %in% ids)
+        return(active_group())
       if(length(ids)) ids[[1]] else NULL
     })
+    shiny::observeEvent(input$group, {
+      ids <- names(saved()$groups)
+      active_group(if(length(input$group)==1L && input$group %in% ids)
+        input$group else if(length(ids)) ids[[1]] else NULL)
+    },ignoreInit=TRUE)
     preflight_context <- shiny::reactive({
       id <- selected_group();if(is.null(id)) return(NULL)
       x <- current(); g <- saved()$groups[[id]]
@@ -47,11 +93,16 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
       preflight_context()
     }), store=store,ready=function() !is.function(masks$busy) || !masks$busy())
     reload <- function() {
+      chosen <- active_group()
       x <- current(); editing(FALSE); shiny::removeModal(session=session)
       saved(list(path=NULL,groups=list())); discovery(NULL)
       if(is.null(x)) return()
       tryCatch({
-        saved(store$acquisition_groups(x$key)); discovery(store$survey_collections(x$key)$discovery)
+        next_saved <- store$acquisition_groups(x$key)
+        saved(next_saved)
+        active_group(if(length(chosen)==1L && chosen %in% names(next_saved$groups))
+          chosen else if(length(next_saved$groups)) names(next_saved$groups)[1] else NULL)
+        discovery(store$survey_collections(x$key)$discovery)
         status("")
       },error=function(e) status(conditionMessage(e)))
     }
@@ -59,12 +110,8 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
     output$event_choices <- shiny::renderUI({
       groups <- saved()$groups
       if(!length(groups)) return(shiny::p("No Survey Events yet. Use Define a Survey Event below to create the first one."))
-      labels <- vapply(groups,function(g) paste0(g$settings$year,
-        if(!is.na(g$settings$month)) sprintf("-%02d",g$settings$month) else " (month unknown)"),character(1))
-      duplicate <- duplicated(labels) | duplicated(labels,fromLast=TRUE)
-      labels[duplicate] <- paste(labels[duplicate],vapply(groups[duplicate],function(g) paste(g$members$title,collapse=", "),character(1)),sep=" | ")
       shiny::selectInput(session$ns("group"),"Survey Event date",
-        choices=stats::setNames(as.character(names(groups)),labels),selectize=FALSE,
+        choices=survey_event_choice_labels(groups),selectize=FALSE,
         selected=shiny::isolate(selected_group()))
     })
     output$new_event_controls <- shiny::renderUI(shiny::tags$details(
@@ -165,7 +212,7 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
           event_ids=if(is.null(input$events)) character() else input$events,group_id=edit_id,
           expected_path=expected$context,expected_selection=expected$selection,expected_groups=expected$groups)
         selected <- if(!is.null(edit_id)) edit_id else setdiff(names(next_saved$groups),names(saved()$groups))[1]
-        saved(next_saved); editing(FALSE); shiny::removeModal(session=session)
+        saved(next_saved);active_group(selected);editing(FALSE); shiny::removeModal(session=session)
         shiny::updateSelectInput(session,"group",selected=selected)
         status("Event settings saved. Prior revisions and acquisition evidence are retained.")
       },error=function(e) status(paste("Event settings not saved:",conditionMessage(e))))
@@ -183,6 +230,14 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
           !identical(g$settings$selection_revision,basename(selection_path()))) "Changed setup: review required" else "Saved")))
     },spacing="xs")
     list(has_pending=function() isTRUE(shiny::isolate(editing())),status=status,
-      context=shiny::reactive({if(isTRUE(editing()) || selection_pending()) return(NULL);preflight_context()}))
+      context=shiny::reactive({if(isTRUE(editing()) || selection_pending()) return(NULL);preflight_context()}),
+      choices=shiny::reactive(survey_event_choice_labels(saved()$groups)),
+      selected=shiny::reactive(selected_group()),
+      select=function(id) {
+        if(length(id)==1L && id %in% names(saved()$groups)) {
+          active_group(id)
+          shiny::updateSelectInput(session,"group",selected=id)
+        }
+      })
   })
 }

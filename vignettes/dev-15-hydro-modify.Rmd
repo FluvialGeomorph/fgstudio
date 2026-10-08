@@ -9,10 +9,11 @@ vignette: >
 
 Hydro Modify follows Survey Events in the Study tabset. It uses the selected
 Event and its existing Stream DEM editions. `selected_group()` in Event settings
-resolves a valid explicit selection or the first saved Event before the hidden
-dropdown renders. Both panels therefore use the same context; pending edits still
+resolves a valid explicit selection or the first saved Event before the linked
+selector renders. Survey Events, Hydro Modify, Flowline and Flowline Points use
+that same selection. Pending edits still
 withhold processing, and no saved Events produce the normal empty state.
-Hydro Modify shows the selected Event date above its Stream tabs. The current implementation supports
+Hydro Modify shows the Event selector above its Stream tabs. The current implementation supports
 close inspection, persistent cutline drawing, background hydro modification and
 review of the saved result against the original DEM. From a saved Hydro DEM it
 also extracts, displays and reopens a terrain-derived candidate stream network.
@@ -22,9 +23,11 @@ also extracts, displays and reopens a terrain-derived candidate stream network.
 eligible edition with `dem_request()` and `find_dem()`. Event, Study or Stream
 changes replace the map context and restore drawings bound to that source edition.
 
-The map widget itself is initialized to the DEM raster's extent; it does not
-depend on an early proxy command reaching a still-hidden widget. The layer control
-selects Imagery, Street map or OpenTopoMap and independently toggles Elevation,
+The map widget uses the saved Stream feature as its fit target, falling back to
+the DEM raster only when Stream geometry is unavailable. It refits with a small
+margin when the Stream changes or the hidden workflow tab becomes visible; it
+does not depend on an early proxy command reaching a still-hidden widget. The
+layer control defaults to OpenTopoMap, also offers Imagery and Street map, and independently toggles Elevation,
 Hillshade, Synthetic stream, Cutlines and DEM extent. Stream changes replace the map widget and
 restore only drawings attached to that displayed DEM. Do not queue proxy clears
 of the cutline group during replacement: Shiny may deliver them after the new
@@ -50,7 +53,7 @@ path. GDAL window extraction selects available overviews within a display
 budget; close views retain source cells before Web Mercator display
 reprojection. Geographic map bounds are intersected with the DEM's geographic
 extent before projection to its local CRS. Wrapped longitudes are normalized;
-empty views return a normal message and a Return to Stream action. Each viewport
+empty views return a normal message. Each viewport
 uses a local elevation stretch. The color sequence
 matches `fluvgeo::get_terrain_leaflet()` and is shared by the other DEM views.
 International-foot elevations on metre grids are converted for hillshade slope.
@@ -71,7 +74,7 @@ rejects a stale edit rather than overwriting another saved drawing.
 | --- | --- | --- |
 | Saved Stream DEM | Read for display | Existing external GeoTIFF edition associated with the selected Event and Stream |
 | Cutline drawing revision | `hydro_drawn_lines()`, `study_hydro_store()` | Study-local `hydro-modify/<event hash>/<stream hash>/<revision>/cutlines.gpkg`, layer `cutlines`; source DEM ID and context in `cutlines.rds` |
-| Hydro-modified Stream DEM | `launch_hydro_burn()` -> `fluvgeo::burn_hydro_cutlines()` -> `hydro_publish()` | Drawing revision's `result/hydro-dem.tif`, `provenance.json` and internal `result.rds`; explicit source DEM edition and cutline revision links |
+| Hydro Stream DEM | With cuts: `launch_hydro_burn()` -> `fluvgeo::burn_hydro_cutlines()`; without cuts: `launch_hydro_passthrough()`; both finish through `hydro_publish()` | Drawing revision's `result/hydro-dem.tif`, `provenance.json` and internal `result.rds`; explicit source DEM edition and cutline revision links |
 | Elevation and hillshade display | `prepare_hydro_dem_view()` | Session/job-owned temporary GeoTIFFs, removed when replaced or the session ends |
 | Display pyramids | `.fg_hydro_display_cache()` | Study-local `terrain-display/<key>` COGs and completion record; regenerable, separate from analytical editions |
 | Synthetic stream candidate | First run: `launch_stream_extraction()` -> `locate_stream_outlet()` -> `extract_synthetic_stream_network()`; threshold updates: `launch_stream_threshold()` -> `threshold_synthetic_stream_network()`; both publish through `study_stream_network_store()` | Hydro-revision-local immutable directory containing routing/fill/direction/accumulation GeoTIFFs, diagnostic fill GeoTIFF, `stream-network.gpkg`, outlet evidence and provenance |
@@ -84,10 +87,13 @@ source, source selection or Study context rejects stale completion. A newer DEM
 edition does not invalidate a job bound to the retained displayed edition. Reopening
 drawings selects their linked edition when its saved input binding remains valid.
 Display/hydro-only backend releases reuse equivalent Stream DEM recipes rather
-than trigger unnecessary rebuilding. Re-applying
-an unchanged drawing reuses its saved result. Changing drawings creates a new
+than trigger unnecessary rebuilding. The apply control exists only for a
+nonempty drawing revision without a result and disappears after publication.
+Changing drawings creates a new
 revision and switches review back to the original DEM until the new cuts are
-applied. Editing and source changes retain previous results.
+applied. When no cutline is saved, the extraction action publishes an unchanged
+copy of the original Stream DEM and continues automatically. Editing and source
+changes retain previous results.
 
 The author-provided legacy `_02_HydroDEM.py` rasterizes line IDs, optionally
 expands zones, calculates each zone's minimum elevation, and replaces elevations
@@ -110,7 +116,8 @@ cutlines.
 ## Synthetic Stream review
 
 The analyst enters an initiation area in hectares; one hectare is the default.
-Extraction requires the saved Hydro DEM and runs in a separate R process. The
+Extraction ensures that a bound Hydro DEM exists, carrying the original forward
+unchanged when no cutline is needed, and runs in a separate R process. The
 NHDPlusV2 source chain and the next downstream NLDI segment identify an
 approximate rounded-cap crossing. The selected outlet is the lowest valid Hydro
 DEM boundary cell within 30 metres of that crossing. When NLDI does not return a

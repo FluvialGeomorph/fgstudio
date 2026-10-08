@@ -22,7 +22,9 @@ Studio calls `study_area_flowline_points()` to obtain the legacy ArcPy-
 replacement profile in kilometers across every connected Stream and ordered
 Reach in one Study Area reference frame.
 
-The present boundary is current/base-event creation and local immutable review.
+Each locally defined Survey Event is selectable on this screen and retains its
+own immutable candidate. The present analytical boundary is current/base-event
+creation and local immutable review.
 Comparison-event calibration, acceptance of an FGDB longitudinal reference
 frame, and governed publication remain later work.
 
@@ -33,9 +35,11 @@ frame, and governed publication remain later work.
 2. `load_flowline_points_review()` opens each exact saved Hydro revision,
    Stream segment evidence, and Reach Flowline candidate. Missing prerequisites
    identify the Stream and route back to the responsible tab.
-3. The create action passes all saved Reach lines, Hydro rasters, and Stream
-   corridors to `fluvgeo::study_area_flowline_points()`. The default maximum
-   spacing is one metre; existing Flowline vertices are retained.
+3. When no exact candidate exists, the module automatically passes all saved
+   Reach lines, Hydro rasters, and Stream corridors to
+   `fluvgeo::study_area_flowline_points()` at the one-metre default. The advanced
+   recreate action uses an explicit alternate spacing. Existing Flowline vertices
+   are retained.
 4. The backend identifies the sole Study outlet, derives each tributary parent
    from prior Stream Definition, projects tributary outlets onto downstream
    Flowlines, and propagates confluence measures through the acyclic graph. It
@@ -48,14 +52,21 @@ frame, and governed publication remain later work.
    dynamically stretched Hydro DEM. The longitudinal graph always displays all
    Study Area Streams and Reaches on their common mouth-based x-axis.
 
-Leaflet can initialize while its tab is hidden and before the map container has
-its final width. A display-only resize observer corrects the map when its visible
-dimensions become available; this browser lifecycle detail does not appear as a
-workflow control.
+Each map defaults to OpenTopoMap and fits the full saved Stream with a small
+margin whenever its Stream tab is selected or the workflow tab becomes visible.
+Ordinary resizes while the map remains visible preserve analyst zoom and pan.
 
-Changing the advanced spacing input does not rerun sampling. A new candidate is
-created only by the explicit button action. Creation and viewport work expose
-visible progress so a long operation does not appear hung.
+Leaflet can initialize while its tab is hidden and before the map container has
+its final width. Display-only visibility handling corrects the map and reapplies
+the Stream target when its visible dimensions become available; this browser
+lifecycle detail does not appear as a workflow control.
+
+Changing the advanced spacing input does not rerun sampling. A replacement
+candidate is created only by **Recreate Flowline Points**. Default creation and
+viewport work expose visible progress so a long operation does not appear hung.
+Returning to the unchanged tab checks the in-session Event/revision key before
+opening any Flowline or point files. Hydro or Flowline saves advance the key and
+force a fresh exact-input check; ordinary tab navigation does not.
 
 ## Compatibility profile
 
