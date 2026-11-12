@@ -3,15 +3,15 @@ flowline_review_ui <- function(id) {
   bslib::card(bslib::card_header("Flowline"),
     shiny::p("Choose a Survey Event and Stream. FG Studio saves the conservative Flowline automatically; choose another smoothing strength only when the terrain calls for it."),
     shiny::uiOutput(ns("events")),shiny::uiOutput(ns("streams")),
+    shiny::uiOutput(ns("status")),
+    leaflet::leafletOutput(ns("map"),height="650px"),
     shiny::radioButtons(ns("bandwidth"),"Smoothing strength",
       choices=c("Conservative - 2 m (default)"="2","Moderate - 3 m"="3",
         "Stronger - 4 m"="4","Most aggressive - 5 m"="5"),
       selected="2",inline=TRUE),
     shiny::p(class="small","Changing the smoothing strength automatically saves that candidate. The selected terrain path is reused."),
-    shiny::uiOutput(ns("status")),
     shiny::tags$details(class="small mb-2",shiny::tags$summary("Selection details"),
       shiny::uiOutput(ns("summary"))),
-    leaflet::leafletOutput(ns("map"),height="650px"),
     shiny::p(class="small","Gold is the automatically selected and smoothed Stream path. Colored lines are the resulting Reach Flowlines, with white dots at shared boundaries. Cyan shows the complete synthetic Stream Network; magenta shows the retained NHDPlusV2 reference. Elevation colors stretch to the current view."))
 }
 
@@ -200,9 +200,12 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
         return()
       }
       busy(TRUE);on.exit(busy(FALSE),add=TRUE)
+      # A changed Event/Stream owns a different review. Clear the previous
+      # geometry before resolving prerequisites so a failed resolution cannot
+      # leave another Event's lines visible under the new selector.
+      review(NULL);last_view <<- NULL;native(FALSE);stop_view();view_notice("")
       tryCatch({
         inputs <- resolve_flowline_review_inputs(store,selection)
-        review(NULL);last_view <<- NULL;native(FALSE)
         notice("Preparing the selected Stream path...")
         value <- load_flowline_review(store,selection,inputs)
         if(is.null(value$saved)) {

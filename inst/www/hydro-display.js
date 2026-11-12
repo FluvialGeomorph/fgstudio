@@ -12,6 +12,19 @@ function(el, x, data) {
       fitTimer = null;
       return;
     }
+    // A newly revealed htmlwidget can have non-zero dimensions just before
+    // Leaflet finishes positioning its map pane. fitBounds during that short
+    // window reaches Leaflet's zoom code with no pane position and aborts the
+    // rest of the display update. Retry after initialization instead.
+    if (!map._mapPane || !map._mapPane._leaflet_pos) {
+      if (fitTimer === null) {
+        fitTimer = window.setTimeout(function() {
+          fitTimer = null;
+          fitTarget();
+        }, 60);
+      }
+      return;
+    }
     map.invalidateSize({pan: false});
     if ((!wasVisible || !fittedTarget) && Array.isArray(targetBounds) &&
         targetBounds.length === 4 && targetBounds.every(Number.isFinite)) {

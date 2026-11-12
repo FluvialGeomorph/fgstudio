@@ -63,6 +63,10 @@ same viewport-stretched Hydro DEM and hillshade used for terrain review. The
 map fits the full saved Stream with a small margin whenever its Stream tab is
 selected or the workflow tab becomes visible, while ordinary visible-map resizes
 preserve analyst zoom and pan. OpenTopoMap is the default basemap. The
+map appears before optional smoothing and selection details so the saved result
+is visible immediately when the tab opens. Changing Event or Stream clears the
+preceding review before resolving the new prerequisites; a missing Hydro DEM or
+network cannot leave another selection's lines on screen. The
 summary reports the routes evaluated, source-line count, path length, reference
 mismatch, next-best reference margin and smoothing diagnostics. There is no
 manual branch control. The analyst can switch among four available smoothing

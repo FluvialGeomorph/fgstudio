@@ -22,7 +22,7 @@ const hook = eval('(' + payload.hook + ')');
 const el = element();
 function mount(bounds=[-93,40,-92.99,40.01],visible=true) {
   const panes = {'hydro-elevation':{style:{}},'hydro-hillshade':{style:{}}};
-  const map = {getPane: name => panes[name],invalidateSize(options) {
+  const map = {_mapPane:{_leaflet_pos:{x:0,y:0}},getPane: name => panes[name],invalidateSize(options) {
     this.invalidated=options;
   },fitBounds(bounds,options) {this.fitCalls=(this.fitCalls || []).concat([{bounds,options}]);}};
   el.offsetWidth=visible ? 800 : 0;el.offsetHeight=visible ? 600 : 0;

@@ -67,6 +67,28 @@ test_that("Flowline Points review requires a saved Flowline", {
   expect_error(load_flowline_points_review(store,context),"Flowline tab.*Reach Flowlines")
 })
 
+test_that("Flowline Points clears another Event before a prerequisite failure", {
+  fixture <- flowline_points_review_fixture(withr::local_tempdir())
+  original_hydro_read <- fixture$store$hydro_read
+  fixture$store$hydro_read <- function(key,event,...)
+    if(identical(event,"missing")) NULL else original_hydro_read()
+  context <- shiny::reactiveVal(fixture$context)
+  shiny::testServer(flowline_points_review_server,args=list(current=function()
+    list(path=context()$path),context=context,store=fixture$store,
+    active=function()TRUE),{
+    session$setInputs(stream="s1",station_distance=1)
+    session$flushReact()
+    expect_gt(nrow(points()),10)
+    next_context <- context();next_context$group_id <- "missing"
+    next_context$group_path <- paste0(next_context$group_path,"-missing")
+    context(next_context);session$flushReact()
+    expect_null(review())
+    expect_null(points())
+    expect_match(notice(),"Hydro DEM",fixed=TRUE)
+    expect_identical(view_notice(),"")
+  })
+})
+
 test_that("Flowline Points review keeps only spacing overrides in Advanced controls", {
   html <- as.character(flowline_points_review_ui("points"))
   expect_false(grepl("Create Study Area Flowline Points",html,fixed=TRUE))
@@ -75,4 +97,6 @@ test_that("Flowline Points review keeps only spacing overrides in Advanced contr
   expect_match(html,"Advanced spacing",fixed=TRUE)
   expect_match(html,"shared profile",fixed=TRUE)
   expect_match(html,"(?s)<details[^>]*>.*Recreate Flowline Points.*</details>",perl=TRUE)
+  expect_lt(regexpr("points-map",html,fixed=TRUE)[1],
+    regexpr("Advanced spacing",html,fixed=TRUE)[1])
 })

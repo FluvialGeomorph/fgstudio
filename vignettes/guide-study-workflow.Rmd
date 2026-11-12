@@ -529,7 +529,9 @@ Open **Flowline** after saving the synthetic Stream Network. Choose the Survey
 Event and Stream to inspect; no tributary or segment selection is required. FG Studio compares
 every complete terrain-derived head-to-outlet route with the NHDPlusV2 Stream
 you previously selected and displays the conservative 2-map-unit candidate in
-gold by default. Use **Smoothing strength** to select a more aggressive candidate.
+gold by default. The map appears before the optional smoothing and selection
+details so the saved linework is visible as the tab opens. Use **Smoothing
+strength** below the map to select a more aggressive candidate.
 The requested candidate is prepared once and retained for the session; this does
 not repeat terrain processing or mainstem selection. An exact saved candidate
 opens directly without recreating the other smoothing strengths.
@@ -566,7 +568,8 @@ existing Stream definitions, derives each tributary's starting station at its
 downstream confluence, retains existing vertices, and samples the DEM elevation
 at every point. No line, Reach, parent Stream, offset, field, or direction
 selection is required. To use a nondefault spacing, expand **Advanced spacing**,
-enter the maximum distance and choose **Recreate Flowline Points**.
+below the map and Study Area profile, enter the maximum distance and choose
+**Recreate Flowline Points**.
 
 While creation runs, the app displays progress. Stream tabs change the detailed
 map only: each map shows the colored Reach Flowlines, a red display sample of

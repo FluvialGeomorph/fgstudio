@@ -55,6 +55,8 @@ frame, and governed publication remain later work.
 Each map defaults to OpenTopoMap and fits the full saved Stream with a small
 margin whenever its Stream tab is selected or the workflow tab becomes visible.
 Ordinary resizes while the map remains visible preserve analyst zoom and pan.
+The map and Study Area profile precede advanced spacing and profile details so
+the saved result is visible immediately when the tab opens.
 
 Leaflet can initialize while its tab is hidden and before the map container has
 its final width. Display-only visibility handling corrects the map and reapplies

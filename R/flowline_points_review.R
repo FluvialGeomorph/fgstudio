@@ -3,6 +3,11 @@ flowline_points_review_ui <- function(id) {
   bslib::card(bslib::card_header("Flowline Points"),
     shiny::p("Choose a Survey Event. FG Studio creates one-meter Flowline Points automatically after every Stream has saved Reach Flowlines, then displays all Streams and Reaches on the shared profile."),
     shiny::uiOutput(ns("events")),shiny::uiOutput(ns("streams")),
+    shiny::uiOutput(ns("status")),
+    bslib::layout_columns(col_widths=c(7,5),
+      leaflet::leafletOutput(ns("map"),height="600px"),
+      bslib::card(bslib::card_header("Study Area longitudinal elevation profile"),
+        shiny::plotOutput(ns("profile"),height="520px"))),
     shiny::tags$details(class="small mb-2",
       shiny::tags$summary("Advanced spacing"),
       shiny::numericInput(ns("station_distance"),"Maximum point spacing (meters)",
@@ -10,13 +15,8 @@ flowline_points_review_ui <- function(id) {
       shiny::p("One meter is the FG Studio default. Use this only to replace the saved candidate with a different spacing."),
       shiny::actionButton(ns("create"),"Recreate Flowline Points",
         class="btn-outline-primary btn-sm")),
-    shiny::uiOutput(ns("status")),
     shiny::tags$details(class="small mb-2",shiny::tags$summary("Profile details"),
       shiny::uiOutput(ns("summary"))),
-    bslib::layout_columns(col_widths=c(7,5),
-      leaflet::leafletOutput(ns("map"),height="600px"),
-      bslib::card(bslib::card_header("Study Area longitudinal elevation profile"),
-        shiny::plotOutput(ns("profile"),height="520px"))),
     shiny::p(class="small mt-2","Stream tabs change the map. The profile always includes every Stream and Reach, measured upstream from the Study Area outlet."))
 }
 
@@ -150,9 +150,12 @@ flowline_points_review_server <- function(id,current,context,store,
       key <- paste(ctx$path,ctx$group_path,shiny::isolate(revision()),sep="\r")
       if(identical(key,loaded_key) && !is.null(review())) return()
       notice("Opening this Survey Event's saved Flowline Points...")
+      # Do not present the preceding Event's points/profile while resolving a
+      # changed Event. A failed prerequisite check owns an explicit empty state.
+      review(NULL);points(NULL);last_view <<- NULL;stop_view();view_notice("")
       tryCatch({
         value <- load_flowline_points_review(store,ctx)
-        review(value);loaded_key <<- key;last_view <<- NULL
+        review(value);loaded_key <<- key
         if(!is.null(value$saved)) {
           points(value$saved$points)
           shiny::updateNumericInput(session,"station_distance",
@@ -162,8 +165,7 @@ flowline_points_review_server <- function(id,current,context,store,
           value <- create_points(value,1,automatic=TRUE)
         }
         refreshed(shiny::isolate(refreshed())+1L)
-      },error=function(e){loaded_key <<- NULL;review(NULL);points(NULL);
-        notice(conditionMessage(e))})
+      },error=function(e){loaded_key <<- NULL;notice(conditionMessage(e))})
     },ignoreNULL=FALSE)
 
     shiny::observeEvent(input$create,{

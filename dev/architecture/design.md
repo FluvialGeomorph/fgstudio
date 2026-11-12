@@ -25,6 +25,11 @@ tab navigation and task actions do not also show the blocking overlay. These two
 progress representations are mutually exclusive.
 Hydro Modify, Flowline and Flowline Points expose the same linked Survey Event
 selector. Changing it once changes the active Event context across those tabs.
+Flowline and Flowline Points place their review map (and the Study-wide profile
+for points) before optional parameter and diagnostic details so saved data is
+visible when the tab opens. A changed Event or Stream clears the preceding
+review before prerequisites are resolved; an unavailable result therefore shows
+an explicit empty/error state instead of geometry from another selection.
 
 ## Session and storage boundaries
 

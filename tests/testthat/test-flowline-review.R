@@ -99,6 +99,34 @@ test_that("Flowline review needs no separate save control", {
   html <- as.character(flowline_review_ui("flowline"))
   expect_false(grepl("Save Reach Flowlines",html,fixed=TRUE))
   expect_match(html,"automatically saves",fixed=TRUE)
+  expect_lt(regexpr("flowline-map",html,fixed=TRUE)[1],
+    regexpr("flowline-bandwidth",html,fixed=TRUE)[1])
+})
+
+test_that("Flowline review clears another Event before a prerequisite failure", {
+  fixture <- flowline_review_fixture(withr::local_tempdir())
+  original_hydro_read <- fixture$store$hydro_read
+  fixture$store$hydro_read <- function(key,event,...)
+    if(identical(event,"missing")) NULL else original_hydro_read()
+  context <- shiny::reactiveVal(list(key="study",path=fixture$study,
+    group_id="event",group_path=fixture$group,event_label="2019-12",
+    streams=data.frame(stream_id="s1",stream_name="Stream one"),
+    reaches=data.frame(reach_id="r1",stream_id="s1",reach_name="Reach one")))
+  shiny::testServer(flowline_review_server,args=list(current=function()
+    list(path=fixture$study),context=context,store=fixture$store,
+    active=function()TRUE),{
+    session$setInputs(stream="s1")
+    expect_s3_class(review()$result$raw_flowline,"sf")
+    next_context <- context();next_context$group_id <- "missing"
+    next_context$group_path <- paste0(fixture$group,"-missing")
+    context(next_context);session$flushReact()
+    expect_null(review())
+    expect_match(notice(),"Hydro DEM",fixed=TRUE)
+    expect_identical(view_notice(),"")
+    widget <- jsonlite::fromJSON(output$map,simplifyVector=FALSE)
+    expect_false(any(vapply(widget$x$calls,
+      function(x) identical(x$method,"addPolylines"),logical(1))))
+  })
 })
 
 test_that("saved Flowline review reuses the published smoothing candidate", {
