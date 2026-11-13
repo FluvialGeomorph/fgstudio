@@ -24,6 +24,7 @@ Encoding: UTF-8
 Depends: R (>= 4.1.0)
 Roxygen: list(markdown = TRUE)
 Suggests: 
+    chromote,
     flow,
     knitr,
     pkgdown,

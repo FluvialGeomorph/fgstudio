@@ -42,8 +42,8 @@ to a more aggressive candidate without rerunning path selection or terrain work;
 no manual tributary pruning or separate save action is required. The conservative
 default and every explicit smoothing choice are divided across the current
 Reaches and retained automatically as an immutable local
-candidate with exact-input fingerprints. Local Flowline creation is complete;
-Flowline Points now consumes every exact Stream candidate and Hydro DEM, derives
+candidate with exact-input fingerprints. Flowline Points consumes every exact
+Stream candidate and Hydro DEM, derives
 tributary offsets at their downstream confluences, creates one Study-wide
 one-meter-default kilometer profile with the complete legacy field contract,
 and saves an immutable local result for map/profile review.
@@ -154,8 +154,8 @@ Neither an AI account nor an agent is required to use or maintain the applicatio
 
 ## Further reading and authority
 
-This orientation synthesizes the maintained workspace context reviewed on
-2026-09-20. Current app behavior comes from fgstudio's implementation and tests;
+This orientation links the maintained workspace context. Current app behavior
+comes from fgstudio's implementation and tests;
 the following documents explain the wider purpose and accepted direction.
 Their member repositories own changes to those contracts.
 

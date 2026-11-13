@@ -128,9 +128,9 @@ not scientific authority. Keep local diagnostics opt-in.
 
 ## Hydro modification: implemented locally
 
-The current local Hydro Modify increment is complete. The map inspection and
-edition-bound cutline drawing, background application and saved-result review
-are implemented in article 15. The owner authorized comparable terra cell
+The Hydro Modify workflow includes map inspection, edition-bound cutline drawing,
+background application, and saved-result review as documented in article 15.
+The owner authorized comparable terra cell
 assignment: touched cells, first-drawn shared-cell priority, and no widening in
 this version. Preserve legacy minimum-elevation conditioning and source NoData.
 Each terrain workflow tab exposes the shared Survey Event selector; the first
@@ -206,7 +206,7 @@ Stream definition already expresses the analyst's
 choice of Stream, so this step must not ask the analyst to select network heads or
 segments. If the available topology and retained evidence cannot support one
 defensible result, fail with an actionable route back to Stream definition rather
-than offering a one-off branch override. The current Spencer 2019-12 setting has
+than offering a one-off branch override. The Spencer 2019-12 setting has
 no governed Reach-owned Survey Event IDs; preserve that fact and do not fabricate
 them. Smoothing and Reach division reuse the saved vector network; they do not
 rerun filling, direction, accumulation, or thresholding.
@@ -236,9 +236,9 @@ recomputing every smoothing alternative. On the Spencer mainstem this reduced
 the measured saved-review preparation from about 42 seconds to 0.59 seconds;
 returning to an unchanged tab uses the in-session review without disk reopening.
 
-## Flowline Points: current/base-event increment complete
+## Flowline Points: implemented current/base-event workflow
 
-The User Manual's **Create Flowline Points** step is now implemented for the
+The User Manual's **Create Flowline Points** step is implemented for the
 current/base-event case. This was a gap-closing increment around the existing
 `fluvgeo::flowline_points()` capability, not a new implementation from scratch.
 The durable feature record is
@@ -261,10 +261,20 @@ multiple eligible governed Survey Events exist. Do not simulate that state in
 the single-event Spencer study. Automate file, field, and tolerance selection
 from saved context while preserving the analyst's explicit base-event and
 comparison-event decision required by the FGDB longitudinal-reference contract.
-The current Hydro Modify, Flowline and Flowline Points screens nevertheless
+Hydro Modify, Flowline and Flowline Points nevertheless
 support any number of locally defined Survey Events through one synchronized
 selector and keep each Event's saved candidates separate. That navigation does
 not itself designate a base/comparison pair or perform calibration.
+
+## Selecting the next feature
+
+No feature after Flowline Points is authorized by this plan. Begin the next
+scoping pass with the next applicable FluvialGeomorph-toolbox/User Manual step,
+inspect the existing `fluvgeo` and `ohwm2` capability before proposing new code,
+and let the owner choose the next cohesive analyst outcome. Preserve the same
+replacement strategy: automate inputs already expressed by prior Study
+definition, retain legacy output contracts, add fail-closed validation, and keep
+reusable geospatial logic in `fluvgeo`.
 
 Resolve routine intermediate steps without separate owner handoffs. Ask only for
 unresolved consequential choices and continue independent authorized work while
@@ -286,6 +296,6 @@ Stream only when needed to verify integration or performance.
 - Existing active studies are retained. The earlier authorized retirement of four
   trial studies is not standing permission to clear current studies.
 
-The current handoff records the local review setup and unresolved work. Measured
-terrain evidence is consolidated in the mosaic feature record; do not restore
-superseded development steps as standing instructions.
+Measured terrain evidence is consolidated in the mosaic feature record; do not
+restore superseded development steps or completed checkpoints as standing
+instructions.

@@ -17,6 +17,7 @@ explicitly invokes them. JavaScript contracts now run through
 | `build-docs.ps1`, `build-docs.R`, `build-code-map.R` | Build isolated documentation, site navigation and source map; no study changes or publication |
 | `code-map-utils.R`, `query-code-map.R`, `check-code-map.R` | Developer-only graph helpers, lookup/freshness and bridge checks; checked by the documentation build |
 | `check-docs.R` | Local HTML link/anchor and article-export validation; called after the site build, no network |
+| `capture-doc-screenshots.R` | Regenerate the eight stable top-level workflow screenshots from one complete saved study and running preview; optional documentation maintenance, no study mutation |
 
 ## Optional live-service qualification
 

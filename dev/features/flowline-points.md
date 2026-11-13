@@ -1,7 +1,7 @@
 # Flowline Points capability qualification and FG Studio integration
 
 - Status: current/base-event creation implemented and verified; comparison-event calibration deferred
-- Updated: 2026-10-07
+- Updated: 2026-11-13
 - Workflow position: after saved Flowline and before Features, REM, and Cross
   Sections
 - Legacy producer: `FluvialGeomorph-toolbox/tools/_06_FlowlinePoints.py`
@@ -21,17 +21,14 @@ parameter, topology, unit, and method evidence to detect stale candidates.
 This continues the refactoring pattern already proven by `ohwm2`. To deploy the
 Shiny workflow quickly and dogfood the existing `fluvgeo` analyses, `ohwm2`
 asked the user to digitize a Flowline manually. It then drove development and use
-of `fluvgeo::flowline_points()` and its downstream analysis chain. FG Studio has
-now closed that upstream gap by deriving and saving the Flowline automatically.
-The remaining question is not whether Flowline Points can be created; it is
-whether the existing implementation satisfies the legacy output contract and
-every downstream function that consumes it.
+of `fluvgeo::flowline_points()` and its downstream analysis chain. FG Studio
+closes that upstream gap by deriving and saving the Flowline automatically, then
+qualifies Flowline Points against the legacy output contract and downstream
+consumers. The implemented boundary is current/base-event creation; it does not
+fabricate comparison-event calibration when the local study has no governed
+Reach-owned Survey Events.
 
-The increment begins with the current/base-event case demonstrated by Spencer
-Creek. It does not fabricate comparison-event calibration when the local study
-contains only one event setting and no governed Reach-owned Survey Events.
-
-## Why this is the next step
+## Workflow role
 
 The User Manual places **Create Flowline Points** immediately after **Create
 Flowline**. Flowline Points supply the terrain-sampled longitudinal profile and
@@ -40,12 +37,12 @@ and Level 1 reporting. The completed Flowline store already provides the exact
 saved Reach lines and Hydro DEM revision required by this operation.
 
 The existing `fluvgeo::flowline_points()` samples one arbitrary line and is used
-by `ohwm2`. The current `fluvgeo::reach_flowline_points()` wrapper extends that
+by `ohwm2`. `fluvgeo::reach_flowline_points()` extends that
 capability to continuous kilometer stationing across ordered saved Reaches
-without changing the existing API default. The next work begins with a gap audit
-covering the legacy producer and all downstream consumers, then makes only the
-adaptations demonstrated to be necessary for the shared contract, persistence,
-application review, and calibration workflow.
+without changing the existing API default. The completed gap review covers the
+legacy producer and downstream consumers and limits the replacement to the
+adaptations required for the shared contract, persistence, application review,
+and current/base-event workflow.
 
 ## Capability-gap review result
 
@@ -116,7 +113,7 @@ the replacement profile explicitly.
 
 ## Implemented current/base-event integration
 
-The **Flowline Points** tab now opens the exact saved Reach Flowline revisions
+The **Flowline Points** tab opens the exact saved Reach Flowline revisions
 and bound Hydro DEMs for every Stream in the Survey Event, defaults to one-metre
 maximum spacing, and creates that default automatically when no exact candidate
 exists. Spacing and **Recreate Flowline Points** appear only as advanced override
@@ -184,7 +181,7 @@ Real-data topology acceptance on the saved Spencer 2019-12 event produced:
 | east unnamed trib | 3 | 14,360 | 1.523 km | 10.111 km | 0.166 m |
 | west unnamed trib | 3 | 11,870 | 7.726 km | 14.809 km | 1.910 m |
 
-All 60,747 points are now one candidate and can be plotted together without
+All 60,747 points form one candidate and can be plotted together without
 manually entering offsets. Generation took 13.72 seconds on the development
 workstation. The two tributary connection gaps pass the 2.828 m limit for the
 one-meter Spencer Hydro DEMs.
@@ -202,7 +199,7 @@ The Spencer verification confirms the chosen density and legacy profile on all
 three Streams. The advanced override remains available for a study-specific
 need; changing it does not calculate until the user creates a new candidate.
 
-## Later slice: comparison-event calibration
+## Deferred comparison-event calibration
 
 Multi-event calibration belongs to this feature family but is not required to
 prove the single-event Spencer result. When eligible Reach-owned Survey Events

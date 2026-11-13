@@ -7,8 +7,9 @@ terrain and shared R methods to characterize stream geometry.
 
 The intended workflow connects Study Area, Stream and Reach definition with
 survey selection, terrain development, Level 1 analysis and reviewable reports.
-Today, the app supports study definition, source acquisition, Stream DEM assembly
-and map-based hydro modification.
+The implemented app supports study definition, source acquisition, Stream DEM
+assembly, hydro modification, synthetic Stream Network extraction, automatic
+Reach Flowlines and Study-wide Flowline Points.
 Maps, guided choices and saved evidence make those steps accessible while
 keeping consequential scientific decisions with the analyst.
 
@@ -40,7 +41,7 @@ procedures and methods. The [project overview](vignettes/fgstudio.Rmd) explains
 these relationships, the local GeoPackage/GeoTIFF direction, and why study
 definition matters even when a project does not use FGDB.
 
-## What you can do now
+## Implemented workflow
 
 - Create and reopen a local Study Area; define its boundary, Streams and Reaches.
 - Discover Survey Collections, record acquisition intent, select and download

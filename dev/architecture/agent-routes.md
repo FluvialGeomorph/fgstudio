@@ -1,9 +1,5 @@
 # Agent entry routes (FG Studio scope)
 
-For synthetic stream extraction, start with the [project plan](../goals/project-plan.md),
-Article 15 and the [candidate schema](../schemas/synthetic-stream-network.md).
-The current handoff remains historical orientation, not the implementation route.
-
 For any vector output historically produced by `FluvialGeomorph-toolbox`, read
 the [legacy-derived-feature workflow](../workflows/legacy-derived-feature-compatibility.md)
 before the feature row below. Its compatibility profile is a required producer

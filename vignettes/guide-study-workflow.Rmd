@@ -13,6 +13,71 @@ shared scientific foundation and planned place in the analysis workflow.
 Use the contents list to jump to the operation you need; the app supports
 iterative study design rather than requiring every operation in a fixed order.
 
+## Visual workflow walkthrough
+
+The app follows a recognizable left-to-right progression even though analysts
+may return to earlier decisions as a study evolves. The complete Spencer Creek
+development study below shows what a reviewer should expect at each stage.
+Screenshots stay at the stable top-level tab boundary so this tour remains useful
+while individual controls continue to improve.
+
+### 1. Overview
+
+Begin with the saved definition: purpose, hierarchy, Survey Events, output
+resolution, and the map that locates the Study Area, Streams, and Reaches.
+
+![A saved Study Area overview with definition summaries and a context map.](figures/study-workflow/01-overview.png){fig-alt="A saved Study Area overview with definition summaries and a context map." width="100%"}
+
+### 2. Study Structure
+
+Define or review the Study Area boundary and the nested Stream and Reach areas.
+This spatial hierarchy governs the terrain and derived products that follow.
+
+![Study Structure showing the saved Stream and Reach hierarchy on the map.](figures/study-workflow/02-study-structure.png){fig-alt="Study Structure showing the saved Stream and Reach hierarchy on the map." width="100%"}
+
+### 3. Collections
+
+Review the source elevation collections that are available for the Study Area.
+Collection footprints use an OpenStreetMap background so coverage remains clear.
+
+![Collections showing available elevation-source footprints for the Study Area.](figures/study-workflow/03-collections.png){fig-alt="Collections showing available elevation-source footprints for the Study Area." width="100%"}
+
+### 4. Analysis CRS
+
+Confirm the horizontal and vertical coordinate references used to interpret,
+compare, and persist the study's terrain products.
+
+![Analysis CRS showing the saved horizontal and vertical reference choices.](figures/study-workflow/04-analysis-crs.png){fig-alt="Analysis CRS showing the saved horizontal and vertical reference choices." width="100%"}
+
+### 5. Survey Events
+
+Group compatible source collections into dated Survey Events and review the
+Streams, output cell sizes, and acquisition state associated with each event.
+
+![Survey Events showing a dated terrain event and its assigned study content.](figures/study-workflow/05-survey-events.png){fig-alt="Survey Events showing a dated terrain event and its assigned study content." width="100%"}
+
+### 6. Hydro Modify
+
+Inspect each Stream DEM and add cutlines only where fine-scale obstructions keep
+the terrain from routing through the real channel.
+
+![Hydro Modify showing the terrain surface and saved channel-correction context.](figures/study-workflow/06-hydro-modify.png){fig-alt="Hydro Modify showing the terrain surface and saved channel-correction context." width="100%"}
+
+### 7. Flowline
+
+Review the terrain-derived mainstem selected from the synthetic stream network.
+Conservative smoothing is automatic; stronger saved candidates remain optional.
+
+![Flowline showing the terrain-derived mainstem selected for a Stream.](figures/study-workflow/07-flowline.png){fig-alt="Flowline showing the terrain-derived mainstem selected for a Stream." width="100%"}
+
+### 8. Flowline Points
+
+Verify one-meter points, elevations, and shared Study Area stationing. The map
+draws points only at inspection scale, while the profile compares all Streams
+and Reaches from the common Study Area outlet.
+
+![Flowline Points showing the map and shared Study Area longitudinal profile.](figures/study-workflow/08-flowline-points.png){fig-alt="Flowline Points showing the map and shared Study Area longitudinal profile." width="100%"}
+
 ## Start or reopen a study
 
 1. Enter a working Study Area name and optional purpose/customer question.
@@ -267,8 +332,10 @@ reference. Set the target elevation unit independently. Optional epoch/model
 fields preserve those details without guessing from survey dates. Check and save
 the specification; this creates metadata only and does not change source DEMs.
 Incomplete and epoch-dependent targets remain explicitly unqualified for processing.
-Survey Event settings are available in Survey Events. Source-reference
-reconciliation and mosaicking remain future work.
+Survey Event settings are available in Survey Events. Compatible same-CRS source
+DEMs can be mosaicked and resampled after their references, file choices, and
+Event settings are saved. Executing a selected cross-CRS datum-operation plan
+remains outside the integrated workflow.
 
 Both CRS editors show validation errors and save confirmation beside their buttons.
 A saved definition reappears as its EPSG identifier (or authoritative WKT) when
@@ -361,13 +428,16 @@ checked against the current inputs and reused when you reopen the Event.
 Masks are internal DEM inputs. Normal sessions do not build mask display rasters
 or show mask maps. To correct boundaries, use **Study Structure**; to change spacing,
 use **Review / edit Survey Event**. Failures still provide recovery guidance.
-Mask troubleshooting is an optional developer view scheduled for removal from
-the analyst workflow once DEM integration is complete.
+Mask troubleshooting is an optional developer diagnostic and is not part of the
+analyst workflow.
 
-FG Studio supports local Study Area, Stream and Reach definition, including
-saved-Reach splitting and combining. It is not yet an L1 execution app: terrain
-DEM processing, report generation and Enterprise access remain future UI work.
-Backend capabilities elsewhere in fluvgeo are not automatically exposed here.
+FG Studio supports local Study Area, Stream and Reach definition, source DEM
+acquisition, same-CRS Stream DEM processing, Hydro modification, synthetic
+Stream Network extraction, automatic Reach Flowlines, and Study-wide Flowline
+Points. It is not a complete L1 execution app: downstream analysis, report
+delivery, cross-CRS operation execution, and Enterprise access remain outside
+the implemented UI. Backend capabilities elsewhere in fluvgeo are not
+automatically exposed here.
 
 ## Run on the development workstation
 
@@ -421,10 +491,12 @@ to use another Photon instance without changing the UI.
 The local study selector lists this workspace's drafts; it is not a multi-user
 authorization system. Do not host this prototype for shared users. Future FGDB
 access needs explicit Enterprise authentication, authorization and edit contracts.
-Future terrain bundles will retain GeoPackage vectors/tables, external GeoTIFFs
-and metadata links; the current context holds Study Area identity and Purpose,
-boundary, Streams and Reaches. Companion GeoPackages retain selected source
-geometry, buffer settings and, after splitting, versioned piece assignments.
+The local study folder retains GeoPackage vectors/tables, external GeoTIFFs,
+immutable preparation candidates, and metadata links. Its context holds Study
+Area identity and Purpose, boundary, Streams and Reaches. Companion GeoPackages
+retain selected source geometry, buffer settings and, after splitting, versioned
+piece assignments. This local representation is not yet a portable governed
+FGDB delivery bundle.
 Move or back up the entire study folder, not only its latest context file.
 
 The Study Workspace sidebar can be collapsed with its edge toggle and reopened
@@ -467,7 +539,7 @@ work. There is no update button while opening saved results or waiting for masks
 If selected source files are missing, return to Collections > DEM files to acquire
 them. White cells in a DEM indicate NoData.
 
-The saved 2019-12 example now includes Spencer Creek mainstem and both unnamed
+The saved 2019-12 example includes Spencer Creek mainstem and both unnamed
 tributary DEMs. Each has its own Stream tab and filesystem GeoTIFF. There is no
 output-download/save step. GeoPackages hold vectors and related tables; portable
 folder metadata and enterprise transfer remain unfinished. The current RDS edition
@@ -597,9 +669,13 @@ selection is required. To use a nondefault spacing, expand **Advanced spacing**,
 below the map and Study Area profile, enter the maximum distance and choose
 **Recreate Flowline Points**.
 
-While creation runs, the app displays progress. Stream tabs change the detailed
-map only: each map shows the colored Reach Flowlines, a red display sample of
-points, its confluence when applicable, and the viewport-stretched Hydro DEM.
+When the tab must reopen saved line and point files, it first displays the Event
+and Stream controls, plain-language status, and progress cue. Creation and terrain
+display continue to report progress. Stream tabs change the detailed map only:
+each map shows the colored Reach Flowlines, its confluence when applicable, and
+the viewport-stretched Hydro DEM. Red point markers are requested only after
+zooming to inspection scale and include at most 1,000 points from the visible
+window.
 Selecting a Stream, including after returning from another top-level workflow
 tab, fits its complete saved extent with a small margin.
 The longitudinal profile always uses every saved Study Area point on one common

@@ -65,7 +65,7 @@ reference:
       - run_app
 articles:
   - title: Purpose and analyst workflow
-    desc: How FG Studio fits FluvialGeomorph, who it serves, and what the local preview can do today.
+    desc: How FG Studio fits FluvialGeomorph, who it serves, and the implemented local workflow and boundaries.
     contents:
       - fgstudio
       - guide-study-workflow
