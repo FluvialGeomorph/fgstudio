@@ -20,12 +20,13 @@ mod_study_ui <- function(id) {
       shiny::uiOutput(ns("message"))
     ),
     bslib::card(
-      bslib::card_header("Your Study Area"),
+      bslib::card_header("Study Workspace"),
       shiny::uiOutput(ns("summary")),
       shiny::div(class = "fg-study-tabs", shiny::tabsetPanel(id=ns("study_task"),type="tabs",
-        shiny::tabPanel("Geometry",value="Study geometry",shiny::uiOutput(ns("boundary_editor")),shiny::uiOutput(ns("streams_editor"))),
+        shiny::tabPanel("Overview",value="Study overview",shiny::uiOutput(ns("overview"))),
+        shiny::tabPanel("Study Structure",value="Study structure",shiny::uiOutput(ns("boundary_editor")),shiny::uiOutput(ns("streams_editor"))),
         shiny::tabPanel("Collections",value="Survey Collections",mod_survey_collections_ui(ns("survey_collections"))),
-        shiny::tabPanel("CRS",value="Analysis setup",shiny::tabsetPanel(type="tabs",
+        shiny::tabPanel("Analysis CRS",value="Analysis CRS",shiny::tabsetPanel(type="tabs",
           shiny::tabPanel("Horizontal CRS",study_analysis_crs_ui(ns("analysis_crs"))),
           shiny::tabPanel("Vertical Reference",study_vertical_reference_ui(ns("vertical_reference")))),
           shiny::actionButton(ns("continue_event"), "Continue to Survey Events", class="btn-primary")),
@@ -58,6 +59,16 @@ mod_study_server <- function(id, store) {
     collections <- mod_survey_collections_server("survey_collections",current,store)
     event_settings <- survey_event_settings_server("event_settings",current,store,
       collections$selection_path,collections$has_pending)
+    next_definition_tab <- shiny::reactive({
+      x <- current()
+      if(is.null(x) || !isTRUE(x$boundary) || x$streams < 1L || x$reaches < 1L)
+        return("Study structure")
+      if(is.null(collections$selection_path())) return("Survey Collections")
+      if(is.null(x$analysis_crs) || is.null(x$vertical_reference))
+        return("Analysis CRS")
+      if(!length(event_settings$choices())) return("Define a Survey Event")
+      "Hydro Modify"
+    })
     hydro_modify_server("hydro",current,event_settings$context,store,
       active=function() identical(input$study_task,"Hydro Modify"),events=event_settings,
       on_changed=function() {advance(hydro_revision);advance(flowline_revision)})
@@ -148,7 +159,7 @@ mod_study_server <- function(id, store) {
         vapply(query,utils::URLencode,character(1),reserved=TRUE)) else character()
       shiny::updateQueryString(paste0("?",paste(fields,collapse="&")),mode="replace",session=session)
     }
-    attempt <- function(action) {
+    attempt <- function(action, destination="Study overview") {
       tryCatch({
         study <- action()
         editor_key <<- NULL
@@ -157,6 +168,7 @@ mod_study_server <- function(id, store) {
         notice(list(kind = "success", text = "Study Area saved and reopened from local storage."))
         refresh(study$key)
         shiny::updateTabsetPanel(session, "workspace_task", selected = "open")
+        shiny::updateTabsetPanel(session, "study_task", selected = destination)
         remember_study(study$key)
       }, error = function(e) {
         # Avoid exposing paths or database internals in user-facing errors.
@@ -183,7 +195,8 @@ mod_study_server <- function(id, store) {
         notice(list(kind = "warning", text = "Enter a Study Area name to begin."))
       } else {
         pending_selection <<- if (is.null(editor)) NULL else editor$selection_state()
-        attempt(function() store$create(input$name, if (is.null(input$notes)) "" else input$notes))
+        attempt(function() store$create(input$name, if (is.null(input$notes)) "" else input$notes),
+          destination="Study structure")
       }
     }, ignoreInit = TRUE)
     shiny::observeEvent(input$open, {
@@ -306,23 +319,86 @@ mod_study_server <- function(id, store) {
       shiny::tagList(
         shiny::div(class = "d-flex align-items-baseline gap-3 flex-wrap",
           shiny::tags$h2(x$name, class = "h4 mb-0"),
-          shiny::span("Saved draft", class = "badge text-bg-success"),
-          shiny::actionLink(session$ns("edit_name"), "Edit name"),
-          shiny::actionLink(session$ns("edit_purpose"), "Edit purpose"),
-          if (x$streams > 0L) shiny::actionLink(session$ns("rename_stream"), "Rename Stream"),
-          if (x$reaches > 0L) shiny::actionLink(session$ns("rename_reach"), "Rename Reach")),
-        compact_table(data.frame(Item = c("Purpose", "Boundary", "Streams / Reaches / Surveys", "Analysis CRS", "Next"),
-          Status = c(purpose, if (x$boundary) "Saved - editable" else "Not defined",
-            sprintf("%d / %d / %d", x$streams, x$reaches, x$events),
-            if (is.null(x$analysis_crs)) "Required before mosaicking - open CRS" else x$analysis_crs$name,
-            if (!is.null(collections$selection_path())) {
-              if (is.null(x$analysis_crs)) "Open CRS to define the analysis reference" else
-                "Open Survey Events to review your saved collections and survey date"
-            } else if (x$reaches > 0L) "Open Collections to discover and select lidar acquisitions" else
-            if (x$streams > 0L) "Choose Reaches on the map to define Reaches within a Stream" else
-              if (x$boundary) "Choose Streams on the map to define a Stream" else "Select or draw a Study Area boundary")))
+          shiny::span("Saved locally", class = "badge text-bg-success")),
+        shiny::p(class="mb-1",shiny::strong("Purpose: "),purpose),
+        shiny::tags$details(class="small mb-2",shiny::tags$summary("Change names or purpose"),
+          shiny::div(class="d-flex gap-3 flex-wrap mt-2",
+            shiny::actionLink(session$ns("edit_name"), "Edit Study Area name"),
+            shiny::actionLink(session$ns("edit_purpose"), "Edit purpose"),
+            if (x$streams > 0L) shiny::actionLink(session$ns("rename_stream"), "Rename Stream"),
+            if (x$reaches > 0L) shiny::actionLink(session$ns("rename_reach"), "Rename Reach")))
       )
     })
+    output$overview <- shiny::renderUI({
+      x <- current()
+      if(is.null(x)) return(shiny::tagList(
+        shiny::tags$h3("Start a Study Area",class="h5"),
+        shiny::p("Use New to name the Study Area. FG Studio will then open Study Structure so you can define its boundary, Streams, and Reaches.")))
+      streams <- if(is.null(x$stream_inventory)) data.frame() else sf::st_drop_geometry(x$stream_inventory)
+      reaches <- if(is.null(x$reach_inventory)) data.frame() else sf::st_drop_geometry(x$reach_inventory)
+      structure <- if(!nrow(streams)) data.frame(Stream="Not defined",Reaches="Not defined") else
+        data.frame(Stream=streams$stream_name,Reaches=vapply(streams$stream_id,function(id) {
+          names <- sort(reaches$reach_name[reaches$stream_id==id])
+          if(length(names)) paste(names,collapse=", ") else "Not defined"
+        },character(1)))
+      event_labels <- names(event_settings$choices())
+      event_overview <- event_settings$overview()
+      vertical <- if(is.null(x$vertical_reference)) "Not defined" else
+        paste0(x$vertical_reference$reference_name[1]," (",
+          gsub("_"," ",x$vertical_reference$elevation_unit[1],fixed=TRUE),")")
+      destination <- next_definition_tab()
+      next_label <- switch(destination,
+        "Study structure"="Continue defining Study Structure",
+        "Survey Collections"="Continue with Survey Collections",
+        "Analysis CRS"="Continue with Analysis CRS",
+        "Define a Survey Event"="Continue with Survey Events",
+        "Continue to Hydro Modify")
+      shiny::tagList(
+        shiny::div(class="alert alert-light border",role="note",
+          shiny::tags$h3("Review this Study",class="h5"),
+          shiny::p(class="mb-0","This page summarizes the saved definition. Open a workflow tab for its maps and evidence; use the continuation button only when you intend to add or change the definition.")),
+        bslib::card(bslib::card_header("Study Area, Streams, and Reaches"),
+          leaflet::leafletOutput(session$ns("overview_map"),height="520px")),
+        bslib::layout_columns(col_widths=c(6,6),
+          bslib::card(bslib::card_header("Saved definition"),
+            compact_table(data.frame(Item=c("Boundary","Streams / Reaches","Survey Collections","Horizontal CRS","Vertical reference","Survey Events"),
+              Selection=c(if(isTRUE(x$boundary)) "Saved" else "Not defined",
+                sprintf("%d / %d",x$streams,x$reaches),
+                if(is.null(collections$selection_path())) "Not selected" else "Saved selections",
+                if(is.null(x$analysis_crs)) "Not defined" else x$analysis_crs$name,
+                vertical,if(length(event_labels)) paste(event_labels,collapse=", ") else "Not defined")))),
+          bslib::card(bslib::card_header("Stream and Reach structure"),compact_table(structure))),
+        if(nrow(event_overview)) bslib::card(
+          bslib::card_header("Survey Event definitions"),
+          compact_table(event_overview)),
+        shiny::tags$h3("Review details",class="h5 mt-3"),
+        shiny::p("Use the tabs above to inspect the saved maps, source evidence, settings, and derived results. Editing controls remain with the definition they change."),
+        shiny::tags$h3("Continue defining or updating",class="h5"),
+        shiny::p("FG Studio identified the next incomplete or downstream step from the saved definition. You can also open any tab above directly."),
+        shiny::actionButton(session$ns("continue_definition"),next_label,class="btn-primary"))
+    })
+    output$overview_map <- leaflet::renderLeaflet({
+      x <- current()
+      map <- fg_leaflet() |>
+        leaflet::addProviderTiles(leaflet::providers$OpenStreetMap,group="Street map") |>
+        add_opentopomap()
+      if(is.null(x) || !inherits(x$boundary_sf,"sf")) return(map)
+      boundary <- sf::st_transform(x$boundary_sf,4326)
+      bounds <- sf::st_bbox(boundary)
+      map <- leaflet::addPolygons(map,data=boundary,group="Study Area",
+        color="#222222",weight=3,fillOpacity=.02,label=x$name,
+        options=leaflet::pathOptions(interactive=TRUE,bubblingMouseEvents=FALSE))
+      map <- saved_feature_layers(map,x,identify=TRUE) |>
+        leaflet::addLayersControl(baseGroups=c("Street map","OpenTopoMap"),
+          overlayGroups=c("Study Area","Saved Streams","Saved Reaches"),
+          options=leaflet::layersControlOptions(collapsed=TRUE)) |>
+        leaflet::fitBounds(bounds[[1]],bounds[[2]],bounds[[3]],bounds[[4]],
+          options=list(padding=c(20,20)))
+      map
+    })
+    shiny::observeEvent(input$continue_definition,
+      shiny::updateTabsetPanel(session,"study_task",selected=next_definition_tab()),
+      ignoreInit=TRUE)
     list(current = shiny::reactive(current()), notice = shiny::reactive(notice()))
   })
 }

@@ -1,6 +1,6 @@
 Package: fgstudio
 Title: FluvialGeomorph Studio
-Version: 0.0.0.9091
+Version: 0.0.0.9094
 Authors@R: c(
     person("Michael", "Dougherty", , "Michael.P.Dougherty@usace.army.mil", role = "aut",
            comment = c(ORCID = "0000-0002-1465-5927")),
@@ -48,6 +48,7 @@ Imports:
     leafem (>= 0.2.3),
     leaflet (>= 2.2.3),
     leaflet.extras (>= 2.0.2),
+    later,
     openssl,
     sf,
     shiny (>= 1.8.1),

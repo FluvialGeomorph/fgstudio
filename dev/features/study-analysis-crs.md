@@ -1,6 +1,6 @@
 # Study Area analysis CRS
 
- Analysis setup requires a saved
+ Analysis CRS requires a saved
 Study Area polygon and a projected 2D EPSG/WKT definition. Validation/catalog
 evidence is recorded automatically, without personal identity or a Why field.
 Check CRS resolves WKT/name/units with sf and tests

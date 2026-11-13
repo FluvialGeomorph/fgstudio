@@ -26,6 +26,23 @@ survey_event_choice_labels <- function(groups) {
   stats::setNames(as.character(names(groups)), labels)
 }
 
+survey_event_overview <- function(groups,streams=NULL) {
+  if(!length(groups)) return(data.frame())
+  labels <- survey_event_choice_labels(groups)
+  inventory <- if(is.null(streams)) data.frame() else sf::st_drop_geometry(streams)
+  do.call(rbind,lapply(names(groups),function(id) {
+    g <- groups[[id]]
+    stream_names <- if("stream_name" %in% names(g$streams)) g$streams$stream_name else
+      inventory$stream_name[match(g$streams$stream_id,inventory$stream_id)]
+    stream_names <- unique(stream_names[!is.na(stream_names) & nzchar(stream_names)])
+    data.frame(`Survey Event`=names(labels)[match(id,unname(labels))],
+      Collections=paste(unique(g$members$title),collapse=", "),
+      Streams=if(length(stream_names)) paste(stream_names,collapse=", ") else "Unavailable",
+      `Output cell size`=paste(g$settings$cell_size,g$settings$unit),
+      check.names=FALSE)
+  }))
+}
+
 linked_survey_event_selector <- function(input, output, session, events, context) {
   output$events <- shiny::renderUI({
     if (is.null(events)) {
@@ -232,6 +249,7 @@ survey_event_settings_server <- function(id,current,store,selection_path,selecti
     list(has_pending=function() isTRUE(shiny::isolate(editing())),status=status,
       context=shiny::reactive({if(isTRUE(editing()) || selection_pending()) return(NULL);preflight_context()}),
       choices=shiny::reactive(survey_event_choice_labels(saved()$groups)),
+      overview=shiny::reactive(survey_event_overview(saved()$groups,current()$stream_inventory)),
       selected=shiny::reactive(selected_group()),
       select=function(id) {
         if(length(id)==1L && id %in% names(saved()$groups)) {

@@ -1,8 +1,10 @@
 flowline_points_review_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::card(bslib::card_header("Flowline Points"),
-    shiny::p("Choose a Survey Event. FG Studio creates one-meter Flowline Points automatically after every Stream has saved Reach Flowlines, then displays all Streams and Reaches on the shared profile."),
-    shiny::uiOutput(ns("events")),shiny::uiOutput(ns("streams")),
+    shiny::p("Select a Survey Event from the list. FG Studio creates one-meter Flowline Points automatically after every Stream has saved Reach Flowlines, then displays all Streams and Reaches on the shared profile."),
+    shiny::uiOutput(ns("events")),
+    shiny::p(class="small fw-semibold mb-1","Stream (select a tab to change the map)"),
+    shiny::uiOutput(ns("streams")),
     shiny::uiOutput(ns("status")),
     bslib::layout_columns(col_widths=c(7,5),
       leaflet::leafletOutput(ns("map"),height="600px"),
@@ -17,7 +19,7 @@ flowline_points_review_ui <- function(id) {
         class="btn-outline-primary btn-sm")),
     shiny::tags$details(class="small mb-2",shiny::tags$summary("Profile details"),
       shiny::uiOutput(ns("summary"))),
-    shiny::p(class="small mt-2","Stream tabs change the map. The profile always includes every Stream and Reach, measured upstream from the Study Area outlet."))
+    shiny::p(class="small mt-2","Stream tabs change the map. Flowline Points appear when you zoom to inspection scale; only points in the visible window are drawn. The profile always includes every Stream and Reach, measured upstream from the Study Area outlet."))
 }
 
 load_flowline_points_review <- function(store,context) {
@@ -50,9 +52,26 @@ load_flowline_points_review <- function(store,context) {
       flowlines=vapply(bundle,function(x)x$flowline$path,character(1))))
 }
 
-flowline_points_display_sample <- function(points,maximum=5000L) {
+flowline_points_display_sample <- function(points,maximum=1000L) {
   if(is.null(points) || nrow(points)<=maximum) return(points)
   points[unique(round(seq(1,nrow(points),length.out=maximum))),]
+}
+
+flowline_points_in_view <- function(points,bounds,zoom,minimum_zoom=17L,
+                                    maximum=1000L) {
+  if(is.null(points)) return(NULL)
+  empty <- points[0,,drop=FALSE]
+  b <- unname(unlist(bounds[c("west","south","east","north")]))
+  if(length(zoom)!=1L || !is.finite(zoom) || zoom<minimum_zoom ||
+      length(b)!=4L || any(!is.finite(b)) || b[1]>=b[3] || b[2]>=b[4])
+    return(empty)
+  window <- sf::st_as_sfc(sf::st_bbox(c(xmin=b[1],ymin=b[2],
+    xmax=b[3],ymax=b[4]),crs=4326))
+  local <- sf::st_bbox(sf::st_transform(window,sf::st_crs(points)))
+  xy <- sf::st_coordinates(points)
+  keep <- xy[,1]>=local[["xmin"]] & xy[,1]<=local[["xmax"]] &
+    xy[,2]>=local[["ymin"]] & xy[,2]<=local[["ymax"]]
+  flowline_points_display_sample(points[keep,,drop=FALSE],maximum)
 }
 
 flowline_points_review_server <- function(id,current,context,store,
@@ -64,6 +83,7 @@ flowline_points_review_server <- function(id,current,context,store,
     view_notice <- shiny::reactiveVal("");view_busy <- shiny::reactiveVal(FALSE)
     refreshed <- shiny::reactiveVal(0L);last_view <- NULL;view_key <- NULL
     loaded_key <- NULL;view_job <- NULL;view_worker <- NULL;view_dir <- NULL
+    load_generation <- 0L;session_closed <- FALSE
     worker_ready <- shiny::reactiveVal(FALSE);worker_warming <- FALSE;worker_failed <- FALSE
     cache <- tempfile("flowline-points-map-");dir.create(cache)
     linked_survey_event_selector(input,output,session,events,context)
@@ -144,17 +164,14 @@ flowline_points_review_server <- function(id,current,context,store,
       },error=function(e){worker_failed <<- TRUE;stop_view();view_notice(hydro_error_message(e))})
     })
 
-    shiny::observeEvent(list(context(),active(),revision()),{
-      if(!isTRUE(active())) {stop_view();return()}
-      ctx <- context();if(is.null(ctx)) return()
-      key <- paste(ctx$path,ctx$group_path,shiny::isolate(revision()),sep="\r")
-      if(identical(key,loaded_key) && !is.null(review())) return()
-      notice("Opening this Survey Event's saved Flowline Points...")
-      # Do not present the preceding Event's points/profile while resolving a
-      # changed Event. A failed prerequisite check owns an explicit empty state.
-      review(NULL);points(NULL);last_view <<- NULL;stop_view();view_notice("")
+    load_review <- function(ctx,key,generation) {
+      if(!identical(generation,load_generation) ||
+          !isTRUE(shiny::isolate(active()))) return()
+      on.exit(if(identical(generation,load_generation)) busy(FALSE),add=TRUE)
       tryCatch({
         value <- load_flowline_points_review(store,ctx)
+        if(!identical(generation,load_generation) ||
+            !isTRUE(shiny::isolate(active()))) return()
         review(value);loaded_key <<- key
         if(!is.null(value$saved)) {
           points(value$saved$points)
@@ -166,6 +183,30 @@ flowline_points_review_server <- function(id,current,context,store,
         }
         refreshed(shiny::isolate(refreshed())+1L)
       },error=function(e){loaded_key <<- NULL;notice(conditionMessage(e))})
+    }
+    schedule_review_load <- function(ctx,key) {
+      load_generation <<- load_generation+1L;generation <- load_generation
+      notice("Opening this Survey Event's saved Flowline Points...")
+      # Clear the preceding Event immediately, then yield one browser paint so
+      # the tab shell and progress cue precede GeoPackage/point reopening.
+      review(NULL);points(NULL);last_view <<- NULL;stop_view();view_notice("")
+      busy(TRUE)
+      session$onFlushed(function() {
+        if(session_closed) return()
+        later::later(function() {
+          if(session_closed) return()
+          shiny::withReactiveDomain(session,load_review(ctx,key,generation))
+        },.05)
+      },once=TRUE)
+    }
+    shiny::observeEvent(list(context(),active(),revision()),{
+      if(!isTRUE(active())) {
+        load_generation <<- load_generation+1L;busy(FALSE);stop_view();return()
+      }
+      ctx <- context();if(is.null(ctx)) return()
+      key <- paste(ctx$path,ctx$group_path,shiny::isolate(revision()),sep="\r")
+      if(identical(key,loaded_key) && !is.null(review())) return()
+      schedule_review_load(ctx,key)
     },ignoreNULL=FALSE)
 
     shiny::observeEvent(input$create,{
@@ -179,9 +220,9 @@ flowline_points_review_server <- function(id,current,context,store,
 
     output$map <- leaflet::renderLeaflet({
       value <- selected()
+      generation <- refreshed()
       target_bounds <- NULL
-      map <- leaflet::leaflet(options=leaflet::leafletOptions(maxZoom=23,
-        preferCanvas=TRUE)) |>
+      map <- fg_leaflet() |>
         leaflet::addMapPane("flowline-points-basemap",zIndex=200) |>
         leaflet::addMapPane("hydro-hillshade",zIndex=300) |>
         leaflet::addMapPane("hydro-elevation",zIndex=350) |>
@@ -210,13 +251,6 @@ flowline_points_review_server <- function(id,current,context,store,
           leaflet::addPolylines(data=lines,group="Reach Flowlines",color=colors,
             weight=4,opacity=.9,label=lines$ReachName,
             options=leaflet::pathOptions(interactive=FALSE,pane="flowline-points-lines"))
-        shown <- shiny::isolate(points())
-        if(!is.null(shown)) shown <- shown[shown$stream_id==value$stream_id,]
-        shown <- flowline_points_display_sample(shown)
-        if(!is.null(shown) && nrow(shown)) map <- leaflet::addCircleMarkers(map,
-          data=sf::st_transform(shown,4326),group="Flowline Points",radius=2,
-          stroke=FALSE,fillColor="#d7301f",fillOpacity=.9,
-          options=leaflet::pathOptions(interactive=FALSE,pane="flowline-points-lines"))
         saved <- shiny::isolate(review())$saved
         if(!is.null(saved)) {
           confluence <- saved$connections[saved$connections$stream_id==value$stream_id,]
@@ -230,7 +264,9 @@ flowline_points_review_server <- function(id,current,context,store,
       }
       htmlwidgets::onRender(map,paste(readLines(system.file("www","hydro-display.js",
         package="fgstudio",mustWork=TRUE),warn=FALSE),collapse="\n"),
-        data=list(bounds=target_bounds))
+        data=list(bounds=target_bounds,readyInput=session$ns("map_ready"),
+          readyToken=if(is.null(value)) NULL else
+            paste(value$stream_id,generation,sep=":")))
     })
 
     output$profile <- shiny::renderPlot({
@@ -276,28 +312,52 @@ flowline_points_review_server <- function(id,current,context,store,
     })
 
     bounds <- shiny::debounce(shiny::reactive(input$map_bounds),350)
+    map_token <- shiny::reactive({
+      value <- selected()
+      if(is.null(value)) return(NULL)
+      paste(value$stream_id,refreshed(),sep=":")
+    })
+    map_ready <- shiny::reactive({
+      ready <- input$map_ready
+      !is.null(ready) && identical(ready$token,map_token())
+    })
+    shiny::observe({
+      b <- bounds();zoom <- input$map_zoom;value <- selected();x <- points();refreshed()
+      if(!isTRUE(active()) || !isTRUE(map_ready()) || is.null(value) || is.null(b)) return()
+      proxy <- leaflet::leafletProxy("map",session) |>
+        leaflet::clearGroup("Flowline Points")
+      if(is.null(x)) return()
+      shown <- x[x$stream_id==value$stream_id,,drop=FALSE]
+      shown <- flowline_points_in_view(shown,b,zoom)
+      if(nrow(shown)) leaflet::addCircleMarkers(proxy,
+        data=sf::st_transform(shown,4326),group="Flowline Points",radius=2,
+        stroke=FALSE,fillColor="#d7301f",fillOpacity=.9,
+        options=leaflet::pathOptions(interactive=FALSE,pane="flowline-points-lines"))
+    })
     shiny::observe({
       shiny::invalidateLater(200,session)
-      b <- bounds();value <- selected();refreshed()
-      if(!isTRUE(active()) || is.null(value) || !valid_map_bounds(b)) return()
-      signature <- list(path=value$dem,bounds=b)
+      b <- bounds();value <- selected();token <- map_token()
+      if(!isTRUE(active()) || !isTRUE(map_ready()) || is.null(value) ||
+          !valid_map_bounds(b)) return()
+      signature <- list(path=value$dem,bounds=b,map=token)
       if(identical(signature,last_view)) return()
       if(!worker_ready()) {if(!worker_failed){view_notice("Opening DEM viewer...");view_busy(TRUE)};return()}
       if(!is.null(view_job) || !identical(view_worker$get_state(),"idle")) return()
-      last_view <<- signature;stop_view();view_key <<- signature
+      stop_view();view_key <<- signature
       view_dir <<- tempfile("view-",cache);dir.create(view_dir)
       view_notice("Loading elevation detail...");view_busy(TRUE)
       tryCatch({
         display_cache <- file.path(dirname(shiny::isolate(current())$path),"terrain-display")
-        view_worker$call(function(path,b,directory,display_cache)
+        view_worker$call(function(path,b,directory,display_cache,source_id)
           fluvgeo::prepare_hydro_dem_view(path,b,directory,cache_directory=display_cache,
-            build_cache=FALSE),args=list(path=value$dem,b=b,directory=view_dir,
-              display_cache=display_cache))
+            build_cache=FALSE,source_id=source_id),args=list(path=value$dem,b=b,
+              directory=view_dir,display_cache=display_cache,
+              source_id=value$record$result$output_sha256))
         view_job <<- list(is_alive=function()
           !identical(unname(view_worker$poll_io(0)["process"]),"ready"),
           get_result=function(){answer<-view_worker$read();if(!is.null(answer$error))
             stop(answer$error);answer$result})
-      },error=function(e){stop_view();view_notice(conditionMessage(e))})
+      },error=function(e){view_key <<- NULL;stop_view();view_notice(conditionMessage(e))})
     })
     poll <- function(){
       if(!is.null(view_job) && !view_job$is_alive()) {
@@ -305,12 +365,14 @@ flowline_points_review_server <- function(id,current,context,store,
         on.exit(unlink(finished,recursive=TRUE),add=TRUE)
         tryCatch({
           v <- job$get_result();value <- shiny::isolate(selected())
-          if(is.null(value) || !identical(view_key,
-            list(path=value$dem,bounds=shiny::isolate(bounds())))) return()
+          current_key <- if(is.null(value)) NULL else list(path=value$dem,
+            bounds=shiny::isolate(bounds()),map=shiny::isolate(map_token()))
+          if(!isTRUE(shiny::isolate(map_ready())) ||
+              !identical(view_key,current_key)) {view_key <<- NULL;return()}
           proxy <- leaflet::leafletProxy("map",session)
           if(isTRUE(v$empty)) {
             leaflet::clearImages(proxy) |> leaflet::removeControl("elevation-legend")
-            view_notice(v$message);return()
+            last_view <<- view_key;view_key <<- NULL;view_notice(v$message);return()
           }
           pal <- leaflet::colorNumeric(terrain_palette(),domain=v$limits,
             na.color="transparent")
@@ -326,14 +388,17 @@ flowline_points_review_server <- function(id,current,context,store,
           leaflet::addLegend(proxy,pal=pal,values=v$limits,
             title=paste("Elevation",v$unit),group="Elevation",position="bottomright",
             layerId="elevation-legend")
+          last_view <<- view_key;view_key <<- NULL
           view_notice(if(v$native) "Full source-cell detail; display reprojection only." else
             "Overview: zoom closer for source-cell detail.")
-        },error=function(e)view_notice(hydro_error_message(e)))
+        },error=function(e){view_key <<- NULL;view_notice(hydro_error_message(e))})
       }
     }
     shiny::observe({shiny::invalidateLater(300,session);poll()})
-    session$onSessionEnded(function(){if(!is.null(view_worker))view_worker$kill();
-      unlink(cache,recursive=TRUE)})
+    session$onSessionEnded(function(){
+      session_closed <<- TRUE
+      if(!is.null(view_worker))view_worker$kill();unlink(cache,recursive=TRUE)
+    })
     list(review=review,points=points,selected=selected,poll=poll)
   })
 }

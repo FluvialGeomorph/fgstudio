@@ -38,11 +38,15 @@ flowline_points_review_fixture <- function(directory) {
 
 test_that("Flowline Points review creates the one-meter compatible profile", {
   fixture <- flowline_points_review_fixture(withr::local_tempdir())
+  active <- shiny::reactiveVal(TRUE)
   shiny::testServer(flowline_points_review_server,args=list(current=function()
     list(path=fixture$context$path),context=function()fixture$context,
-    store=fixture$store,active=function()TRUE),{
+    store=fixture$store,active=active),{
     session$setInputs(stream="s1",station_distance=1)
     session$flushReact()
+    expect_match(output$status$html,"Opening this Survey Event",fixed=TRUE)
+    expect_match(output$status$html,"<progress",fixed=TRUE)
+    Sys.sleep(.06);later::run_now(.1);session$flushReact()
     expect_gt(nrow(points()),10)
     expect_equal(unique(points()$station_distance_m),1)
     expect_true(all(c("POINT_M_uncalibrated","calibration_diff","km_to_mouth") %in%
@@ -77,11 +81,14 @@ test_that("Flowline Points clears another Event before a prerequisite failure", 
     list(path=context()$path),context=context,store=fixture$store,
     active=function()TRUE),{
     session$setInputs(stream="s1",station_distance=1)
-    session$flushReact()
+    session$flushReact();Sys.sleep(.06);later::run_now(.1);session$flushReact()
     expect_gt(nrow(points()),10)
     next_context <- context();next_context$group_id <- "missing"
     next_context$group_path <- paste0(next_context$group_path,"-missing")
     context(next_context);session$flushReact()
+    expect_match(output$status$html,"Opening this Survey Event",fixed=TRUE)
+    expect_match(output$status$html,"<progress",fixed=TRUE)
+    Sys.sleep(.06);later::run_now(.1);session$flushReact()
     expect_null(review())
     expect_null(points())
     expect_match(notice(),"Hydro DEM",fixed=TRUE)
@@ -96,7 +103,31 @@ test_that("Flowline Points review keeps only spacing overrides in Advanced contr
   expect_false(grepl("Return to Stream",html,fixed=TRUE))
   expect_match(html,"Advanced spacing",fixed=TRUE)
   expect_match(html,"shared profile",fixed=TRUE)
+  expect_match(html,"Stream (select a tab to change the map)",fixed=TRUE)
+  expect_match(html,"zoom to inspection scale",fixed=TRUE)
   expect_match(html,"(?s)<details[^>]*>.*Recreate Flowline Points.*</details>",perl=TRUE)
   expect_lt(regexpr("points-map",html,fixed=TRUE)[1],
     regexpr("Advanced spacing",html,fixed=TRUE)[1])
+})
+
+test_that("Flowline Points map uses a bounded display sample", {
+  points <- sf::st_as_sf(data.frame(id=seq_len(2500),x=seq_len(2500),y=0),
+    coords=c("x","y"),crs=26915)
+  shown <- flowline_points_display_sample(points)
+  expect_equal(nrow(shown),1000)
+  expect_equal(shown$id[c(1,nrow(shown))],c(1,2500))
+  expect_equal(flowline_points_display_sample(points[1:900,]),points[1:900,])
+})
+
+test_that("Flowline Points load only inside an inspection-scale viewport", {
+  points <- sf::st_as_sf(data.frame(id=seq_len(2500),
+    x=seq(500000,502499),y=4450000),coords=c("x","y"),crs=26915)
+  geographic <- sf::st_bbox(sf::st_transform(points,4326))
+  bounds <- list(west=geographic[["xmin"]],south=geographic[["ymin"]]-.001,
+    east=mean(geographic[c("xmin","xmax")]),north=geographic[["ymax"]]+.001)
+  expect_equal(nrow(flowline_points_in_view(points,bounds,16)),0)
+  shown <- flowline_points_in_view(points,bounds,18)
+  expect_gt(nrow(shown),0)
+  expect_lte(nrow(shown),1000)
+  expect_true(max(shown$id)<2500)
 })

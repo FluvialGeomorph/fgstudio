@@ -73,7 +73,7 @@ test_that("mask review maps display generated rasters and boundaries without cha
   expect_gt(file.info(image)$size,0)
   expect_identical(tools::md5sum(path),before)
   expect_match(mask_recovery_message(simpleError("Invalid cell size")),"invalid cell size")
-  expect_match(mask_recovery_message(simpleError("Missing Reach polygons")),"Geometry")
+  expect_match(mask_recovery_message(simpleError("Missing Reach polygons")),"Study Structure")
   html <- as.character(survey_event_settings_ui("event"))
   expect_false(grepl("Mask to view|Analysis masks|Mask troubleshooting",html))
   withr::local_options(list(fgstudio.mask_diagnostics=TRUE))

@@ -8,3 +8,18 @@ test_that("OpenTopoMap is the default project basemap", {
     vapply(hidden,function(x)x$args[[1]],character(1))))
   expect_false("OpenTopoMap" %in% vapply(hidden,function(x)x$args[[1]],character(1)))
 })
+
+test_that("project maps use the scale-conscious canvas renderer", {
+  widget <- fg_leaflet()
+  expect_true(widget$x$options$preferCanvas)
+  expect_identical(widget$x$options$maxZoom,23)
+})
+
+test_that("Street map can be the explicit footprint-review default", {
+  widget <- add_opentopomap(leaflet::leaflet(),default="Street map")
+  hidden <- Filter(function(x) identical(x$method,"hideGroup"),widget$x$calls)
+  groups <- vapply(hidden,function(x)x$args[[1]],character(1))
+  expect_true(all(c("OpenTopoMap","Imagery") %in% groups))
+  expect_false("Street map" %in% groups)
+  expect_error(add_opentopomap(leaflet::leaflet(),default="Unknown"),"Basemap default")
+})

@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Survey Events is a main Study Area tab after CRS, which also
+Survey Events is a main Study Area tab after Analysis CRS, which also
 provides a Continue to Survey Events button. The panel uses
 native choice lists populated from saved Survey Collections and their date evidence.
 Known same-month collections form a suggestion; unresolved dates remain explicit.
@@ -20,6 +20,10 @@ controls and acquisition evidence are grouped separately in Define a Survey Even
 in the top panel, collapsed when saved events exist and expanded for the first event.
 Cancel discards the editor; Save Survey Event validates and publishes a snapshot.
 Opening an editor marks pending work for the existing study lifecycle guard.
+The module also returns a read-only overview table to `mod_study_server()` with
+each saved date label, Survey Collection membership, assigned Streams and output
+cell size. The main Overview uses this same persisted reactive state; it does not
+open DEMs, create masks or introduce another saved representation.
 
 "Acquisition group" remains an internal legacy API/storage name only. It must not
 be presented as a separate analyst concept. Saving the local Survey Event definition

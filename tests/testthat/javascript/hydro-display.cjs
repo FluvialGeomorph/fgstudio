@@ -16,6 +16,9 @@ global.ResizeObserver = class {
   disconnect() {this.disconnected=true;}
 };
 global.window.ResizeObserver = global.ResizeObserver;
+global.Shiny = {calls: [], setInputValue(name,value,options) {
+  this.calls.push({name,value,options});
+}};
 global.L = {control: () => ({addTo(map) {map.control=this.onAdd();}}),
   DomUtil: {create: element}, DomEvent: {disableClickPropagation() {}, disableScrollPropagation() {}}};
 const hook = eval('(' + payload.hook + ')');
@@ -26,18 +29,24 @@ function mount(bounds=[-93,40,-92.99,40.01],visible=true) {
     this.invalidated=options;
   },fitBounds(bounds,options) {this.fitCalls=(this.fitCalls || []).concat([{bounds,options}]);}};
   el.offsetWidth=visible ? 800 : 0;el.offsetHeight=visible ? 600 : 0;
-  hook.call(map,el,{}, {bounds});
+  hook.call(map,el,{}, {bounds,readyInput:'points-map_ready',readyToken:'stream:1'});
   el.resizeObserver.callback();
   return {map,panes};
 }
 let {map,panes} = mount(undefined,false);
 assert.strictEqual(map.fitCalls,undefined);
+assert.strictEqual(Shiny.calls.length,0);
 el.offsetWidth=800;el.offsetHeight=600;el.resizeObserver.callback();
 assert.deepStrictEqual(map.invalidated,{pan:false});
+assert.strictEqual(Shiny.calls.length,1);
+assert.strictEqual(Shiny.calls[0].name,'points-map_ready');
+assert.strictEqual(Shiny.calls[0].value.token,'stream:1');
+assert.deepStrictEqual(Shiny.calls[0].options,{priority:'event'});
 assert.deepStrictEqual(map.fitCalls,[{bounds:[[40,-93],[40.01,-92.99]],
   options:{animate:false,padding:[16,16]}}]);
 el.resizeObserver.callback();
 assert.strictEqual(map.fitCalls.length,1);
+assert.strictEqual(Shiny.calls.length,1);
 el.offsetWidth=0;el.offsetHeight=0;el.resizeObserver.callback();
 el.offsetWidth=800;el.offsetHeight=600;el.resizeObserver.callback();
 assert.strictEqual(map.fitCalls.length,2);

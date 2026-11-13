@@ -6,7 +6,7 @@ requirements; the DEM pipeline's supported unit conversion is described separate
 
 ## Reference specification
 
-Analysis setup has Horizontal CRS and Vertical reference tabs. The latter provides
+Analysis CRS has Horizontal CRS and Vertical Reference tabs. The latter provides
 local area-screened vertical EPSG candidates, authoritative-definition entry,
 ellipsoidal 3D definitions, declared/future names, local and unknown choices.
 Height type, elevation unit, coordinate epoch/evidence and optional intended-model

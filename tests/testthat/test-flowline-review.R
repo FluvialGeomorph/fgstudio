@@ -99,6 +99,7 @@ test_that("Flowline review needs no separate save control", {
   html <- as.character(flowline_review_ui("flowline"))
   expect_false(grepl("Save Reach Flowlines",html,fixed=TRUE))
   expect_match(html,"automatically saves",fixed=TRUE)
+  expect_match(html,"Stream (select a tab)",fixed=TRUE)
   expect_lt(regexpr("flowline-map",html,fixed=TRUE)[1],
     regexpr("flowline-bandwidth",html,fixed=TRUE)[1])
 })

@@ -20,8 +20,14 @@ it does not yet run L1 analysis or connect to Enterprise.
 
 `fgstudio_app()` applies Bootstrap 5 with the Bootswatch **Flatly** theme through
 bslib. All tabsets use the theme's standard tab style, including New/Open in the
-Study Workspace sidebar, the main Study tabs, CRS, Collections and Stream DEMs.
+Study Workspace sidebar, the main Study tabs, Analysis CRS, Collections and Stream DEMs.
 Do not add module-specific tab colors or mix pill navigation into these tabsets.
+The main tabset begins with Overview. Reopening a saved Study selects it so the
+persisted definition is reviewed before any editor. Creating a new Study instead
+selects Study Structure, preserving the direct initial-definition workflow.
+Overview renders the saved Study Area, Stream and Reach polygons on a read-only
+Leaflet map through the same current context used by the hierarchy tables; it
+does not create another geometry representation.
 
 | Call or registration | Responsibility | Source |
 |---|---|---|
@@ -51,6 +57,7 @@ cannot be understood by looking only for a top-level function named `create`.
 | Create Study Area | create observer → `store$create` | `fluvgeo::start_study_context`; reread persisted context |
 | Open study | open observer → `store$read` | `fluvgeo::read_study_context`; highest numbered local revision |
 | Reload saved study | one-time URL observer → `restore_study` → `store$read` | Same validated read path; no new revision |
+| Review saved definition | Overview renderer → current context, collection-selection path and Survey Event overview | Read-only summary; no new revision or derived computation |
 | Edit Study Area name/Purpose | modal save → `store$rename` / `store$set_purpose` → local `revise` | `fluvgeo::revise_study_context`; new immutable revision |
 | Save drawn boundary | `mod_boundary_server` → `store$save_boundary` | Containment check, then context revision |
 | Rename Stream/Reach | `study_feature_names` → `store$rename_feature` → local `revise` | `fluvgeo::rename_study_feature`; identity and geometry retained |
@@ -87,6 +94,11 @@ Reload restores only the latest persisted revision, not navigation tabs, drafts,
 validation results or previews. Both CRS forms show saved definitions and status;
 their local messages distinguish failed validation from a completed save. Test
 `test-study-reload.R` uses a fresh storage adapter and session against saved files.
+The restoration route deliberately selects Overview rather than the last visited
+tab. The overview does not duplicate editors: it summarizes saved choices and
+routes the analyst to the owning detail tab. Name/Purpose and feature-renaming
+actions remain available under **Change names or purpose** in the persistent
+Study header.
 
 Opening a saved Study Area, including restoration from the opaque URL key, uses
 the delayed app-wide working overlay because the workspace is not usable until

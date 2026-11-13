@@ -17,8 +17,10 @@ iterative study design rather than requiring every operation in a fixed order.
 
 1. Enter a working Study Area name and optional purpose/customer question.
 2. Select **Create Study Area**. The app saves a real fluvgeo context GeoPackage
-   and reads it back before displaying the saved draft.
-3. Review the compact status table and its **Next** action.
+   and reads it back before opening **Study Structure** for initial definition.
+3. Reopening a saved study lands on **Overview** instead. Review its Purpose,
+   boundary, Stream/Reach hierarchy, analysis references, and Survey Event
+   definitions before opening a detail tab.
 4. Reload reopens the latest saved revision of this tab's study, including both
    CRS specifications. The URL contains only its opaque local study key; it works
    on this workstation's data store. A fresh URL without a key starts empty; use
@@ -26,6 +28,24 @@ iterative study design rather than requiring every operation in a fixed order.
 5. Choose **Workspace - New** to start another; saved studies remain intact and
    the previous key is removed from the URL. That action confirms discarding
    pending edits. Browser reload itself discards unsaved edits, checks and previews.
+
+## Review or continue defining a saved study
+
+**Overview** is the read-only starting point for a saved Study Area. Its Saved
+definition table reports which core choices exist, and its hierarchy and Survey
+Event tables show the actual Stream/Reach organization, collection membership,
+assigned Streams, and output cell sizes. The map shows the saved Study Area,
+Streams and Reaches with labels, providing spatial context without entering an
+editing mode. Use the main tabs to inspect the owning
+maps and evidence. Those tabs also contain the editing controls for the definition
+they own.
+
+Use **Continue defining or updating** only when you intend to move forward from
+the saved definition. FG Studio routes that button to the first incomplete step,
+or to Hydro Modify when the prerequisite definition exists. It does not rerun a
+calculation from Overview. Study name, Purpose, Stream-name and Reach-name changes
+are grouped under **Change names or purpose** below the saved Study title so they
+do not compete with routine review.
 
 ## Rename saved Streams or Reaches
 
@@ -121,7 +141,7 @@ downloads and ArcGIS Enterprise access are not implemented yet.
 
 ## Edit a Study Area name
 
-Select **Edit name** beside the saved study title, change the name, then select
+Expand **Change names or purpose**, select **Edit Study Area name**, change the name, then select
 **Save name**. Cancel leaves it unchanged. The saved-study list updates, and the
 new name persists when reopened. Study identity, boundary and notes are retained;
 the prior revision is preserved. Save any unfinished boundary changes first, or
@@ -234,7 +254,7 @@ Reach from one already defined.
 
 ## Survey acquisition and analysis references
 
-In **CRS**, search projected EPSG systems applicable to the saved Study
+In **Analysis CRS**, search projected EPSG systems applicable to the saved Study
 Area. Filter horizontal units, inspect datum/frame and coverage, and open the
 SpatialReference.org explorer or selected definition. Check the CRS, then save it;
 validation and catalog evidence are recorded automatically. Advanced EPSG/WKT entry remains
@@ -306,7 +326,7 @@ the session cache. Drag a rectangle and choose **Inspect selected area** for
 source-window detail; **Preview elevations** returns to the whole tile. These
 display samples do not change the original DEM.
 
-After **CRS**, use **Continue to Survey Events** or open the
+After **Analysis CRS**, use **Continue to Survey Events** or open the
 adjacent **Survey Events** main tab. For an existing event, choose its date in
 **Survey Event date** (for example, **2019-12**). Its DEM appears immediately
 below; there is no separate date tab or DEM navigation step. Expand **Event
@@ -339,7 +359,7 @@ button. Progress appears while masks are generated; matching saved masks are
 checked against the current inputs and reused when you reopen the Event.
 
 Masks are internal DEM inputs. Normal sessions do not build mask display rasters
-or show mask maps. To correct boundaries, use **Geometry**; to change spacing,
+or show mask maps. To correct boundaries, use **Study Structure**; to change spacing,
 use **Review / edit Survey Event**. Failures still provide recovery guidance.
 Mask troubleshooting is an optional developer view scheduled for removal from
 the analyst workflow once DEM integration is complete.
@@ -408,8 +428,9 @@ geometry, buffer settings and, after splitting, versioned piece assignments.
 Move or back up the entire study folder, not only its latest context file.
 
 The Study Workspace sidebar can be collapsed with its edge toggle and reopened
-when you need another study. The bordered main tab set is **Geometry**,
-**Collections**, **CRS**, and **Survey Events**.
+when you need another study. The main tabs are **Overview**, **Study Structure**,
+**Collections**, **Analysis CRS**, **Survey Events**, **Hydro Modify**,
+**Flowline**, and **Flowline Points**.
 
 ## Survey Events: top-to-bottom workflow
 
@@ -463,8 +484,10 @@ Processing messages appear only while building DEMs or when work is paused or ne
 Every interactive map offers **OpenTopoMap** in its upper-right layers control:
 the Study workspace (including boundary, Stream, Reach and drainage exploration),
 Survey Collections/DEM files, Hydro Modify, Flowline, and Flowline Points.
-**OpenTopoMap is the default basemap**; Imagery and Street map remain available
-where applicable. The selected basemap remains active until you switch. Basemaps
+**OpenTopoMap is the default basemap** except on **Collections**, where
+**OpenStreetMap** is the default so teal and orange collection polygons remain
+distinct from the basemap. Imagery and Street map remain available where
+applicable. The selected basemap remains active until you switch. Basemaps
 stay below data overlays; OpenTopoMap
 tiles remain visible when zooming closer for DEM inspection.
 
@@ -525,8 +548,9 @@ flow accumulation.
 
 ## Review the automatically selected Flowline
 
-Open **Flowline** after saving the synthetic Stream Network. Choose the Survey
-Event and Stream to inspect; no tributary or segment selection is required. FG Studio compares
+Open **Flowline** after saving the synthetic Stream Network. Select the Survey
+Event from the dropdown, then select the labeled Stream tab to inspect. No
+tributary or segment selection is required. FG Studio compares
 every complete terrain-derived head-to-outlet route with the NHDPlusV2 Stream
 you previously selected and displays the conservative 2-map-unit candidate in
 gold by default. The map appears before the optional smoothing and selection
@@ -560,7 +584,9 @@ Points should consume the saved local candidate rather than transient geometry.
 ## Create Flowline Points
 
 Open **Flowline Points** after FG Studio has saved Reach Flowlines for every
-Stream and choose the Survey Event to review. When no matching point candidate
+Stream and choose the Survey Event from the dropdown. Select a labeled Stream
+tab to change the detailed map; the profile still includes every Stream and
+Reach. When no matching point candidate
 exists, FG Studio automatically creates it at the **1 meter** default and uses
 every exact saved
 Reach Flowline and bound Hydro DEM. It finds the one Study Area outlet from the

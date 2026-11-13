@@ -59,7 +59,7 @@ test_that("Apply publishes a completed worker result and exposes its saved surfa
   lines <- hydro_drawn_lines(list(type="FeatureCollection",features=list(list(
     geometry=list(type="LineString",coordinates=list(c(-93,40),c(-92.999,40.001)))))))
   store$hydro_save("study","event","s1","dem1",lines,NULL,path)
-  launch <- function(source,lines,filename) {
+  launch <- function(source,lines,filename,display_cache) {
     writeBin(as.raw(1:9),filename)
     list(is_alive=function() FALSE,get_result=function() list(path=filename,method="fixture"))
   }
@@ -93,7 +93,7 @@ test_that("extraction carries an unchanged DEM forward when no cutlines are need
     sf::st_linestring(matrix(c(0,3,3,0),ncol=2,byrow=TRUE)),crs=26915))
   store <- c(hydro,network_store,list(dem_request=function(...) list(),
     find_dem=function(...) dem,stream_segments=function(...) list(lines=reference)))
-  passthrough <- function(source,filename) {
+  passthrough <- function(source,filename,display_cache) {
     file.copy(source,filename)
     list(is_alive=function() FALSE,get_result=function() list(path=filename,
       method="unchanged_source",output_sha256="same-sha",

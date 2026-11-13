@@ -132,6 +132,31 @@ candidates separate. Returning to the unchanged Flowline Points tab reuses its
 in-session review before reopening any of the full point or Flowline layers;
 Hydro and Flowline saves explicitly invalidate that reuse. Multi-Event navigation
 does not yet perform comparison-event calibration or accept a governed frame.
+On a required reopen, FG Studio first paints the tab shell, Event/Stream choices,
+plain-language status, and progress cue, then reads the saved GeoPackage and
+point profile. The initial browser view therefore never waits behind that
+synchronous disk work without feedback.
+
+The map keeps the full saved candidate and the full Study Area profile in the
+server workflow, but sends no point markers at the initial Stream extent. At
+inspection zoom 17 or closer, it transmits at most 1,000 evenly distributed
+markers from only the current viewport and clears the previous marker layer on
+every view change. This display-only, scale-dependent bound avoids making first
+review proportional to one-meter point density. Flowline and Flowline Points use the
+same bounded, file-backed Hydro DEM viewport cache. A reused viewport avoids
+repeat terrain preparation while each Leaflet widget retains only its current
+elevation and hillshade layers; full DEM rasters are not held in browser memory.
+Hydro DEM creation prepares the shared elevation/hillshade overviews and raster
+statistics before publication. Flowline and Flowline Points consume those
+artifacts with cache construction disabled, so first draw never becomes an
+implicit raster-pyramid job.
+
+Terrain display work starts only after the current Leaflet instance reports
+that it is visible and initialized. Each request is bound to that map instance,
+Stream, and viewport. A result for an obsolete map or extent is discarded and
+the current view remains eligible to run; only a raster successfully attached
+to the current map is recorded as displayed. This prevents tab initialization,
+resize, and rapid Stream changes from leaving the viewer permanently blank.
 
 `fluvgeo::study_area_flowline_points()` uses prior Stream Definition as the
 topology authority. A Stream whose downstream endpoint lies in another Stream's

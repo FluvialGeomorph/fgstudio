@@ -64,6 +64,11 @@ test_that("shared map visibility is independent of inclusion and product intent"
     session$setInputs(map_mode="included")
     expect_identical(visible_keys(),"USIEI:1")
     expect_true(grepl("Shared coverage map",as.character(mod_survey_collections_ui("fixture")),fixed=TRUE))
+    widget <- jsonlite::fromJSON(output$map,simplifyVector=FALSE)
+    hidden <- Filter(function(x) identical(x$method,"hideGroup"),widget$x$calls)
+    groups <- vapply(hidden,function(x)x$args[[1]],character(1))
+    expect_true("OpenTopoMap" %in% groups)
+    expect_false("Street map" %in% groups)
   })
 })
 

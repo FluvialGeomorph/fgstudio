@@ -11,7 +11,19 @@ The app-wide bslib theme is Bootstrap 5 Bootswatch Flatly. Standard tab navigati
 is used throughout, including the Study Workspace sidebar. Theme colors and tab
 states come from Flatly rather than module-specific CSS overrides.
 
-OpenTopoMap is the default on every interactive map; other offered basemaps are
+Opening or restoring a saved Study Area lands on Overview, which presents the
+persisted definition as a review artifact: Purpose, boundary, Stream/Reach
+hierarchy, analysis CRS and local Survey Event definitions. Its hierarchy map
+shows the saved Study Area, Streams and Reaches without entering an editor. Definition
+and derived-result tabs retain their detailed maps and evidence. Change actions
+for names and Purpose are collapsed in the persistent header, while one explicit
+continuation action routes to the next incomplete/downstream definition step.
+Creating a new Study Area bypasses Overview and opens Study Structure because
+the analyst's immediate intent is initial definition.
+
+OpenTopoMap is the default on interactive maps except the Survey Collections
+coverage map, which defaults to OpenStreetMap so colored collection footprints
+remain distinguishable from the basemap. Other offered basemaps remain
 analyst-selectable alternatives. Maps correct their dimensions automatically
 when hidden workflow tabs become visible. Hydro Modify, Flowline and Flowline
 Points use the saved Stream feature as their shared fit target, with the Stream
@@ -23,11 +35,28 @@ Study Area, when the workspace is not yet usable. Background work within a
 workflow tab uses that module's analyst-language status and blue activity bar;
 tab navigation and task actions do not also show the blocking overlay. These two
 progress representations are mutually exclusive.
+
+Scale-dependent rendering is an application-wide interactive-cartography
+invariant. Every map uses Leaflet's canvas renderer, viewport clipping and
+zoom-dependent vector simplification. Basemaps use provider tiles at their
+native scale. Dense point and raster detail must additionally be bounded on the
+server: do not transmit it at overview scale, request only the visible window
+after an explicit inspection-zoom threshold, cap the display payload, and
+replace the prior detail layer when the view changes. Flowline Points begins at
+Stream extent with no point markers and requests at most 1,000 visible markers
+at zoom 17 or closer. Hydro DEM displays have a fixed pixel budget, reuse a
+bounded file-backed viewport cache, and clear existing image layers before
+adding the current elevation and hillshade pair. Hydro DEM production
+precomputes full-resolution elevation/hillshade COG overviews and statistics in
+the existing background job; review tabs only consume that cache and never
+trigger pyramid construction. Saved analytical data are never
+sampled or generalized by these display rules.
 Hydro Modify, Flowline and Flowline Points expose the same linked Survey Event
 selector. Changing it once changes the active Event context across those tabs.
 Flowline and Flowline Points place their review map (and the Study-wide profile
 for points) before optional parameter and diagnostic details so saved data is
-visible when the tab opens. A changed Event or Stream clears the preceding
+visible when the tab opens. Their Survey Event control is a dropdown; the
+separately labeled Stream tabs select the map target. A changed Event or Stream clears the preceding
 review before prerequisites are resolved; an unavailable result therefore shows
 an explicit empty/error state instead of geometry from another selection.
 

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "fgstudio",
-  "package_version": "0.0.0.9091",
+  "package_version": "0.0.0.9094",
   "generator": {
     "pkgnet": "0.6.1",
     "flow": "0.2.0"
@@ -10,7 +10,7 @@
   "inputs": [
     {
       "file": "DESCRIPTION",
-      "sha256": "89c242c634e2eda8d14b181b5826adf2dd1210db071c4d35b1a97c900b3f5b1e"
+      "sha256": "1aa193b6531ff12d7608c889bab705519e746d6907998de90532bbe2f835d8b7"
     },
     {
       "file": "NAMESPACE",
@@ -18,7 +18,7 @@
     },
     {
       "file": "R/app.R",
-      "sha256": "a14d219f72baddd108ad0da9fcda3961891d2282253d7a2f9122634a0ac65330"
+      "sha256": "b9a058360df46d1b39243f9ff0c4cb10e63ed01327630ec76b182d9b120dbe9d"
     },
     {
       "file": "R/compact_table.R",
@@ -38,11 +38,11 @@
     },
     {
       "file": "R/event_masks.R",
-      "sha256": "5d11e6ba4f71105ad282efdc2d777ff250f107345f662681d5d6fd49637c251d"
+      "sha256": "ef69a457175a40c0ca27aebdb5a4c418389f4ca4caa68f5985651e19ca2a791b"
     },
     {
       "file": "R/flowline_points_review.R",
-      "sha256": "758f9f2a0e5aca2cc198d7dbdbf237cfebe9a22e23d8f546b7ad7aede4b6c1e7"
+      "sha256": "040bd39bd2c704a43a49582f25de1ba2a0c9a849d2372212781aa41ccf7f635d"
     },
     {
       "file": "R/flowline_points_store.R",
@@ -50,7 +50,7 @@
     },
     {
       "file": "R/flowline_review.R",
-      "sha256": "fff8b81d4daff7e1289d4b6b78b27998bac68e5e04fc8080011b0d1739c46243"
+      "sha256": "1529b9c633e3930811021ba2b222b48572c58d3e4af1d1e828913cf4b23ec73b"
     },
     {
       "file": "R/flowline_store.R",
@@ -58,7 +58,7 @@
     },
     {
       "file": "R/hydro_modify.R",
-      "sha256": "b2dcda05d76c4741e28105771235a7d5d7d9d187db0cb102d374f45b3eefcbb2"
+      "sha256": "b0952e338946a786e283d025267b2d966f0031f38a4983b8d87b58fed55b0cb1"
     },
     {
       "file": "R/hydro_store.R",
@@ -66,7 +66,7 @@
     },
     {
       "file": "R/map_basemaps.R",
-      "sha256": "713e87d2662aee4bc6c7ca1299eef67003b6796bc6bf1e4b035e215cab9634d6"
+      "sha256": "fb3fcbe83891155d6344103336a5cd5a8f9297607c6cb92f0ce4b1523dd0e16a"
     },
     {
       "file": "R/map_search.R",
@@ -74,7 +74,7 @@
     },
     {
       "file": "R/mod_boundary.R",
-      "sha256": "306853da541ed369f0ba0e4f509a2a4f91b8162d80e5ba3255ef65d1a7547d50"
+      "sha256": "3339dbfad031bedf285e720f0533d1f559061b94f6062cd047eaec9f9d4bfeef"
     },
     {
       "file": "R/mod_streams.R",
@@ -82,11 +82,11 @@
     },
     {
       "file": "R/mod_study.R",
-      "sha256": "ed31208d430fc7663b287ec1aa816c84e3f62479eaa86a38ec31a1ae1fb89f5e"
+      "sha256": "6d31c015c5c2f47bf7a8bd907cb934ff85212351397fbfd1f9805c0765a7057f"
     },
     {
       "file": "R/mod_survey_collections.R",
-      "sha256": "800aa9ab0a75f0f44c740c49ff279a896c3aca496b0a1eb1e4705dc1b84f623d"
+      "sha256": "9bb9838e2544b9c3ede4111dd934bb2441c93aec5d01e505c5765cc29ac1b914"
     },
     {
       "file": "R/network_reference.R",
@@ -170,11 +170,11 @@
     },
     {
       "file": "R/survey_event_dems.R",
-      "sha256": "dc83ce35382f35f0aedc1eeb15dc83458728ff341c4ffd71f88493a1297fa39e"
+      "sha256": "f04bed6ed7cf0a4978975f236b019315ac04684827b3ddb03f5d0b5fef00c91b"
     },
     {
       "file": "R/survey_event_settings.R",
-      "sha256": "5a820229f9321923cb38241caa98d33d02500c8f53156b6cb07b4c49789cb581"
+      "sha256": "cde6b86949f9a0c9e6fb16666c16c896d36f3c67cf0954e7f2aa88db75a14299"
     },
     {
       "file": "R/terrain_dem_provenance.R",
@@ -230,7 +230,7 @@
       "locations": [
         {
           "file": "R/map_basemaps.R",
-          "line": 4
+          "line": 9
         }
       ]
     },
@@ -445,6 +445,16 @@
       ]
     },
     {
+      "id": "fgstudio::fg_leaflet",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/map_basemaps.R",
+          "line": 4
+        }
+      ]
+    },
+    {
       "id": "fgstudio::fg_working_overlay",
       "exported": false,
       "locations": [
@@ -470,7 +480,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 442
+          "line": 446
         }
       ]
     },
@@ -480,7 +490,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 421
+          "line": 425
         }
       ]
     },
@@ -490,7 +500,17 @@
       "locations": [
         {
           "file": "R/flowline_points_review.R",
-          "line": 53
+          "line": 55
+        }
+      ]
+    },
+    {
+      "id": "fgstudio::flowline_points_in_view",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/flowline_points_review.R",
+          "line": 60
         }
       ]
     },
@@ -500,7 +520,7 @@
       "locations": [
         {
           "file": "R/flowline_points_review.R",
-          "line": 58
+          "line": 77
         }
       ]
     },
@@ -520,7 +540,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 86
+          "line": 88
         }
       ]
     },
@@ -540,7 +560,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 79
+          "line": 81
         }
       ]
     },
@@ -570,7 +590,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 504
+          "line": 515
         }
       ]
     },
@@ -590,7 +610,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 499
+          "line": 510
         }
       ]
     },
@@ -640,7 +660,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 426
+          "line": 428
         }
       ]
     },
@@ -650,7 +670,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 432
+          "line": 439
         }
       ]
     },
@@ -700,7 +720,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 445
+          "line": 456
         }
       ]
     },
@@ -710,7 +730,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 457
+          "line": 468
         }
       ]
     },
@@ -770,7 +790,7 @@
       "locations": [
         {
           "file": "R/survey_event_settings.R",
-          "line": 29
+          "line": 46
         }
       ]
     },
@@ -780,7 +800,7 @@
       "locations": [
         {
           "file": "R/flowline_points_review.R",
-          "line": 23
+          "line": 25
         }
       ]
     },
@@ -790,7 +810,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 29
+          "line": 31
         }
       ]
     },
@@ -860,7 +880,7 @@
       "locations": [
         {
           "file": "R/mod_study.R",
-          "line": 41
+          "line": 42
         }
       ]
     },
@@ -940,7 +960,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 61
+          "line": 63
         }
       ]
     },
@@ -1030,7 +1050,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 18
+          "line": 20
         }
       ]
     },
@@ -1040,7 +1060,7 @@
       "locations": [
         {
           "file": "R/hydro_modify.R",
-          "line": 466
+          "line": 477
         }
       ]
     },
@@ -1205,7 +1225,7 @@
       "locations": [
         {
           "file": "R/flowline_review.R",
-          "line": 428
+          "line": 432
         }
       ]
     },
@@ -1380,12 +1400,22 @@
       ]
     },
     {
+      "id": "fgstudio::survey_event_overview",
+      "exported": false,
+      "locations": [
+        {
+          "file": "R/survey_event_settings.R",
+          "line": 29
+        }
+      ]
+    },
+    {
       "id": "fgstudio::survey_event_settings_server",
       "exported": false,
       "locations": [
         {
           "file": "R/survey_event_settings.R",
-          "line": 57
+          "line": 74
         }
       ]
     },
@@ -1720,6 +1750,12 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::flowline_points_in_view",
+      "to": "fgstudio::flowline_points_display_sample",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::flowline_points_review_server",
       "to": "fgstudio::add_opentopomap",
       "kind": "static-dependency",
@@ -1728,6 +1764,12 @@
     {
       "from": "fgstudio::flowline_points_review_server",
       "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_points_review_server",
+      "to": "fgstudio::fg_leaflet",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1745,7 +1787,7 @@
     },
     {
       "from": "fgstudio::flowline_points_review_server",
-      "to": "fgstudio::flowline_points_display_sample",
+      "to": "fgstudio::flowline_points_in_view",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1794,6 +1836,12 @@
     {
       "from": "fgstudio::flowline_review_server",
       "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::flowline_review_server",
+      "to": "fgstudio::fg_leaflet",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -1866,6 +1914,12 @@
     {
       "from": "fgstudio::hydro_modify_server",
       "to": "fgstudio::add_opentopomap",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::hydro_modify_server",
+      "to": "fgstudio::fg_leaflet",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -2075,6 +2129,12 @@
     },
     {
       "from": "fgstudio::mod_boundary_server",
+      "to": "fgstudio::fg_leaflet",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_boundary_server",
       "to": "fgstudio::focus_saved_feature",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
@@ -2177,7 +2237,19 @@
     },
     {
       "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::add_opentopomap",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
       "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::fg_leaflet",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -2226,6 +2298,12 @@
     {
       "from": "fgstudio::mod_study_server",
       "to": "fgstudio::mod_survey_collections_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_study_server",
+      "to": "fgstudio::saved_feature_layers",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -2304,6 +2382,12 @@
     {
       "from": "fgstudio::mod_survey_collections_server",
       "to": "fgstudio::compact_table",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::mod_survey_collections_server",
+      "to": "fgstudio::fg_leaflet",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -2560,6 +2644,12 @@
       "evidence": "pkgnet-FunctionReporter"
     },
     {
+      "from": "fgstudio::survey_event_overview",
+      "to": "fgstudio::survey_event_choice_labels",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
       "from": "fgstudio::survey_event_settings_server",
       "to": "fgstudio::event_masks_server",
       "kind": "static-dependency",
@@ -2574,6 +2664,12 @@
     {
       "from": "fgstudio::survey_event_settings_server",
       "to": "fgstudio::survey_event_dems_server",
+      "kind": "static-dependency",
+      "evidence": "pkgnet-FunctionReporter"
+    },
+    {
+      "from": "fgstudio::survey_event_settings_server",
+      "to": "fgstudio::survey_event_overview",
       "kind": "static-dependency",
       "evidence": "pkgnet-FunctionReporter"
     },
@@ -2990,8 +3086,8 @@
     }
   ],
   "evaluation": {
-    "static_nodes": 140,
-    "static_edges": 183,
+    "static_nodes": 143,
+    "static_edges": 194,
     "reviewed_bridges": 31,
     "storage_closure_detected": false,
     "limitations": ["List-held adapter closures and indirect writer dispatch require reviewed bridges", "Shiny registration is not chronological execution", "Backend internals and Python/QGIS graphs not indexed"]

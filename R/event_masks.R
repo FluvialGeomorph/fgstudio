@@ -61,8 +61,8 @@ mask_recovery_message <- function(e) {
   action <- if(grepl("cell size|spacing",detail,ignore.case=TRUE))
     "Open Review / edit Survey Event to correct the invalid cell size." else
     if(grepl("disk|space",detail,ignore.case=TRUE)) "Free disk space on the drive holding the study, then reopen the Survey Event." else
-    if(grepl("CRS|reference",detail,ignore.case=TRUE)) "Open CRS to correct the horizontal CRS, then review and save the Survey Event again." else
-    if(grepl("polygon|geometry|Reach|overlap",detail,ignore.case=TRUE)) "Open Geometry to review the Stream and Reach boundaries, then review and save the Survey Event again." else
+    if(grepl("CRS|reference",detail,ignore.case=TRUE)) "Open Analysis CRS to correct the horizontal CRS, then review and save the Survey Event again." else
+    if(grepl("polygon|geometry|Reach|overlap",detail,ignore.case=TRUE)) "Open Study Structure to review the Stream and Reach boundaries, then review and save the Survey Event again." else
     if(grepl("changed|stale|selection|pending",detail,ignore.case=TRUE)) "Save or cancel pending edits, then use Review / edit Survey Event to save it against the current setup." else
     if(grepl("processx|pipe|Access is denied",detail,ignore.case=TRUE)) "The local app needs to be restarted with permission to run background workers. Ask the developer to restart the preview." else
       "Share this message with the developer; the saved inputs have been retained."
@@ -158,7 +158,7 @@ event_masks_server <- function(id,context,store,pending,launch=launch_event_mask
     output$result <- shiny::renderUI({
       rows <- products();if(!length(rows)) return(NULL)
       if(any(vapply(rows,function(p) p$valid_cells==0,logical(1))))
-        shiny::p("Some masks have no included cells. Review their boundaries in Geometry and the Survey Event cell size. Saving corrections updates the masks automatically.")
+        shiny::p("Some masks have no included cells. Review their boundaries in Study Structure and the Survey Event cell size. Saving corrections updates the masks automatically.")
     })
     output$has_masks <- shiny::reactive(length(products())>0)
     output$busy <- shiny::reactive(busy())

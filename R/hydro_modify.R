@@ -92,7 +92,7 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
       dem <- source()
       candidate <- network()
       target_bounds <- NULL
-      map <- leaflet::leaflet(options=leaflet::leafletOptions(maxZoom=23)) |>
+      map <- fg_leaflet() |>
         leaflet::addMapPane("hydro-basemap",zIndex=200) |>
         leaflet::addMapPane("hydro-hillshade",zIndex=300) |>
         leaflet::addMapPane("hydro-elevation",zIndex=350) |>
@@ -274,8 +274,10 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
       burn_passthrough <<- passthrough;burn_continue_stream <<- continue_stream
       burn_threshold <<- threshold;burn_dir <<- store$hydro_prepare(rec)
       filename <- file.path(burn_dir,"hydro-dem.tif")
-      burn_job <<- if(passthrough) launch_passthrough(dem$result$path,filename) else
-        launch_burn(dem$result$path,rec$lines,filename)
+      display_cache <- file.path(dirname(s$path),"terrain-display")
+      burn_job <<- if(passthrough)
+        launch_passthrough(dem$result$path,filename,display_cache) else
+        launch_burn(dem$result$path,rec$lines,filename,display_cache)
       burn_busy(TRUE)
       notice(if(passthrough)
         "Preparing the unchanged Stream DEM for extraction..." else
@@ -423,22 +425,31 @@ hydro_modify_server <- function(id,current,context,store,active=function() TRUE,
   })
 }
 
-launch_hydro_burn <- function(source,lines,filename) {
-  callr::r_bg(function(source,lines,filename) fluvgeo::burn_hydro_cutlines(source,lines,filename),
-    args=list(source=source,lines=lines,filename=filename),libpath=.libPaths(),supervise=TRUE,
+launch_hydro_burn <- function(source,lines,filename,display_cache) {
+  callr::r_bg(function(source,lines,filename,display_cache) {
+    result <- fluvgeo::burn_hydro_cutlines(source,lines,filename)
+    fluvgeo::prepare_hydro_dem_display_cache(filename,display_cache,
+      result$output_sha256)
+    result
+  },args=list(source=source,lines=lines,filename=filename,display_cache=display_cache),
+    libpath=.libPaths(),supervise=TRUE,
     stdout=NULL,stderr=NULL,user_profile=FALSE,system_profile=FALSE)
 }
 
-launch_hydro_passthrough <- function(source,filename) {
-  callr::r_bg(function(source,filename) {
+launch_hydro_passthrough <- function(source,filename,display_cache) {
+  callr::r_bg(function(source,filename,display_cache) {
     if(!file.exists(source) || file.exists(filename) ||
         !file.copy(source,filename,overwrite=FALSE))
       stop("The original Stream DEM could not be prepared for extraction.")
     con <- file(filename,"rb");on.exit(close(con),add=TRUE)
+    output_sha256 <- unclass(as.character(openssl::sha256(con)))
+    close(con);on.exit(NULL,add=FALSE)
+    fluvgeo::prepare_hydro_dem_display_cache(filename,display_cache,output_sha256)
     list(path=filename,method="unchanged_source",cutline_count=0L,
       changed_cells=0L,skipped_nodata_cutlines=integer(),
-      output_sha256=unclass(as.character(openssl::sha256(con))))
-  },args=list(source=source,filename=filename),libpath=.libPaths(),supervise=TRUE,
+      output_sha256=output_sha256)
+  },args=list(source=source,filename=filename,display_cache=display_cache),
+    libpath=.libPaths(),supervise=TRUE,
     stdout=NULL,stderr=NULL,user_profile=FALSE,system_profile=FALSE)
 }
 

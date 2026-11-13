@@ -43,6 +43,10 @@ test_that("Event context defaults before its dropdown renders and preserves expl
     ids <- names(saved()$groups)
     expect_setequal(unname(session$returned$choices()),ids)
     expect_true(all(grepl("202[01]-0[23]",names(session$returned$choices()))))
+    expect_equal(nrow(session$returned$overview()),2L)
+    expect_true(all(c("Survey Event","Collections","Streams","Output cell size") %in%
+      names(session$returned$overview())))
+    expect_true(all(nzchar(session$returned$overview()$Streams)))
     expect_null(input$group)
     expect_identical(session$returned$context()$group_id,ids[[1]])
     expect_match(session$returned$context()$event_label,"202[01]-0[23]")

@@ -9,7 +9,8 @@ vignette: >
 
 Flowline follows Hydro Modify in the Study workspace. Its linked Survey Event
 selector supports every locally defined Event and stays synchronized with the
-other terrain tabs. Opening the tab uses the selected Event and Stream, reads the exact saved Hydro
+other terrain tabs. The Event is selected from the labeled dropdown; a separately
+labeled row of Stream tabs selects the map target. Opening the tab uses the selected Event and Stream, reads the exact saved Hydro
 revision and synthetic Stream Network candidate, and selects one raw Stream-level
 path without asking the analyst to choose network heads or segments. Stream
 definition already records that intent.
@@ -104,7 +105,7 @@ Flowline Points workflow.
 | Retained NHDPlusV2 Stream evidence | `stream_segments()` | Hash-linked Stream selection/piece GeoPackage; read-only reference evidence |
 | Automatically selected Stream path | `select_stream_mainstem()` then `smooth_flowline()` at 2–5 map units | Transient raw path, candidate scores and four smoothed `sf` previews; only the chosen smoothing is saved |
 | Reach Flowline candidates | `derive_reach_flowlines()` and `study_flowline_store()` | Immutable network-revision-local `flowline/<revision>/flowlines.gpkg`, `result.rds` and `provenance.json`; local preparation product, not governed FGDB acceptance |
-| Viewport elevation/hillshade | `prepare_hydro_dem_view()` | Regenerable session display from the Hydro GeoTIFF; analytical terrain is unchanged |
+| Viewport elevation/hillshade | `prepare_hydro_dem_display_cache()` during Hydro production; `prepare_hydro_dem_view()` during review | Precomputed COG overviews/statistics plus a bounded recent-viewport disk cache; analytical terrain is unchanged |
 
 `flowlines.gpkg` contains `raw_stream_flowline`, `smoothed_stream_flowline`,
 internal `reach_flowlines`, legacy-compatible `flowline`, and

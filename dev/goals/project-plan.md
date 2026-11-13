@@ -53,6 +53,9 @@ not take priority over it.
 
 The application supports:
 
+- A review-first saved-study Overview that maps and summarizes Purpose, hierarchy,
+  analysis CRS and local Survey Event definitions without opening editors;
+  new Study creation still routes directly to Study Structure for definition.
 - Durable Study Area creation/reopening, editable name and Purpose; drawn or
   selected watershed boundaries with explicit save and child-area checks.
 - Cancellable drainage discovery, lightweight NHDPlusV2 reference display,

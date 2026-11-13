@@ -29,7 +29,7 @@ fgstudio_app <- function(data_dir = file.path(getwd(), ".local-data")) {
     shiny::div(class = "container-fluid py-2",
       shiny::tags$header(
         shiny::p("FLUVIALGEOMORPH STUDIO", class = "text-uppercase text-body-secondary mb-1"),
-        shiny::tags$h1("Define your Study Area", class = "h3 mb-1")),
+        shiny::tags$h1("Review or define your Study Area", class = "h3 mb-1")),
       shiny::div(class = "small text-body-secondary mb-2",
         "Development preview | Local storage | Not connected to FGDB"),
       mod_study_ui("study"),

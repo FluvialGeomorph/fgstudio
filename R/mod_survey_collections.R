@@ -86,7 +86,7 @@ mod_survey_collections_server <- function(id,current,store,launch=launch_survey_
       tryCatch({
         job <<- launch(x$boundary_sf); started <<- Sys.time(); busy(TRUE)
         status("Searching USGS and NOAA catalogs. Existing selections remain until you save.")
-        shiny::showNotification("Searching Survey Collection catalogs…",id=session$ns("activity"),duration=NULL,session=session)
+        shiny::showNotification("Searching Survey Collection catalogs\u2026",id=session$ns("activity"),duration=NULL,session=session)
       },error=function(e) { cancel(); status("Search could not start; saved selections are unchanged.") })
     },ignoreInit=TRUE)
     poll <- function() {
@@ -171,8 +171,8 @@ mod_survey_collections_server <- function(id,current,store,launch=launch_survey_
       }
     },ignoreInit=TRUE)
     output$map <- leaflet::renderLeaflet({
-      m <- leaflet::addProviderTiles(leaflet::leaflet(),leaflet::providers$OpenStreetMap,group="Street map") |>
-        add_opentopomap() |>
+      m <- leaflet::addProviderTiles(fg_leaflet(),leaflet::providers$OpenStreetMap,group="Street map") |>
+        add_opentopomap(default="Street map") |>
         leaflet::addLayersControl(baseGroups=c("Street map","OpenTopoMap"),
           options=leaflet::layersControlOptions(collapsed=TRUE))
       x <- current()
@@ -220,7 +220,7 @@ mod_survey_collections_server <- function(id,current,store,launch=launch_survey_
         shiny::tags$a(label,href=value,target="_blank",rel="noopener noreferrer")
       shiny::tagList(compact_table(data.frame(Item=c("Catalog / ID","Acquisition period","Reported status","Reported availability","Footprint","Retrieved"),
         Value=c(paste(x$catalog,x$record_id),x$date_label,x$status,x$availability,x$coverage,x$retrieved_at))),
-        link(x$metadata_url,"Catalog / metadata"),shiny::span(" · "),link(x$access_url,"Reported access link"))
+        link(x$metadata_url,"Catalog / metadata"),shiny::span(" \u00b7 "),link(x$access_url,"Reported access link"))
     })
     output$selected <- shiny::renderTable({
       r <- result(); if(is.null(r)) return(NULL)
@@ -249,8 +249,8 @@ mod_survey_collections_server <- function(id,current,store,launch=launch_survey_
       dem <- products[products$product=="DEM",]
       shiny::tagList(compact_table(display),
         compact_table(data.frame(Item=c("Reported DEM pixel size","Resolution screen","Suitability"),
-          Value=c(if(is.na(dem$dem_pixel_size_m)) "Unknown — verify product metadata" else paste(dem$dem_pixel_size_m,"m"),
-            dem$resolution_screen,"Not reviewed — inspect downloaded terrain and processing metadata"))),
+          Value=c(if(is.na(dem$dem_pixel_size_m)) "Unknown \u2014 verify product metadata" else paste(dem$dem_pixel_size_m,"m"),
+            dem$resolution_screen,"Not reviewed \u2014 inspect downloaded terrain and processing metadata"))),
         lapply(seq_len(nrow(products)),function(i) {
           url <- products$access_url[i]
           if(grepl("^https?://[^[:space:]]+$",url)) shiny::div(shiny::tags$a(paste(products$product[i],"reported access"),href=url,target="_blank",rel="noopener noreferrer"))

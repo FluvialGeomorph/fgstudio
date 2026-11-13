@@ -25,6 +25,8 @@ Reach in one Study Area reference frame.
 Each locally defined Survey Event is selectable on this screen and retains its
 own immutable candidate. The present analytical boundary is current/base-event
 creation and local immutable review.
+The Event uses the shared labeled dropdown. A labeled row of Stream tabs changes
+the detailed map only; it does not limit the Study-wide profile or point creation.
 Comparison-event calibration, acceptance of an FGDB longitudinal reference
 frame, and governed publication remain later work.
 
@@ -48,8 +50,10 @@ frame, and governed publication remain later work.
 5. `study_flowline_points_store()` rechecks current inputs, writes an immutable
    candidate, hashes the GeoPackage, and reopens the result through the same
    validation boundary used on later sessions.
-6. Stream tabs display the selected Reach lines, bounded point sample, and
-   dynamically stretched Hydro DEM. The longitudinal graph always displays all
+6. Stream tabs display the selected Reach lines and dynamically stretched Hydro
+   DEM at overview scale. Point markers are requested only for the visible
+   window at zoom 17 or closer, capped at 1,000, and replace the preceding
+   marker layer. The longitudinal graph always displays all
    Study Area Streams and Reaches on their common mouth-based x-axis.
 
 Each map defaults to OpenTopoMap and fits the full saved Stream with a small
@@ -69,6 +73,17 @@ viewport work expose visible progress so a long operation does not appear hung.
 Returning to the unchanged tab checks the in-session Event/revision key before
 opening any Flowline or point files. Hydro or Flowline saves advance the key and
 force a fresh exact-input check; ordinary tab navigation does not.
+
+When reopening is required, the server first flushes the tab shell,
+Event/Stream choices, status text, and progress cue to the browser. Saved
+GeoPackage and point-profile reads begin after that paint, so synchronous disk
+work cannot leave the newly selected tab blank without feedback.
+
+The terrain request waits for the current Leaflet instance to report that it is
+visible and initialized. Requests are keyed to the map instance, selected
+Stream, and viewport. An obsolete result is discarded without marking the
+current view complete, so the latest view remains eligible to run after tab
+initialization, resize, or a rapid Stream change.
 
 ## Compatibility profile
 
@@ -139,8 +154,13 @@ The 60,747-point result was generated in 13.72 seconds on the development
 workstation. The connections pass the 2.828 m two-cell-diagonal limit for these
 one-meter Hydro DEMs. The combined profile satisfies the replacement validator and
 reopens from immutable storage. Each Stream map limits rendering to a
-deterministic sample of at most 5,000 points; this affects display only, not
-saved content or the full Study Area profile plot.
+deterministic sample of at most 1,000 points inside the current inspection-scale
+viewport and transmits no point markers at the initial Stream extent; this
+affects display only, not saved content or the full Study Area profile plot.
+Hydro DEM production precomputes COG elevation/hillshade overviews and
+statistics. Both Flowline review maps reuse those files and a bounded
+recent-viewport disk cache; they do not build pyramids on first draw or retain
+full rasters in browser memory.
 
 ## Source and test route
 

@@ -1,8 +1,10 @@
 flowline_review_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::card(bslib::card_header("Flowline"),
-    shiny::p("Choose a Survey Event and Stream. FG Studio saves the conservative Flowline automatically; choose another smoothing strength only when the terrain calls for it."),
-    shiny::uiOutput(ns("events")),shiny::uiOutput(ns("streams")),
+    shiny::p("Select a Survey Event from the list, then select a Stream tab. FG Studio saves the conservative Flowline automatically; choose another smoothing strength only when the terrain calls for it."),
+    shiny::uiOutput(ns("events")),
+    shiny::p(class="small fw-semibold mb-1","Stream (select a tab)"),
+    shiny::uiOutput(ns("streams")),
     shiny::uiOutput(ns("status")),
     leaflet::leafletOutput(ns("map"),height="650px"),
     shiny::radioButtons(ns("bandwidth"),"Smoothing strength",
@@ -228,7 +230,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
     output$map <- leaflet::renderLeaflet({
       value <- review()
       target_bounds <- NULL
-      map <- leaflet::leaflet(options=leaflet::leafletOptions(maxZoom=23)) |>
+      map <- fg_leaflet() |>
         leaflet::addMapPane("flowline-basemap",zIndex=200) |>
         leaflet::addMapPane("hydro-hillshade",zIndex=300) |>
         leaflet::addMapPane("hydro-elevation",zIndex=350) |>
@@ -275,7 +277,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
               format(round(path$length_m),big.mark=",")," m"),
             options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines")) |>
           leaflet::addPolylines(data=reaches,group="Reach Flowlines",color=colors,
-            weight=4,opacity=1,label=paste0(reaches$ReachName," — ",
+            weight=4,opacity=1,label=paste0(reaches$ReachName," \u2014 ",
               format(round(reaches$length_m),big.mark=",")," m"),
             options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
         if(nrow(boundaries)) map <- leaflet::addCircleMarkers(map,data=boundaries,
@@ -325,7 +327,7 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
             " m smoothing candidate; ",format(round(path$length_m),big.mark=",")," m"),
           options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines")) |>
         leaflet::addPolylines(data=reaches,group="Reach Flowlines",color=colors,
-          weight=4,opacity=1,label=paste0(reaches$ReachName," — ",
+          weight=4,opacity=1,label=paste0(reaches$ReachName," \u2014 ",
             format(round(reaches$length_m),big.mark=",")," m"),
           options=leaflet::pathOptions(interactive=FALSE,pane="flowline-lines"))
       if(nrow(boundaries)) leaflet::addCircleMarkers(proxy,data=boundaries,
@@ -376,9 +378,11 @@ flowline_review_server <- function(id,current,context,store,active=function() TR
       view_notice("Loading elevation detail...");view_busy(TRUE)
       tryCatch({
         display_cache <- file.path(dirname(shiny::isolate(current())$path),"terrain-display")
-        view_worker$call(function(path,b,directory,display_cache)
-          fluvgeo::prepare_hydro_dem_view(path,b,directory,cache_directory=display_cache,build_cache=FALSE),
-          args=list(path=value$dem,b=b,directory=view_dir,display_cache=display_cache))
+        view_worker$call(function(path,b,directory,display_cache,source_id)
+          fluvgeo::prepare_hydro_dem_view(path,b,directory,cache_directory=display_cache,
+            build_cache=FALSE,source_id=source_id),
+          args=list(path=value$dem,b=b,directory=view_dir,display_cache=display_cache,
+            source_id=value$record$result$output_sha256))
         view_job <<- list(is_alive=function() !identical(unname(view_worker$poll_io(0)["process"]),"ready"),
           get_result=function(){answer<-view_worker$read();if(!is.null(answer$error))stop(answer$error);answer$result})
       },error=function(e){stop_view();view_notice(conditionMessage(e))})

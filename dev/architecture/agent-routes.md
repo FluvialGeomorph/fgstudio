@@ -150,10 +150,12 @@ Before changing storage, follow `dev/workflows/r-spatial.md` to FGDB ADR-0025 an
 the Esri findings. Portable folder binding remains unfinished; no DEM-GeoPackage
 migration or analyst output-download workflow is authorized.
 
-Map basemaps: `R/map_basemaps.R` supplies OpenTopoMap to `mod_boundary_server()`,
-`mod_survey_collections_server()` and `hydro_modify_server()`. The Study workspace
-retains base groups when rebuilding its dynamic overlay control. Analyst guidance
-is in the study workflow; Article 15 describes the Hydro layer-ordering boundary.
+Map basemaps: `R/map_basemaps.R` supplies OpenTopoMap to the Study, terrain and
+derived-result maps. `mod_survey_collections_server()` deliberately requests its
+Street map option so colored footprint outlines remain distinct. The Study
+workspace retains base groups when rebuilding its dynamic overlay control.
+Analyst guidance is in the study workflow; Article 15 describes the Hydro
+layer-ordering boundary.
 
 Hydro Modify: `survey_event_settings_server()` resolves the first saved Event
 unless a valid explicit choice exists, independently of dropdown rendering.

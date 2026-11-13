@@ -4,6 +4,16 @@ function(el, x, data) {
   var fittedTarget = false;
   var wasVisible = false;
   var fitTimer = null;
+  var readySent = false;
+  function signalReady() {
+    if (readySent || !data || !data.readyInput ||
+        typeof Shiny === 'undefined') return;
+    readySent = true;
+    Shiny.setInputValue(data.readyInput, {
+      token: data.readyToken,
+      nonce: Date.now()
+    }, {priority: 'event'});
+  }
   function fitTarget() {
     var visible = el.offsetWidth > 0 && el.offsetHeight > 0;
     if (!visible) {
@@ -26,6 +36,7 @@ function(el, x, data) {
       return;
     }
     map.invalidateSize({pan: false});
+    signalReady();
     if ((!wasVisible || !fittedTarget) && Array.isArray(targetBounds) &&
         targetBounds.length === 4 && targetBounds.every(Number.isFinite)) {
       if (fitTimer !== null) window.clearTimeout(fitTimer);

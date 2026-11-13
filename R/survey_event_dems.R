@@ -20,7 +20,7 @@ survey_event_dems_server <- function(id,current,context,store,ready,launch=launc
       ctx <- job_context();if(is.null(ctx)) return(NULL)
       attempted(active())
       request <- terrain_dem_request(store,current(),ctx,stream_id=active())
-      if(is.null(request)) stop("The saved analysis mask is unavailable. Review Study geometry and Event Settings.")
+      if(is.null(request)) stop("The saved analysis mask is unavailable. Review Study Structure and Event Settings.")
       request
     }
     task <- terrain_dem_trial_job(input,output,session,NULL,job_context,current,

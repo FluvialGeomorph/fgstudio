@@ -92,7 +92,7 @@ mod_boundary_server <- function(id, study, store, is_active, on_saved, search = 
         "fgPlaceResults", query$token, rows, error)
     }, ignoreInit = TRUE)
     output$map <- leaflet::renderLeaflet({
-      map <- leaflet::leaflet(options = leaflet::leafletOptions(preferCanvas = TRUE)) |>
+      map <- fg_leaflet() |>
         leaflet::addTiles(group="Street map",options = leaflet::tileOptions(noWrap = TRUE)) |>
         add_opentopomap() |>
         leaflet::addLayersControl(baseGroups=c("Street map","OpenTopoMap"),
