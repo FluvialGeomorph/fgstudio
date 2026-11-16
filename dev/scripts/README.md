@@ -41,6 +41,14 @@ These depend on existing files and are not suitable as automatic package tests.
 Inspect their input/output contracts before running them; `.local-data` is not a
 package fixture store.
 
+- `explore-spencer-cross-section-inputs.R`: bounded Spencer R1 REM, inundation
+  nesting, side-slice path and four-vertex candidate experiment, using the isolated backend library.
+  Requires the saved study and a separate output directory. The default 1.5/3 ft
+  depths and filled holes are exploratory; optional arguments compare depth and
+  hole policy and R1/R3 site. R3 includes 200 m of real Reach 2 downstream
+  context. Named outputs are overwritten. No production cross-section dataset is
+  created.
+
 - `check-reach-local.R`: read-only previews against a selected store (default
   `.local-data`), with before/after file hashes.
 - `check-reach-split-local.R`: read-only previews against `.local-data`, with hashes.

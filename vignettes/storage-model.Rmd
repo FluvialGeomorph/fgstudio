@@ -229,3 +229,10 @@ Regenerable elevation/hillshade COG pyramids live separately under Study-local
 reuse these when present and otherwise prepare only temporary viewport rasters;
 opening a DEM does not require building a full cache. These caches accelerate
 inspection and are not analytical terrain editions or portable FGDB products.
+
+The in-progress Cross Sections inundation review reads the selected Survey
+Event's saved Reach Flowline, Flowline Points and Stream Hydro DEM. It derives
+a session-temporary REM GeoTIFF and transient channel/floodplain footprints;
+these are removed with the session and are not a saved Cross Section or an FGDB
+Dataset Edition. Cross-section layout, editing, publication and their governed
+bindings remain unimplemented.

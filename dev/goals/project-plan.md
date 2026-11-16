@@ -266,13 +266,14 @@ support any number of locally defined Survey Events through one synchronized
 selector and keep each Event's saved candidates separate. That navigation does
 not itself designate a base/comparison pair or perform calibration.
 
-## Cross sections: authorized exploration
+## Cross sections: interactive review and ongoing layout development
 
 The owner selected cross-section layout as the next feature. Develop an
-interactive Spencer Creek prototype and the reusable geometry together, following
+interactive inundation review and reusable geometry together, following
 [Cross-section layout exploration](../features/cross-section-layout.md). The
-layout is an initial candidate for analyst editing, not a claim of HEC-RAS
-compliance. Preserve the legacy-derived output contract and reconcile confirmed
+review is available as a session-only prototype; layout and editing are not yet
+implemented. Future layout is a candidate for analyst editing, not a claim of
+HEC-RAS compliance. Preserve the legacy-derived output contract and reconcile confirmed
 storage and interoperability findings with FGDB.
 
 Resolve routine intermediate steps without separate owner handoffs. Ask only for

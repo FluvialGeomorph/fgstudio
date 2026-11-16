@@ -55,6 +55,8 @@ navbar:
           href: articles/dev-16-flowline.html
         - text: "17. Flowline Points"
           href: articles/dev-17-flowline-points.html
+        - text: "18. Cross-section inundation review"
+          href: articles/dev-18-cross-section-review.html
         - text: Terrain developer tools
           href: articles/terrain-developer-tools.html
 reference:
@@ -70,7 +72,7 @@ articles:
       - fgstudio
       - guide-study-workflow
   - title: Developer guide — read in order
-    desc: Begin with context routing and development methods, then follow the implemented app workflow from lifecycle through Flowline Points.
+    desc: Begin with context routing and follow the app workflow through the in-progress cross-section inundation review.
     navbar: Developer guide
     contents:
       - dev-01-code-navigation
@@ -90,6 +92,7 @@ articles:
       - dev-15-hydro-modify
       - dev-16-flowline
       - dev-17-flowline-points
+      - dev-18-cross-section-review
 
   - title: Developer reference
     desc: Diagnostic and standalone tools outside the application workflow.

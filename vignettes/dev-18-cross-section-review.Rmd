@@ -1,0 +1,61 @@
+---
+title: "18. Cross-section inundation review"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{18. Cross-section inundation review}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Purpose and boundary
+
+The Cross Sections tab provides a session-only way to inspect channel and
+floodplain inundation before developing cross-section geometry. It uses the
+same interactive flooding concept as ohwm2. It does not yet lay out, edit,
+resequence, export, or save cross sections; the observed footprints are not a
+governed FGDB dataset or a claim of hydraulic-model compliance.
+
+## Function flow
+
+1. `mod_study_server()` mounts `cross_section_review_server()` with the linked
+   Survey Event and upstream revision signals. `load_flowline_points_review()`
+   resolves the current Event's saved Flowlines, Flowline Points and Hydro DEMs.
+2. The selected Stream and Reach determine one Reach Flowline, its points and
+   its Stream DEM. A `callr` background process invokes `fluvgeo::detrend()`
+   with a 150 m buffer and writes a temporary analytical REM and a reduced,
+   projected display raster. The fixed buffer can truncate inundation and is not
+   an accepted universal floodplain extent.
+3. Slider values are debounced by 400 ms. The channel must be strictly below
+   the floodplain elevation. A second background process calls
+   `fluvgeo::water_surface_extents()` on the analytical REM. The result retains
+   unsimplified original polygons and hole-filled outer footprints; the latter
+   are drawn over the map. Default REM elevations 103 and 106 ft are initial
+   values, not measured channel and floodplain elevations.
+4. The server cancels the previous job when the selection or requested levels
+   change, checks the selection and level key before displaying a result, and
+   removes session-owned files on session end. A display overview does not
+   replace the full-resolution REM used for footprint extraction. Status text
+   reports processing and invalid levels.
+
+## Data objects and storage
+
+| Object | Input or output | Representation and owner |
+| --- | --- | --- |
+| Flowline and Flowline Points | Saved Reach geometry and sampled elevations for the selected Event | Existing local GeoPackage candidates, resolved by the FG Studio store; not new FGDB records |
+| Hydro DEM | Saved Stream terrain used for the selected Reach | Existing external GeoTIFF owned by the local Hydro revision |
+| REM and display raster | Temporary analytical and map-display surfaces | Session-owned temporary GeoTIFFs; removed at session end |
+| Inundation footprints | Original and hole-filled channel/floodplain extents | Transient `sf` results; no saved layer or governed identity |
+
+The future cross-section producer must follow the legacy-derived compatibility
+workflow and FGDB profile before emitting a replacement vector. FGDB's physical
+binding for cross sections is not resolved by this preview.
+
+## Verification and open work
+
+The `fluvgeo` tests for `water_surface_extents()` check elevation ordering,
+CRS, disconnected areas, empty inundation, holes and nested footprints. A
+whole-app Spencer Creek R1 review exercised the map, slider update and invalid
+level feedback. Initial REM preparation is slow, and caching, broader data
+coverage and other reaches require further qualification. The experimental
+path and collision diagnostic remains separate from the app and is not a
+production layout method. See the local feature record for its findings.

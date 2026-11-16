@@ -605,9 +605,32 @@ Those historical fields are intentionally retained for downstream and legacy
 compatibility. Comparison-event calibration and governed FGDB publication are
 later workflow boundaries.
 
+## Review channel and floodplain inundation
+
+After saving Flowline Points, open **Cross Sections** and choose the Survey
+Event, Stream and Reach. FG Studio prepares an REM in the background from the
+selected Reach Flowline and Flowline Points and its Stream Hydro DEM. The map
+shows the REM and flowline over imagery; the layers control lets you show or
+hide the channel and floodplain footprints. REM colors use the project terrain
+palette, and the legend is in feet.
+
+Move **Channel REM elevation** to identify the channel visually. Adjust
+**Floodplain REM elevation** independently to identify the flood-prone area.
+The initial values are 103 and 106 ft on the REM's 100 ft reference: depths of
+3 and 6 ft. They are starting values, not estimated bank or floodplain levels.
+The floodplain elevation must be greater than the channel elevation. Wait for
+the status to indicate the map is ready after changing a slider.
+
+The current REM extends approximately 150 m to either side of the Reach. An
+inundation footprint reaching that edge may be incomplete. The review fills
+interior holes for the displayed outer footprints. It is temporary: reopening
+the session recomputes the REM and no elevations, footprints or cross sections
+are saved. Cross-section creation, editing, resequencing and export are not yet
+available.
+
 ## Map basemaps
 
-Every interactive map offers **OpenTopoMap** in its upper-right layers control:
+The following interactive maps offer **OpenTopoMap** in their upper-right layers control:
 the Study workspace (including boundary, Stream, Reach and drainage exploration),
 Survey Collections/DEM files, Hydro Modify, Flowline, and Flowline Points.
 **OpenTopoMap is the default basemap** except on **Collections**, where
@@ -615,7 +638,8 @@ Survey Collections/DEM files, Hydro Modify, Flowline, and Flowline Points.
 distinct from the basemap. Imagery and Street map remain available where
 applicable. The selected basemap remains active until you switch. Basemaps stay
 below data overlays; OpenTopoMap tiles remain visible when zooming closer for DEM
-inspection.
+inspection. The in-progress Cross Sections inundation review currently uses
+Esri imagery and offers overlay toggles rather than basemap choices.
 
 ## Storage, privacy, and deployment boundary
 
@@ -624,7 +648,7 @@ saved under `.local-data/` on the computer running R and survive browser/app
 closure. This folder is excluded from Git and package builds. Back it up if you
 want to retain trials. Names and drawn geometries remain on this computer;
 explicit drainage-exploration clicks send coordinates to USGS as described above.
-The browser requests OpenStreetMap and OpenTopoMap basemap tiles over the internet;
+The browser requests OpenStreetMap, OpenTopoMap and Esri imagery tiles over the internet;
 those requests disclose the viewed map area to the tile services. Basemaps are not
 terrain sources, and saving does not depend on a tile download succeeding.
 
