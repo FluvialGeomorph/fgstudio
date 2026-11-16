@@ -10,10 +10,11 @@ vignette: >
 FluvialGeomorph supports repeatable analysis of stream geometry from remotely
 sensed terrain, especially lidar. Its shared methods and reports help analysts
 describe channels through maps, longitudinal comparisons, cross-section metrics
-and profiles. **FG Studio is the developing browser workspace that brings the
-early decisions and data preparation for that work into a coherent, reviewable
-study.** Its longer-term destination is a guided route to Level 1 analysis and
-scientific deliverables using the project's shared R backend.
+and profiles. **FG Studio is the implementation-first browser workspace used to
+turn the open-source replacement workflow into a coherent, reviewable study.**
+It currently carries analysts from study definition through terrain-derived
+Flowlines and Flowline Points. Its next increments continue stepwise toward
+Level 1 analysis and scientific deliverables using the project's shared R backend.
 
 ## Why the study comes before the analysis
 
@@ -29,26 +30,20 @@ retained study record. Scientific judgment remains essential: discovering a
 dataset, downloading it or selecting a CRS does not establish its fitness for
 an engineering question.
 
-For example, a team assessing a stream corridor can define the Study Area and
-Reaches, inspect available lidar acquisitions, retain original DEM tiles and
-record intended reference systems, organize Survey Events and assemble aligned
-Stream DEMs. Hydro Modify supports visual inspection, saved cutline editing and
-provenance-linked hydro DEM production. Synthetic Stream derives and restores a
-threshold-adjustable first-cut candidate network from that saved terrain.
-Flowline then selects the reference-supported longest complete path, computes
-bounded smoothing candidates across the historical 2–5-map-unit range, and
-displays the conservative 2-map-unit result by default. The analyst can switch
-to a more aggressive candidate without rerunning path selection or terrain work;
-no manual tributary pruning or separate save action is required. The conservative
-default and every explicit smoothing choice are divided across the current
-Reaches and retained automatically as an immutable local
-candidate with exact-input fingerprints. Flowline Points consumes every exact
-Stream candidate and Hydro DEM, derives
-tributary offsets at their downstream confluences, creates one Study-wide
-one-meter-default kilometer profile with the complete legacy field contract,
-and saves an immutable local result for map/profile review.
-The intended continuation is shared analysis and reports that another analyst
-or customer can review without reconstructing the originating GIS session.
+For example, a team assessing a stream corridor can define the Study Area,
+Streams, and Reaches; inspect lidar acquisitions; retain original DEM tiles;
+record analysis references; organize Survey Events; and assemble aligned Stream
+DEMs. Hydro Modify retains visual review, cutlines, and source-linked Hydro DEMs.
+Synthetic Stream extraction derives a threshold-adjustable first-cut network.
+
+Flowline then selects the reference-supported longest complete path and saves a
+conservative smoothed candidate automatically. Optional stronger smoothing reuses
+that path rather than repeating terrain processing or tributary selection. Reach
+Flowlines retain exact input fingerprints. Flowline Points combines every Stream
+and Reach into one outlet-referenced, one-meter-default longitudinal profile while
+preserving the complete legacy field contract. The intended continuation is
+shared analysis and reports that another analyst or customer can review without
+reconstructing the originating GIS session.
 
 ## Who this serves
 
@@ -57,7 +52,7 @@ or customer can review without reconstructing the originating GIS session.
 | Analyst defining a new study | Maps and guided inputs make scope, terrain sources and reference choices explicit; saved revisions support iterative work | [Working with a Study Area](guide-study-workflow.html) |
 | Technical lead or reviewer | The developing record ties intended scope to source evidence and makes unresolved choices visible | The capability boundaries below and the reporting requirements under Further reading |
 | R, Shiny or GIS developer | A browser client exercises reusable contracts that can also serve desktop workflows | [Application lifecycle](dev-02-application-lifecycle.html) and the numbered developer series |
-| Human or agent investigating a change | Task routes, source/test references and bounded diagrams provide different entry points to the same implementation | [Code maps and dual-mode development](dev-01-code-navigation.html) |
+| Maintainer investigating a change | Task routes, source/test references and bounded diagrams provide different entry points to the same implementation | [Code maps and dual-mode development](dev-01-code-navigation.html) |
 
 ## Where it fits in the workspace
 
@@ -67,21 +62,28 @@ FG Studio feature.
 
 | Component | Role and relationship to FG Studio |
 | --- | --- |
-| **fgstudio** | Shiny interaction, reactive state, review of choices and orchestration of local saved studies |
-| **fluvgeo** | Shared R scientific calculations, spatial contracts and validation, plots and reporting; FG Studio delegates reusable methods here |
+| **fgstudio** | Implementation-first Shiny workflow: interaction, reactive state, review of choices and orchestration of local saved studies used to prove replacement functions |
+| **fluvgeo** | Reusable open-source scientific calculations, geospatial producers, compatibility checks, plots and reporting; FG Studio delegates shared methods here |
 | **fg-qgis-toolbox** | Developing desktop access to shared R capabilities; interaction is designed alongside Shiny, with its own qualification and rollout |
-| **FluvialGeomorph-toolbox** | Established ArcGIS/Python orchestration; ongoing production workflows are retained during the open-source transition |
-| **ohwm2** | An existing Shiny client and interaction reference; FG Studio has its own repository and workflow |
-| **FGDB** | Governed study identities, relationships, validation and enterprise-loading contracts; future integration is distinct from today's local saves |
+| **FluvialGeomorph-toolbox** | Production legacy ArcPy implementation and historical output contract; its script tools are replaced stepwise by fluvgeo calls without breaking established datasets |
+| **ohwm2** | Existing Shiny client that established the successful pattern of promoting reusable app geospatial work into fluvgeo; FG Studio extends that strategy |
+| **FGDB** | Governed study identities, relationships, validation, compatibility and enterprise-loading contracts; grounded FG Studio results also inform its still-developing physical design |
 | **RegionalCurve / fluvgeodata** | Regional hydraulic geometry capabilities and backend test/example fixtures, respectively |
 | **FG-User-Manual / FG-Tech-Manual** | Project-wide user procedures and technical methods; prototype app guidance does not replace established production instructions |
 | **FG-architecture** | Cross-repository context, ownership and accepted architectural decisions; member repositories retain implementation authority |
 
-The accepted design starts with Shiny's new-project experience and develops shared
-capabilities toward a verified connection with existing FluvialGeomorph tools.
-QGIS offers desktop control over those capabilities. Client screens need not map
-one-to-one to backend functions. This approach supports an open-source, R-native
-workflow while preserving the existing production toolchain.
+The migration is deliberately stepwise. Each legacy ArcPy workflow stage is
+reviewed for opportunities to remove manual input, strengthen validation, and
+adopt mature open-source geospatial methods. The resulting reusable producer
+belongs in fluvgeo and is proven through FG Studio; QGIS can provide desktop
+control over the same capability. Client screens need not map one-to-one to
+backend functions.
+
+This implementation work and FGDB design constrain one another. Accepted FGDB
+invariants govern producers, while grounded app development can expose missing
+GeoPackage, persistence, or interoperability requirements that must be reconciled
+back into FGDB. A convenient local app schema does not silently become FGDB
+authority.
 
 Within that workflow, vector work uses **sf** and raster work uses **terra** in
 the shared backend. CRS handling follows their geospatial libraries rather than
@@ -114,6 +116,12 @@ the implemented preparation tasks, but is not yet a complete Level 1 execution
 environment or a shared hosted service. The [analyst guide](guide-study-workflow.html)
 describes current buttons, persistence and operational limits.
 
+Where a dataset overlaps a historical FluvialGeomorph-toolbox feature class,
+producer compatibility is mandatory: preserve the layer name and established
+field names, capitalization, types, units, and meaning. New fields and stronger
+checks may be additive; existing fields are not removed, renamed, or repurposed
+without an explicit reviewed migration decision.
+
 ## A durable record across clients and time
 
 Study Area, Stream and Reach definitions provide the spatial context for Survey
@@ -137,19 +145,12 @@ an archive migration tool. The broader reporting intent distinguishes Study Area
 Terrain Development and staging views without making four separate documents
 mandatory for every user.
 
-## Why this site also documents development
+## Why this site documents both workflow and implementation
 
-The app is both a user workflow under development and a practical setting for
-testing human/agent context routing. These purposes share an implementation, but
-have distinct evidence: application tests check behavior; navigation experiments
-ask whether a maintainer can find and explain that behavior accurately and with
-less effort.
-
-The analyst guide describes tasks and outcomes. Developer articles trace events,
-state, adapters, shared backend calls, failures and tests. Agent routes provide a
-short entry to the same sources; generated maps help answer bounded dependency
-questions. The [methods article](dev-01-code-navigation.html) records the first
-pilot's limits and the evidence needed before claiming efficiency gains.
+The analyst guide describes tasks, decisions, and outcomes. Developer articles
+trace events, state, adapters, shared backend calls, persistence, failures, and
+tests. Compact routes and generated maps provide bounded entry points to the same
+maintained sources. Application tests establish behavior; navigation aids do not.
 Neither an AI account nor an agent is required to use or maintain the application.
 
 ## Further reading and authority

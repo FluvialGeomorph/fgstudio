@@ -21,6 +21,7 @@ source("dev/scripts/check-code-map.R")
 dir.create("pkgdown", showWarnings = FALSE)
 home <- readLines("README.md", warn = FALSE, encoding = "UTF-8")
 home <- gsub("\\]\\(vignettes/([^)]*)\\.Rmd\\)", "](articles/\\1.html)", home)
+home <- gsub("\\]\\(vignettes/figures/([^)]*)\\)", "](articles/figures/\\1)", home)
 writeLines(c("<!-- Generated from README.md by dev/scripts/build-docs.R; do not edit. -->",home),
   "pkgdown/index.md",useBytes=TRUE)
 pkgdown::build_site(".", devel = FALSE, new_process = FALSE, install = FALSE,

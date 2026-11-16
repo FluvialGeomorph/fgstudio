@@ -2,20 +2,19 @@ Package: fgstudio
 Title: FluvialGeomorph Studio
 Version: 0.0.0.9094
 Authors@R: c(
-    person("Michael", "Dougherty", , "Michael.P.Dougherty@usace.army.mil", role = "aut",
+    person("Michael", "Dougherty", , "Michael.P.Dougherty@usace.army.mil", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1465-5927")),
     person("Christopher", "Haring", , "Christopher.P.Haring@usace.army.mil", role = "aut"),
-    person("Barrie", "Chileen Martinez", , "Barrie.V.Chileen@usace.army.mil", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-6960-8167")),
     person("Thomas", "Darby", role = "rev"),
     person("Davi", "Michl", role = "rev")
   )
-Description: A developing browser workspace for defining stream studies and
-    preparing terrain for FluvialGeomorph analysis. Provides a modular Shiny
-    interface to shared fluvgeo capabilities for local study hierarchy,
-    source terrain acquisition and inspection, and analysis reference
-    specification. Includes analyst guidance and paired human and agent
-    developer documentation for tracing implementation and evidence.
+Description: An implementation-first browser workspace for defining stream
+    studies and preparing terrain for FluvialGeomorph analysis. Provides a
+    modular Shiny interface to shared fluvgeo capabilities for local study
+    hierarchy, source terrain acquisition, analysis references, Stream DEMs,
+    hydro modification, synthetic stream extraction, Flowlines, and Flowline
+    Points. Includes analyst guidance and developer documentation for tracing
+    implementation and evidence.
 License: CC0
 URL: https://fluvialgeomorph.github.io/fgstudio/,
     https://github.com/FluvialGeomorph/fgstudio

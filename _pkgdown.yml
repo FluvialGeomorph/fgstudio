@@ -70,7 +70,7 @@ articles:
       - fgstudio
       - guide-study-workflow
   - title: Developer guide — read in order
-    desc: Begin with context routing and development methods, then follow the app workflow from lifecycle through terrain preparation.
+    desc: Begin with context routing and development methods, then follow the implemented app workflow from lifecycle through Flowline Points.
     navbar: Developer guide
     contents:
       - dev-01-code-navigation

@@ -2,23 +2,28 @@
 
 **FG Studio helps analysts turn a stream-study question into an explicit,
 reusable study definition and a documented terrain foundation.** It is the
-developing R Shiny browser client for FluvialGeomorph, which uses remotely sensed
-terrain and shared R methods to characterize stream geometry.
+implementation-first R Shiny workspace for the open-source FluvialGeomorph
+workflow, which uses remotely sensed terrain and shared R methods to characterize
+stream geometry.
 
-The intended workflow connects Study Area, Stream and Reach definition with
-survey selection, terrain development, Level 1 analysis and reviewable reports.
-The implemented app supports study definition, source acquisition, Stream DEM
-assembly, hydro modification, synthetic Stream Network extraction, automatic
-Reach Flowlines and Study-wide Flowline Points.
-Maps, guided choices and saved evidence make those steps accessible while
-keeping consequential scientific decisions with the analyst.
+The implemented path now runs from Study Area, Stream, and Reach definition
+through source acquisition, Stream DEM assembly, hydro modification, synthetic
+Stream Network extraction, automatic Reach Flowlines, and Study-wide Flowline
+Points. Maps, guided choices, and saved evidence make those steps reviewable while
+keeping consequential scientific decisions with the analyst. Level 1 analysis,
+report delivery, and governed FGDB publication remain later workflow increments.
+
+![FG Studio Overview for the Spencer Creek development study.](vignettes/figures/study-workflow/01-overview.png)
+
+The [Analyst Guide](vignettes/guide-study-workflow.Rmd) follows this workflow with
+completed-state screenshots from the Spencer Creek development study.
 
 ## Find your starting point
 
 | Your question | Start here |
 | --- | --- |
 | Why does this app exist, and how does it fit the project? | [FG Studio in FluvialGeomorph](vignettes/fgstudio.Rmd) |
-| How do I define a study, obtain DEM tiles and record reference systems? | [Working with a Study Area](vignettes/guide-study-workflow.Rmd) |
+| How do I work from study definition through Flowline Points? | [Working with a Study Area](vignettes/guide-study-workflow.Rmd) |
 | How do I trace behavior, diagnose a defect or extend the app? | [Application lifecycle](vignettes/dev-02-application-lifecycle.Rmd), then the relevant developer article |
 | How are we testing better human and agent context routing? | [Code maps and dual-mode development](vignettes/dev-01-code-navigation.Rmd) |
 | How do I launch an installed package from R? | `fgstudio::run_app(data_dir = "path/to/studio-data")` |
@@ -28,18 +33,21 @@ storage details. The site also provides R API reference for the app entry points
 
 ## A client within a shared scientific project
 
-FG Studio owns browser interaction, workflow state and local storage orchestration.
-**fluvgeo** owns reusable scientific methods, spatial validation and reporting.
-Developing **QGIS** tools use that same backend through a desktop interface.
-The established **ArcGIS toolbox** and **ohwm2** workflows remain separate clients;
-FG Studio is an independent application and a working design path for the
-open-source new-project workflow.
+FG Studio owns browser interaction, workflow state, and local-study orchestration.
+**fluvgeo** owns reusable open-source scientific methods, spatial validation, and
+the replacement functions for legacy ArcPy processing. **FluvialGeomorph-toolbox**
+remains the production legacy implementation while those replacements are proven
+stepwise; **ohwm2** established the successful pattern of moving reusable Shiny
+geospatial work into fluvgeo. Developing **QGIS** tools can use the same backend
+through a desktop interface.
 
-**FGDB** defines governed identities, relationships and eventual enterprise
-persistence. The **User Manual** and **Technical Manual** provide project-wide
-procedures and methods. The [project overview](vignettes/fgstudio.Rmd) explains
-these relationships, the local GeoPackage/GeoTIFF direction, and why study
-definition matters even when a project does not use FGDB.
+**FGDB** owns governed identities, relationships, compatibility contracts, and
+eventual enterprise persistence. Alignment is iterative: accepted FGDB invariants
+constrain implementation, while grounded FG Studio development reveals physical
+schema and interoperability requirements that must be reconciled back into FGDB.
+The **User Manual** and **Technical Manual** retain project-wide procedure and
+method authority. The [project overview](vignettes/fgstudio.Rmd) explains these
+relationships and the compatibility-preserving migration strategy.
 
 ## Implemented workflow
 
@@ -57,33 +65,26 @@ definition matters even when a project does not use FGDB.
   reference evidence, with a conservative 2 m default and selectable 2–5 m
   smoothing candidates; divide and save the selected path as exact-input Reach
   Flowlines automatically.
-- Create and reopen one-metre Flowline Points across every connected Stream and
+- Create and reopen one-meter Flowline Points across every connected Stream and
   Reach in a Survey Event, with legacy-compatible fields, Study-wide
   `km_to_mouth` stationing, sampled elevations, and combined profile review.
 - Retain saved revisions and source evidence as the study evolves.
 
-The current release is a **trusted, single-analyst local development preview**.
-Synthetic Stream extraction and local Flowline creation are available, including
-Reach division and immutable save/reopen. Current/base-event Flowline Points are
-also implemented; comparison-event calibration remains later work.
+The current release is a **trusted, single-analyst local development preview**,
+not a shared hosted service or governed delivery system. Current/base-event
+Flowline Points are implemented; comparison-event calibration remains later work.
 Datum-operation review and explicit selection are available, but execution of
-selected cross-CRS pipelines remains pending. Level 1 execution, report delivery
-and governed FGDB delivery are not yet exposed by this app.
-Saving a CRS specification does not transform elevations or establish data fitness.
+selected cross-CRS pipelines remains pending. Saving a CRS specification does not
+transform elevations or establish data fitness.
 
 ## Documentation as part of development
 
-This site serves analysts and maintainers. Its numbered developer articles explain
-events, state, backend calls, persistence, failures and tests. Compact agent routes
-and generated code maps point to the same source and contracts. Human developers
-must be able to maintain the application without an agent or conversation history.
-
-FG Studio is also a bounded testbed for improving that navigation. The first
-paired pilot supported keeping concise routes and explanations, but did **not**
-establish a speed or context-consumption improvement. The
-[methods article](vignettes/dev-01-code-navigation.Rmd) describes the evidence,
-limitations and how future comparisons should be judged. AI-assisted development
-does not make AI services a requirement for using the application.
+This site serves analysts, reviewers, and maintainers. The Analyst Guide follows
+the implemented workflow; numbered developer articles explain events, state,
+backend calls, persistence, failures, and tests. Compact routes and generated
+code maps point to the same source and contracts. Human developers must be able
+to maintain the application without an agent or conversation history, and no AI
+service is required to run FG Studio.
 
 Build the local pkgdown site with `./dev/scripts/build-docs.ps1`, then open
 `docs/index.html`. This builds documentation without publishing it or changing

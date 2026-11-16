@@ -13,71 +13,6 @@ shared scientific foundation and planned place in the analysis workflow.
 Use the contents list to jump to the operation you need; the app supports
 iterative study design rather than requiring every operation in a fixed order.
 
-## Visual workflow walkthrough
-
-The app follows a recognizable left-to-right progression even though analysts
-may return to earlier decisions as a study evolves. The complete Spencer Creek
-development study below shows what a reviewer should expect at each stage.
-Screenshots stay at the stable top-level tab boundary so this tour remains useful
-while individual controls continue to improve.
-
-### 1. Overview
-
-Begin with the saved definition: purpose, hierarchy, Survey Events, output
-resolution, and the map that locates the Study Area, Streams, and Reaches.
-
-![A saved Study Area overview with definition summaries and a context map.](figures/study-workflow/01-overview.png){fig-alt="A saved Study Area overview with definition summaries and a context map." width="100%"}
-
-### 2. Study Structure
-
-Define or review the Study Area boundary and the nested Stream and Reach areas.
-This spatial hierarchy governs the terrain and derived products that follow.
-
-![Study Structure showing the saved Stream and Reach hierarchy on the map.](figures/study-workflow/02-study-structure.png){fig-alt="Study Structure showing the saved Stream and Reach hierarchy on the map." width="100%"}
-
-### 3. Collections
-
-Review the source elevation collections that are available for the Study Area.
-Collection footprints use an OpenStreetMap background so coverage remains clear.
-
-![Collections showing available elevation-source footprints for the Study Area.](figures/study-workflow/03-collections.png){fig-alt="Collections showing available elevation-source footprints for the Study Area." width="100%"}
-
-### 4. Analysis CRS
-
-Confirm the horizontal and vertical coordinate references used to interpret,
-compare, and persist the study's terrain products.
-
-![Analysis CRS showing the saved horizontal and vertical reference choices.](figures/study-workflow/04-analysis-crs.png){fig-alt="Analysis CRS showing the saved horizontal and vertical reference choices." width="100%"}
-
-### 5. Survey Events
-
-Group compatible source collections into dated Survey Events and review the
-Streams, output cell sizes, and acquisition state associated with each event.
-
-![Survey Events showing a dated terrain event and its assigned study content.](figures/study-workflow/05-survey-events.png){fig-alt="Survey Events showing a dated terrain event and its assigned study content." width="100%"}
-
-### 6. Hydro Modify
-
-Inspect each Stream DEM and add cutlines only where fine-scale obstructions keep
-the terrain from routing through the real channel.
-
-![Hydro Modify showing the terrain surface and saved channel-correction context.](figures/study-workflow/06-hydro-modify.png){fig-alt="Hydro Modify showing the terrain surface and saved channel-correction context." width="100%"}
-
-### 7. Flowline
-
-Review the terrain-derived mainstem selected from the synthetic stream network.
-Conservative smoothing is automatic; stronger saved candidates remain optional.
-
-![Flowline showing the terrain-derived mainstem selected for a Stream.](figures/study-workflow/07-flowline.png){fig-alt="Flowline showing the terrain-derived mainstem selected for a Stream." width="100%"}
-
-### 8. Flowline Points
-
-Verify one-meter points, elevations, and shared Study Area stationing. The map
-draws points only at inspection scale, while the profile compares all Streams
-and Reaches from the common Study Area outlet.
-
-![Flowline Points showing the map and shared Study Area longitudinal profile.](figures/study-workflow/08-flowline-points.png){fig-alt="Flowline Points showing the map and shared Study Area longitudinal profile." width="100%"}
-
 ## Start or reopen a study
 
 1. Enter a working Study Area name and optional purpose/customer question.
@@ -104,6 +39,12 @@ Streams and Reaches with labels, providing spatial context without entering an
 editing mode. Use the main tabs to inspect the owning
 maps and evidence. Those tabs also contain the editing controls for the definition
 they own.
+
+The complete Spencer Creek development study illustrates the first review stage:
+the saved definition and spatial context appear together before the analyst enters
+an editing workflow.
+
+![A saved Study Area overview with definition summaries and a context map.](figures/study-workflow/01-overview.png){fig-alt="A saved Study Area overview with definition summaries and a context map." width="100%"}
 
 Use **Continue defining or updating** only when you intend to move forward from
 the saved definition. FG Studio routes that button to the first incomplete step,
@@ -220,6 +161,12 @@ working screen; their retention and coordinate semantics are described here.
 
 ## Define Streams
 
+**Study Structure** is the second workflow stage. It defines or reviews the Study
+Area boundary and the nested Stream and Reach areas that govern every terrain and
+derived product that follows.
+
+![Study Structure showing the saved Stream and Reach hierarchy on the map.](figures/study-workflow/02-study-structure.png){fig-alt="Study Structure showing the saved Stream and Reach hierarchy on the map." width="100%"}
+
 1. Save the Study Area boundary, then choose **Streams** under **Working on**.
    The checked radio is the active task; button color is not a mode indicator.
    Follow the **Do next** table beside the map. Reopening a saved study restores
@@ -317,37 +264,20 @@ require reconciliation; events are never silently duplicated or reassigned.
 the list. If all segments are assigned, use **Split existing** to create another
 Reach from one already defined.
 
-## Survey acquisition and analysis references
+## Select source collections and analysis references
 
-In **Analysis CRS**, search projected EPSG systems applicable to the saved Study
-Area. Filter horizontal units, inspect datum/frame and coverage, and open the
-SpatialReference.org explorer or selected definition. Check the CRS, then save it;
-validation and catalog evidence are recorded automatically. Advanced EPSG/WKT entry remains
-available. Selecting a horizontal CRS does not change elevations; epoch-dependent
-frames require a future qualified coordinate-epoch workflow for processing.
-
-In **CRS > Vertical Reference**, choose a vertical height CRS, a 3D
-geographic CRS for ellipsoidal heights, or an explicit declared/local/unknown
-reference. Set the target elevation unit independently. Optional epoch/model
-fields preserve those details without guessing from survey dates. Check and save
-the specification; this creates metadata only and does not change source DEMs.
-Incomplete and epoch-dependent targets remain explicitly unqualified for processing.
-Survey Event settings are available in Survey Events. Compatible same-CRS source
-DEMs can be mosaicked and resampled after their references, file choices, and
-Event settings are saved. Executing a selected cross-CRS datum-operation plan
-remains outside the integrated workflow.
-
-Both CRS editors show validation errors and save confirmation beside their buttons.
-A saved definition reappears as its EPSG identifier (or authoritative WKT) when
-the study is reopened. **Check** validates the current form; **Save** writes a new
-local revision. Checking alone does not persist edits.
-
-The **Collections** tab discovers reported lidar acquisitions for a saved
+The third workflow stage is **Collections**. It discovers reported lidar
+acquisitions for a saved
 Study Area, displays metadata/footprints and saves checkbox selection intent.
 Reopening restores selections offline. Planned collections are selectable; saving
 does not download data or create Survey Events. Query results distinguish failures
 from empty/partial responses. This uses USGS 3DEP and USIEI catalog layers, not an
 exhaustive clearinghouse; cross-listed records need later identity review.
+
+Collection footprints use an OpenStreetMap background so their teal and orange
+symbology remains distinguishable from the basemap.
+
+![Collections showing available elevation-source footprints for the Study Area.](figures/study-workflow/03-collections.png){fig-alt="Collections showing available elevation-source footprints for the Study Area." width="100%"}
 
 In **Plan acquisition**, choose an included Survey Collection, review reported
 product links, check Existing DEM and/or Lidar point cloud, then **Update
@@ -393,11 +323,45 @@ the session cache. Drag a rectangle and choose **Inspect selected area** for
 source-window detail; **Preview elevations** returns to the whole tile. These
 display samples do not change the original DEM.
 
+The fourth stage, **Analysis CRS**, records the horizontal and vertical references
+used to interpret, compare, and persist those terrain products.
+
+![Analysis CRS showing the saved horizontal and vertical reference choices.](figures/study-workflow/04-analysis-crs.png){fig-alt="Analysis CRS showing the saved horizontal and vertical reference choices." width="100%"}
+
+In **Analysis CRS**, search projected EPSG systems applicable to the saved Study
+Area. Filter horizontal units, inspect datum/frame and coverage, and open the
+SpatialReference.org explorer or selected definition. Check the CRS, then save it;
+validation and catalog evidence are recorded automatically. Advanced EPSG/WKT entry remains
+available. Selecting a horizontal CRS does not change elevations; epoch-dependent
+frames require a future qualified coordinate-epoch workflow for processing.
+
+In **CRS > Vertical Reference**, choose a vertical height CRS, a 3D
+geographic CRS for ellipsoidal heights, or an explicit declared/local/unknown
+reference. Set the target elevation unit independently. Optional epoch/model
+fields preserve those details without guessing from survey dates. Check and save
+the specification; this creates metadata only and does not change source DEMs.
+Incomplete and epoch-dependent targets remain explicitly unqualified for processing.
+Survey Event settings are available in Survey Events. Compatible same-CRS source
+DEMs can be mosaicked and resampled after their references, file choices, and
+Event settings are saved. Executing a selected cross-CRS datum-operation plan
+remains outside the integrated workflow.
+
+Both CRS editors show validation errors and save confirmation beside their buttons.
+A saved definition reappears as its EPSG identifier (or authoritative WKT) when
+the study is reopened. **Check** validates the current form; **Save** writes a new
+local revision. Checking alone does not persist edits.
+
 After **Analysis CRS**, use **Continue to Survey Events** or open the
 adjacent **Survey Events** main tab. For an existing event, choose its date in
 **Survey Event date** (for example, **2019-12**). Its DEM appears immediately
 below; there is no separate date tab or DEM navigation step. Expand **Event
 Settings** only to review or edit the selected event.
+
+This fifth stage groups compatible collections into a dated event and presents
+its assigned Streams, output cell size, acquisition state, and saved Stream DEMs
+in one review context.
+
+![Survey Events showing a dated terrain event and its assigned study content.](figures/study-workflow/05-survey-events.png){fig-alt="Survey Events showing a dated terrain event and its assigned study content." width="100%"}
 
 To create another event, expand **Define a Survey Event** in the top Event panel. Select
 from **Saved Survey Collections for this Survey Event**, then click **Define a
@@ -439,72 +403,7 @@ delivery, cross-CRS operation execution, and Enterprise access remain outside
 the implemented UI. Backend capabilities elsewhere in fluvgeo are not
 automatically exposed here.
 
-## Run on the development workstation
-
-From the repository root in R, with development dependencies available:
-
-```r
-# Once, or after deliberately updating the local backend snapshot:
-source("dev/scripts/prepare-dev.R")
-```
-
-Start the app from PowerShell in a **new R process**, separate from preparation
-and testing:
-
-```powershell
-./dev/scripts/run-dev.ps1
-```
-
-Do not source `run-dev.R` after running tests in the same R session. Test doubles
-must never be able to affect the analyst preview.
-
-Open <http://127.0.0.1:8780>. Stop the R process to stop the app. The preparation
-script installs the sibling fluvgeo checkout only into `dev/local-library`, then
-documents and tests this package. It does not update shared libraries or ohwm2.
-Development requires devtools, pkgload, testthat, withr and the package Imports;
-reproducibleai is loaded from the sibling source for context validation.
-
-For an installed package with its dependencies:
-
-```r
-fgstudio::run_app(data_dir = "path/to/studio-data")
-```
-
-## Storage and safety
-
-This is a **trusted single-analyst local preview**, bound to loopback. Drafts are
-saved under `.local-data/` on the computer running R and survive browser/app
-closure. This folder is excluded from Git and package builds. Back it up if you
-want to retain trials. Names and drawn geometries remain on this computer;
-explicit drainage-exploration clicks send coordinates to USGS as described above.
-The browser requests OpenStreetMap basemap tiles over the internet; those requests
-disclose the viewed map area to the tile service. The basemap is not a terrain
-source, and saving does not depend on a tile download succeeding.
-Place searches send only the entered search text to the public Photon service
-(OpenStreetMap data), not the study name or boundary automatically. Do not enter
-confidential information. Search requires internet access; if unavailable, manual
-map navigation and boundary saving remain available. This limited preview uses
-Photon's public demo; broader deployment requires a supported service/hosting
-decision. Developers can set `options(fgstudio.photon_url = "https://your-host/api/")`
-to use another Photon instance without changing the UI.
-
-The local study selector lists this workspace's drafts; it is not a multi-user
-authorization system. Do not host this prototype for shared users. Future FGDB
-access needs explicit Enterprise authentication, authorization and edit contracts.
-The local study folder retains GeoPackage vectors/tables, external GeoTIFFs,
-immutable preparation candidates, and metadata links. Its context holds Study
-Area identity and Purpose, boundary, Streams and Reaches. Companion GeoPackages
-retain selected source geometry, buffer settings and, after splitting, versioned
-piece assignments. This local representation is not yet a portable governed
-FGDB delivery bundle.
-Move or back up the entire study folder, not only its latest context file.
-
-The Study Workspace sidebar can be collapsed with its edge toggle and reopened
-when you need another study. The main tabs are **Overview**, **Study Structure**,
-**Collections**, **Analysis CRS**, **Survey Events**, **Hydro Modify**,
-**Flowline**, and **Flowline Points**.
-
-## Survey Events: top-to-bottom workflow
+## Process and review Stream DEMs
 
 For a saved Stream DEM, expand **DEM details**, then **Coordinate-operation
 provenance** to see the coordinate systems, conversion method and datum-operation
@@ -551,18 +450,6 @@ information. No review or approval of these details is required.
 
 Processing messages appear only while building DEMs or when work is paused or needs attention. Opening saved DEMs does not show Waiting or Ready notifications.
 
-## Map basemaps
-
-Every interactive map offers **OpenTopoMap** in its upper-right layers control:
-the Study workspace (including boundary, Stream, Reach and drainage exploration),
-Survey Collections/DEM files, Hydro Modify, Flowline, and Flowline Points.
-**OpenTopoMap is the default basemap** except on **Collections**, where
-**OpenStreetMap** is the default so teal and orange collection polygons remain
-distinct from the basemap. Imagery and Street map remain available where
-applicable. The selected basemap remains active until you switch. Basemaps
-stay below data overlays; OpenTopoMap
-tiles remain visible when zooming closer for DEM inspection.
-
 ## Inspect channels and draw cutlines
 
 Open **Hydro Modify** beside **Survey Events**. Choose the Survey Event above the
@@ -577,6 +464,12 @@ channel elevations on both sides. Double-click to finish; completed cutlines sav
 automatically. Use the edit/delete tools to revise them. Reopening restores the
 drawings for the same Stream DEM edition.
 
+This sixth stage keeps the terrain, saved cutlines, and synthetic Stream Network
+together so the analyst can judge whether fine-scale flow barriers require
+intervention.
+
+![Hydro Modify showing the terrain surface and saved channel-correction context.](figures/study-workflow/06-hydro-modify.png){fig-alt="Hydro Modify showing the terrain surface and saved channel-correction context." width="100%"}
+
 When saved cutlines have not yet been applied, choose the contextual **Apply
 saved cutlines to DEM** control. It disappears after that drawing revision is
 processed. Each cutline's
@@ -585,6 +478,12 @@ earlier cutlines take priority where cells are shared. NoData stays NoData.
 Switch between **Original DEM** and **Hydro-modified DEM** to review the result.
 Editing a drawing saves a new revision; apply it to update the result. Original
 DEMs and earlier drawing/results are retained.
+
+Hover over cutlines to see their numbers. A line can be inside the rectangular
+DEM extent but cross only NoData, especially outside the Stream mask. Apply
+reports those line numbers and applies the valid cuts. Select the appropriate
+Stream or edit the reported lines. Existing drawings remain attached to the DEM
+edition on which they were drawn, even when another equivalent edition exists.
 
 The map opens at the full saved Stream extent with a small margin, and returns to
 that extent whenever its Stream tab is selected. Use the layers control in the
@@ -636,6 +535,11 @@ dashed magenta. Pan and zoom to compare all three against the locally stretched
 Hydro DEM and hillshade. Colored lines show the resulting Reach Flowlines and
 white points show their exact shared boundaries.
 
+The seventh stage therefore presents the selected mainstem in its terrain and
+reference context before the analyst considers a stronger smoothing candidate.
+
+![Flowline showing the terrain-derived mainstem selected for a Stream.](figures/study-workflow/07-flowline.png){fig-alt="Flowline showing the terrain-derived mainstem selected for a Stream." width="100%"}
+
 The summary reports the path length, source-line count, number of routes compared,
 separation from the next reference match, smoothing method, maximum displacement,
 length change, Reach names and local save state. If prerequisites are missing,
@@ -669,6 +573,12 @@ selection is required. To use a nondefault spacing, expand **Advanced spacing**,
 below the map and Study Area profile, enter the maximum distance and choose
 **Recreate Flowline Points**.
 
+The eighth stage closes the current implemented workflow by combining point
+inspection with the shared Study Area longitudinal profile. All Streams and
+Reaches use the common outlet-based stationing convention.
+
+![Flowline Points showing the map and shared Study Area longitudinal profile.](figures/study-workflow/08-flowline-points.png){fig-alt="Flowline Points showing the map and shared Study Area longitudinal profile." width="100%"}
+
 When the tab must reopen saved line and point files, it first displays the Event
 and Stream controls, plain-language status, and progress cue. Creation and terrain
 display continue to report progress. Stream tabs change the detailed map only:
@@ -695,8 +605,79 @@ Those historical fields are intentionally retained for downstream and legacy
 compatibility. Comparison-event calibration and governed FGDB publication are
 later workflow boundaries.
 
-Hover over cutlines to see their numbers. A line can be inside the rectangular
-DEM extent but cross only NoData, especially outside the Stream mask. Apply
-reports those line numbers and applies the valid cuts. Select the appropriate
-Stream or edit the reported lines. Existing drawings remain attached to the DEM
-edition on which they were drawn, even when another equivalent edition exists.
+## Map basemaps
+
+Every interactive map offers **OpenTopoMap** in its upper-right layers control:
+the Study workspace (including boundary, Stream, Reach and drainage exploration),
+Survey Collections/DEM files, Hydro Modify, Flowline, and Flowline Points.
+**OpenTopoMap is the default basemap** except on **Collections**, where
+**OpenStreetMap** is the default so teal and orange collection polygons remain
+distinct from the basemap. Imagery and Street map remain available where
+applicable. The selected basemap remains active until you switch. Basemaps stay
+below data overlays; OpenTopoMap tiles remain visible when zooming closer for DEM
+inspection.
+
+## Storage, privacy, and deployment boundary
+
+This is a **trusted single-analyst local preview**, bound to loopback. Drafts are
+saved under `.local-data/` on the computer running R and survive browser/app
+closure. This folder is excluded from Git and package builds. Back it up if you
+want to retain trials. Names and drawn geometries remain on this computer;
+explicit drainage-exploration clicks send coordinates to USGS as described above.
+The browser requests OpenStreetMap and OpenTopoMap basemap tiles over the internet;
+those requests disclose the viewed map area to the tile services. Basemaps are not
+terrain sources, and saving does not depend on a tile download succeeding.
+
+Place searches send only the entered search text to the public Photon service
+(OpenStreetMap data), not the study name or boundary automatically. Do not enter
+confidential information. Search requires internet access; if unavailable, manual
+map navigation and boundary saving remain available. This limited preview uses
+Photon's public demo; broader deployment requires a supported service/hosting
+decision. Developers can set `options(fgstudio.photon_url = "https://your-host/api/")`
+to use another Photon instance without changing the UI.
+
+The local study selector lists this workspace's drafts; it is not a multi-user
+authorization system. Do not host this preview for shared users. Future FGDB
+access needs explicit Enterprise authentication, authorization, and edit contracts.
+The local study folder retains GeoPackage vectors/tables, external GeoTIFFs,
+immutable preparation candidates, and metadata links. Its context holds Study
+Area identity and Purpose, boundary, Streams, and Reaches. Companion GeoPackages
+retain selected source geometry, buffer settings, and versioned piece assignments.
+This local representation is not yet a portable governed FGDB delivery bundle.
+Move or back up the entire study folder, not only its latest context file.
+
+The Study Workspace sidebar can be collapsed with its edge toggle and reopened
+when you need another study. The main tabs are **Overview**, **Study Structure**,
+**Collections**, **Analysis CRS**, **Survey Events**, **Hydro Modify**,
+**Flowline**, and **Flowline Points**.
+
+## Run on the development workstation
+
+From the repository root in R, with development dependencies available:
+
+```r
+# Once, or after deliberately updating the local backend snapshot:
+source("dev/scripts/prepare-dev.R")
+```
+
+Start the app from PowerShell in a **new R process**, separate from preparation
+and testing:
+
+```powershell
+./dev/scripts/run-dev.ps1
+```
+
+Do not source `run-dev.R` after running tests in the same R session. Test doubles
+must never be able to affect the analyst preview.
+
+Open <http://127.0.0.1:8780>. Stop the R process to stop the app. The preparation
+script installs the sibling fluvgeo checkout only into `dev/local-library`, then
+documents and tests this package. It does not update shared libraries or ohwm2.
+Development requires devtools, pkgload, testthat, withr, and the package Imports;
+reproducibleai is loaded from the sibling source for context validation.
+
+For an installed package with its dependencies:
+
+```r
+fgstudio::run_app(data_dir = "path/to/studio-data")
+```

@@ -266,15 +266,14 @@ support any number of locally defined Survey Events through one synchronized
 selector and keep each Event's saved candidates separate. That navigation does
 not itself designate a base/comparison pair or perform calibration.
 
-## Selecting the next feature
+## Cross sections: authorized exploration
 
-No feature after Flowline Points is authorized by this plan. Begin the next
-scoping pass with the next applicable FluvialGeomorph-toolbox/User Manual step,
-inspect the existing `fluvgeo` and `ohwm2` capability before proposing new code,
-and let the owner choose the next cohesive analyst outcome. Preserve the same
-replacement strategy: automate inputs already expressed by prior Study
-definition, retain legacy output contracts, add fail-closed validation, and keep
-reusable geospatial logic in `fluvgeo`.
+The owner selected cross-section layout as the next feature. Develop an
+interactive Spencer Creek prototype and the reusable geometry together, following
+[Cross-section layout exploration](../features/cross-section-layout.md). The
+layout is an initial candidate for analyst editing, not a claim of HEC-RAS
+compliance. Preserve the legacy-derived output contract and reconcile confirmed
+storage and interoperability findings with FGDB.
 
 Resolve routine intermediate steps without separate owner handoffs. Ask only for
 unresolved consequential choices and continue independent authorized work while
