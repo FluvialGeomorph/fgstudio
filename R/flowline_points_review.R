@@ -86,6 +86,21 @@ flowline_points_review_server <- function(id,current,context,store,
     load_generation <- 0L;session_closed <- FALSE
     worker_ready <- shiny::reactiveVal(FALSE);worker_warming <- FALSE;worker_failed <- FALSE
     cache <- tempfile("flowline-points-map-");dir.create(cache)
+    rem_queue <- list();rem_job <- NULL;rem_current <- NULL;rem_busy <- shiny::reactiveVal(FALSE)
+    rem_revision <- shiny::reactiveVal(0L);rem_notice <- shiny::reactiveVal("");rem_failures<-character()
+    queue_rems <- function(value) {
+      stop_rem()
+      rem_failures<<-character()
+      rem_queue <<- cross_section_rem_queue(store,value)
+      rem_revision(shiny::isolate(rem_revision())+1L)
+    }
+    stop_rem <- function() {
+      if(!is.null(rem_job) && rem_job$is_alive()) {
+        rem_job$kill();rem_job$wait(timeout=2000)
+        if(!is.null(rem_current))rem_queue <<- c(list(rem_current),rem_queue)
+      }
+      rem_job <<- NULL;rem_current <<- NULL;rem_busy(FALSE)
+    }
     linked_survey_event_selector(input,output,session,events,context)
 
     selected_id <- shiny::reactive({
@@ -133,6 +148,7 @@ flowline_points_review_server <- function(id,current,context,store,
           result$points,result$connections)
       })
       value$saved <- saved;review(value);points(saved$points)
+      queue_rems(value)
       notice(paste0("Saved ",format(saved$point_count,big.mark=","),
         " Flowline Points across ",saved$stream_count," Streams at ",
         format(saved$station_distance_m,trim=TRUE)," m maximum spacing."))
@@ -178,6 +194,7 @@ flowline_points_review_server <- function(id,current,context,store,
           shiny::updateNumericInput(session,"station_distance",
             value=value$saved$station_distance_m)
           notice("Saved Flowline Points are ready for review and downstream analysis.")
+          queue_rems(value)
         } else {
           value <- create_points(value,1,automatic=TRUE)
         }
@@ -217,6 +234,26 @@ flowline_points_review_server <- function(id,current,context,store,
       },error=function(e) notice(paste("Flowline Points were not created:",
         conditionMessage(e))))
     },ignoreInit=TRUE)
+    shiny::observe({
+      rem_revision()
+      if(!isTRUE(active())) {stop_rem();return()}
+      if(!is.null(rem_job)) {
+        shiny::invalidateLater(250,session)
+        if(rem_job$is_alive())return()
+        tryCatch(rem_job$get_result(),error=function(e)rem_failures<<-c(rem_failures,conditionMessage(e)))
+        rem_job <<- NULL;rem_current <<- NULL;rem_busy(FALSE)
+      }
+      if(is.null(review()$saved))return()
+      if(!length(rem_queue)) {rem_notice(if(length(rem_failures))
+        "Some REM preparations failed; Cross Sections will retry the selected Reach." else
+        "Cross-section REMs are precomputed for the saved inputs.");return()}
+      if(busy() || view_busy() || !is.null(view_job)) {shiny::invalidateLater(250,session);return()}
+      args<-rem_queue[[1]];rem_queue <<- rem_queue[-1];rem_current <<- args
+      rem_notice(paste("Precomputing cross-section REM:",args$line$ReachName[1]))
+      rem_busy(TRUE)
+      rem_job <<- callr::r_bg(cross_section_rem_artifact,args=args,libpath=.libPaths(),supervise=TRUE,stdout=NULL,stderr=NULL)
+      shiny::invalidateLater(250,session)
+    },priority=20)
 
     output$map <- leaflet::renderLeaflet({
       value <- selected()
@@ -293,9 +330,9 @@ flowline_points_review_server <- function(id,current,context,store,
     })
 
     output$status <- shiny::renderUI(shiny::tagList(
-      shiny::p(role="status",notice()),shiny::p(class="small",view_notice()),
-      if(busy() || view_busy()) shiny::tags$progress(style="width:100%",
-        `aria-label`="FG Studio is creating or displaying Flowline Points")))
+      shiny::p(role="status",notice()),shiny::p(class="small",view_notice()),shiny::p(class="small",rem_notice()),
+      if(busy() || view_busy() || rem_busy()) shiny::tags$progress(style="width:100%",
+        `aria-label`="FG Studio is preparing Flowline Points or cross-section REMs")))
     output$summary <- shiny::renderUI({
       x <- points();value <- review()
       if(is.null(x) || is.null(value) || is.null(value$saved)) return(NULL)
@@ -339,6 +376,7 @@ flowline_points_review_server <- function(id,current,context,store,
       b <- bounds();value <- selected();token <- map_token()
       if(!isTRUE(active()) || !isTRUE(map_ready()) || is.null(value) ||
           !valid_map_bounds(b)) return()
+      if(rem_busy())return()
       signature <- list(path=value$dem,bounds=b,map=token)
       if(identical(signature,last_view)) return()
       if(!worker_ready()) {if(!worker_failed){view_notice("Opening DEM viewer...");view_busy(TRUE)};return()}
@@ -397,7 +435,7 @@ flowline_points_review_server <- function(id,current,context,store,
     shiny::observe({shiny::invalidateLater(300,session);poll()})
     session$onSessionEnded(function(){
       session_closed <<- TRUE
-      if(!is.null(view_worker))view_worker$kill();unlink(cache,recursive=TRUE)
+      stop_rem();if(!is.null(view_worker))view_worker$kill();unlink(cache,recursive=TRUE)
     })
     list(review=review,points=points,selected=selected,poll=poll)
   })

@@ -232,7 +232,34 @@ inspection and are not analytical terrain editions or portable FGDB products.
 
 The in-progress Cross Sections inundation review reads the selected Survey
 Event's saved Reach Flowline, Flowline Points and Stream Hydro DEM. It derives
-a session-temporary REM GeoTIFF and transient channel/floodplain footprints;
-these are removed with the session and are not a saved Cross Section or an FGDB
-Dataset Edition. Cross-section layout, editing, publication and their governed
-bindings remain unimplemented.
+precomputed analytical/display REM GeoTIFFs and transient channel/floodplain
+footprints. `cross_section_rem_artifact()` persists the rasters under Study-local
+cross-section-preparation/<input-recipe-hash> with source/output hashes and
+recipe metadata; Flowline Points queues Reaches and Cross Sections reuses those
+files. Regional geometry caches remain session-owned. `cross_section_layout()` adds candidate polylines,
+three polygon regions, independent polygon centerlines and direction support.
+Method v6 / draft schema 5 retains perpendicular channel cuts and ordered,
+fixed-target floodplain routing, with explicit bank indices, multiple-bend flags,
+leg status, rotation bounds/angles and separate short-tangent/raw-route flags.
+The starting levels are 103/109 ft. Extra vertices are unchecked by default;
+when enabled, polygon routing may place several away from the centerline.
+Permanent Seq labels support troubleshooting. Sides with no mapped floodplain width are distinct from incomplete legs. Manual
+bend addition/removal preserves candidate identity and banks/endpoints.
+`cross_section_layout_review()`
+refreshes geometry diagnostics after vertex correction or deletion. Candidate
+keys are retained while mutable review `Seq` values are resequenced.
+`study_cross_section_store()` publishes explicit local drafts at Study scope in
+`cross-sections/<revision>/cross-sections.gpkg`, with standard `cross_section`
+feature table, explicit layout/REM metadata columns, `layout_metadata` table,
+outer/source footprints, three multipart hydraulic regions, component geometries,
+raw/smoothed centerlines, skeletons and diagnostics. Additional boundary_chains
+LINESTRINGs and boundary_anchors POINTs retain directed shared edges and whole-channel
+bank arcs, generated bank/planned outer anchors, candidate/Seq links and explicit
+feature-CRS chainage units. Review refreshes actual order/skew diagnostics after
+edits; generated target evidence remains separate. Input/output hashes and a PENDING
+marker protect exact-lineage reopening and incomplete publication. Metadata is
+stored in tables rather than encoded in the feature-class name, following the
+FGDB cross-section naming contract. Local draft keys and revisions do not create
+governed cross-section, Survey Event or Dataset Edition identities. Original
+inundation holes remain in source inundation layers when available; saved outer footprints document
+the geometry used for layout. Legacy export and enterprise binding remain open.

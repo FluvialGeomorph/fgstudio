@@ -616,17 +616,84 @@ palette, and the legend is in feet.
 
 Move **Channel REM elevation** to identify the channel visually. Adjust
 **Floodplain REM elevation** independently to identify the flood-prone area.
-The initial values are 103 and 106 ft on the REM's 100 ft reference: depths of
-3 and 6 ft. They are starting values, not estimated bank or floodplain levels.
+The Midwest initial values are 103 and 109 ft on the REM's 100 ft reference:
+depths of 3 and 9 ft. They are starting values, not estimated bank or floodplain levels.
 The floodplain elevation must be greater than the channel elevation. Wait for
 the status to indicate the map is ready after changing a slider.
 
 The current REM extends approximately 150 m to either side of the Reach. An
 inundation footprint reaching that edge may be incomplete. The review fills
-interior holes for the displayed outer footprints. It is temporary: reopening
-the session recomputes the REM and no elevations, footprints or cross sections
-are saved. Cross-section creation, editing, resequencing and export are not yet
-available.
+interior holes for the displayed outer footprints. Analytical/display REMs are
+precomputed and retained for the exact saved inputs. Flowline Points prepares
+Reaches in the background; Cross Sections reuses them or prepares a missing
+Reach once. Use **Save draft** below to retain a layout and
+its selected levels for these exact saved inputs.
+
+Review **Channel**, **Left floodplain** and **Right floodplain** first. Blue,
+magenta and green centerlines are derived independently from those polygons.
+Each region can have disconnected components; gaps and failed centerlines are
+reported rather than hidden. Use **Layers** to compare **Raw centerlines** and
+**Polygon skeletons** with the smoothed result. **Candidates** and permanent
+**Section numbers** appear by default; their Seq numbers identify troubleshooting
+references and popups. Either layer can be hidden through Layers.
+
+**Centerline boundary spacing** (initially 2 m) controls densification for
+polygon skeleton extraction and the working centerline simplification scale.
+The source polygons stay unchanged. **Centerline smoothing (Chaikin passes)**
+(initially two) rounds the extracted paths cartographically; zero preserves raw
+paths. A smoothing proposal that leaves its own polygon is rejected and the raw
+path is retained with a diagnostic. More passes do not establish better flow
+estimates; compare both artifacts.
+
+**Centerline tangent distance** (initially 20 m) measures direction using a chord
+along the centerline. It is independent of cartographic smoothing. **Cross-section
+spacing** places centers half that metre distance upstream of the Reach outlet,
+then at equal intervals. Changing these two layout distances reuses the polygon
+centerlines. Orange candidates indicate unresolved direction, unsupported ends,
+conflicts or coverage problems. White also requires hydraulic review. A missing
+overbank path leaves an endpoint at its bank rather than inventing a path.
+The layout searches rotations up to **Maximum floodplain leg rotation** around each floodplain centerline
+normal to reach the outer boundary and reduce overlaps, keeping channel-bank
+vertices fixed. It does not shorten legs to clear collisions; unresolved
+conflicts remain orange. A bank already on the outer boundary with no adjacent
+floodplain is counted separately as a side with no floodplain width.
+The initial rotation limit is 30 degrees; it can be increased to 60, with rotations
+over 30 remaining orange for review. Direction matches must stay inside the
+region so nearest-point matching cannot jump across a channel indentation.
+**Allow additional floodplain vertices for deconfliction** is unchecked by
+default. When enabled, the solver may route around neighboring sections using
+multiple bends, including points away from the centerline. Channel cuts stay
+perpendicular to their local centerline direction without width minimization.
+Banks remain fixed. Outer targets follow section order along connected boundaries;
+routing cannot slide a target past its neighbor. Remaining channel contacts and
+unavailable complete routes stay flagged. Straight legs remain the starting point.
+Use **Ordering boundaries** and **Ordered boundary targets** in Layers to review
+the shared edges and planned endpoints. Popups distinguish actual bank/outer
+order, planned targets and channel departure from perpendicular. A planned target
+may remain visible when no complete leg could be constructed.
+**Direction review points** distinguishes shortened tangent windows and use of
+raw centerlines from unavailable direction evidence. Those informational
+conditions alone do not mean that a segment is missing. Candidate popups show
+each leg's status and generated rotation; manual edits clear its rotation value.
+Select a vertex on the intended side and use **Add floodplain bend** or **Remove
+floodplain bend** to make a manual adjustment. A new bend starts at the leg
+midpoint; select its named bend vertex and move it on the map. Banks and outer
+endpoints stay fixed when adding/removing a bend. For a zero-width leg, move its
+outer endpoint before adding a bend. Conflicts and coverage remain visible for
+review; extra vertices are an option rather than a guarantee of deconfliction.
+
+Automatic deconfliction is the main workflow. Under **Optional manual correction**,
+choose a **Section to correct** and a **Vertex to move**, then press **Move
+vertex on map** and click the new location. Cyan markers identify the selected
+section's vertices. **Cancel move** disarms the click. Section popups show
+conflicting review numbers, endpoint gaps and length outside the floodplain.
+**Delete section** removes that candidate and resequences the remaining review
+numbers. Changing Reach, Event, elevation, spacing, centerline extraction/smoothing or tangent settings replaces
+unsaved edits. **Save draft** retains corrected geometry and layout metadata;
+selecting that Reach again with unchanged saved inputs restores the draft.
+Drafts may retain unresolved warnings for later correction. Saving does not
+accept the geometry scientifically. Old loess drafts remain saved as prior evidence and are not reopened under this polygon-centerline method. Adding sections and legacy export remain
+unavailable.
 
 ## Map basemaps
 

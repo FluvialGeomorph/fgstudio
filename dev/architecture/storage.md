@@ -81,3 +81,36 @@ that portable contract. Stream corridors determine parentage; only the one
 outlet Stream starts at zero, and tributaries inherit their parent-Flowline
 confluence measure. These are local current/base-event candidates, not accepted
 FGDB longitudinal reference frames.
+
+Cross-section drafts use immutable Study-scoped `cross-sections/<revision>`
+directories with `cross-sections.gpkg`, `result.rds` and `provenance.json`.
+`study_cross_section_store()` fingerprints exact Study/Event/Flowline Points
+lineage, rejects stale publication, hides PENDING writes and verifies output
+hashes on reopening. The standard feature table is `cross_section`; explicit
+layout/REM metadata columns and the `layout_metadata` table carry descriptive
+variables. Schema 2 adds three multipart hydraulic regions, disconnected
+components, polygon skeletons, raw/smoothed centerlines and component diagnostics
+to the footprint/support evidence. Old loess drafts remain prior revisions and
+do not match the polygon-centerline method fingerprint. Tangent distance,
+boundary spacing and Chaikin passes are distinct metadata; the retired support
+distance column is typed missing rather than repurposed.
+Method v6 / draft schema 5 retains perpendicular channel cuts, ordered boundary
+targets and fixed-target polygon routing, leg status, rotation and diagnostics.
+Four or more vertices use explicit integer bank indices, bend counts and routed flags; manual
+addition/removal retains candidate identity. boundary_chains LINESTRINGs and
+boundary_anchors POINTs add directed shared edges/whole-channel bank arcs and
+generated bank/planned outer targets, linked to candidate IDs/Seq with explicit
+feature-CRS chainage units. Actual order and channel skew refresh on edit/save;
+generated targets remain source planning evidence. Anchors follow candidate ID
+assignment, deletion and resequencing without creating governed identities.
+Older drafts remain on disk but do not match the new method fingerprint.
+REM preparation is a separate persistent local asset under
+cross-section-preparation/<input-recipe-hash>, with external analytical/display
+GeoTIFFs and preparation JSON/RDS retaining exact lineage and output hashes.
+Flowline Points queues preparation; Cross Sections reuses it or builds a missing
+Reach once. Water levels, bend permission and layout tuning do not invalidate it.
+The local draft profile is `dev/schemas/cross-section-drafts.md`. Opaque local
+candidate keys survive corrections and resequencing but do not establish
+governed cross-section identity or acceptance. FGDB's cross-section naming
+contract owns the naming rule; enterprise normalization and legacy export
+remain distinct unfinished bindings.

@@ -1,61 +1,120 @@
 ---
-title: "18. Cross-section inundation review"
+title: "18. Cross-section regions, centerlines and drafts"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{18. Cross-section inundation review}
+  %\VignetteIndexEntry{18. Cross-section regions, centerlines and drafts}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-## Purpose and boundary
+## Workflow and responsibility
 
-The Cross Sections tab provides a session-only way to inspect channel and
-floodplain inundation before developing cross-section geometry. It uses the
-same interactive flooding concept as ohwm2. It does not yet lay out, edit,
-resequence, export, or save cross sections; the observed footprints are not a
-governed FGDB dataset or a claim of hydraulic-model compliance.
-
-## Function flow
+Cross Sections presents three hydraulic review regions: channel, left
+descending-bank floodplain and right descending-bank floodplain. Polygon-derived
+centerlines replace the rejected slice-midpoint/loess approximation. They are
+reviewable geometric direction proxies, not measured hydraulic flow paths.
+The feature record owns provisional method choices and scientific limits.
 
 1. `mod_study_server()` mounts `cross_section_review_server()` with the linked
-   Survey Event and upstream revision signals. `load_flowline_points_review()`
-   resolves the current Event's saved Flowlines, Flowline Points and Hydro DEMs.
-2. The selected Stream and Reach determine one Reach Flowline, its points and
-   its Stream DEM. A `callr` background process invokes `fluvgeo::detrend()`
-   with a 150 m buffer and writes a temporary analytical REM and a reduced,
-   projected display raster. The fixed buffer can truncate inundation and is not
-   an accepted universal floodplain extent.
-3. Slider values are debounced by 400 ms. The channel must be strictly below
-   the floodplain elevation. A second background process calls
-   `fluvgeo::water_surface_extents()` on the analytical REM. The result retains
-   unsimplified original polygons and hole-filled outer footprints; the latter
-   are drawn over the map. Default REM elevations 103 and 106 ft are initial
-   values, not measured channel and floodplain elevations.
-4. The server cancels the previous job when the selection or requested levels
-   change, checks the selection and level key before displaying a result, and
-   removes session-owned files on session end. A display overview does not
-   replace the full-resolution REM used for footprint extraction. Status text
-   reports processing and invalid levels.
+   Event selector and upstream revision signals. `load_flowline_points_review()`
+   resolves exact saved Flowlines, Flowline Points and Hydro DEM inputs.
+2. `cross_section_rem_queue()` queues saved Reaches from Flowline Points.
+   `cross_section_rem_artifact()` calls `fluvgeo::detrend()` in a sequential
+   background worker and publishes analytical/display REM GeoTIFFs, display
+   limits and provenance. They persist across sessions with exact-input/recipe
+   fingerprints and output hashes. Cross Sections reads those files immediately,
+   preparing a missing Reach once when necessary. The inherited corridor can
+   truncate evidence; the current metric project uses approximately 150 m.
+3. The debounced worker calls `water_surface_extents()` with strictly ordered
+   analyst levels. Original inundation retains holes; outer footprints fill
+   holes without connecting disconnected parts.
+4. `cross_section_regions()` partitions the outer footprint into three multipart
+   parent regions with explicit component identities. `centerline::cnt_skeleton()`
+   and `cnt_path()` produce per-component Voronoi skeletons and longitudinal raw
+   routes. Douglas-Peucker/Chaikin proposals are retained only when simple and
+   contained in their own component. Failures and rejected smoothing are explicit.
+5. `cross_section_layout()` samples the saved measured Flowline, uses local
+   tangents from the three polygon centerlines and constructs editable cut
+   lines. An overbank uses the component touching its bank. A bank already on the
+   outer boundary with no adjacent overbank is a zero-width floodplain side,
+   distinct from missing/ambiguous direction evidence. A bank-to-centerline
+   connector that leaves its polygon is replaced by the closest tested visible
+   segment projection, preserving the source line and recording the adjustment.
+   Channel cuts are perpendicular to the local channel-centerline tangent;
+   width minimization and conflict-driven rotation are removed. One-sided GEOS
+   rays propose full-coverage floodplain endpoints within the angular bound;
+   tentative alternatives reduce contacts and angular departure before rank
+   assignment. `cross_section_boundary_chains()` extracts directed
+   shared edges and whole-channel bank arcs. `cross_section_order_anchors()`
+   assigns outer targets in Seq order; `cross_section_refine_targets()` can repair
+   infeasible proposals inside their ordered neighbor interval before freezing them.
+   `cross_section_ordered_routes()` builds complete nonintersecting floodplain
+   routes to those fixed targets, treating other channels and accepted legs as
+   barriers. Extra vertices are unchecked by default. When enabled, constrained
+   triangulation/graph routing and visibility shortcuts can add multiple vertices
+   away from centerlines. Unsupported routes and channel contacts stay explicit.
+   Explicit left_bank_vertex/right_bank_vertex retain channel identity with four
+   or more vertices. No leg is shortened. The backend routing helper is
+   `cross_section_deconflict.R`, with ordering in `cross_section_order.R`;
+   tests include multi-bend obstacles, fixed endpoints and a wide confluence.
+6. Original polygons, components, skeletons and raw/smoothed centerlines are
+   separately reviewable. Polygons/centerlines appear first; candidate cut lines
+   and permanent Seq numbers appear by default. Advanced settings and manual
+   correction are collapsed. Boundary spacing, Chaikin passes and local tangent
+   distance are distinct parameters. Direction review points identify shortened
+   tangent windows, raw-centerline use and unavailable direction evidence
+   separately from incomplete geometry. A session cache reuses skeletons and
+   centerlines when only cut-line spacing or tangent distance changes.
+7. Map clicks move an armed vertex after transformation from display to analysis
+   CRS. `cross_section_layout_review()` refreshes orientation, endpoint fields,
+   all-pair touches/crossings, self-crossings, endpoint gaps and outside length.
+   With boundary chains supplied it also refreshes actual bank/outer rank and
+   channel departure from perpendicular without moving geometry. Generated
+   target evidence remains distinct from later manual edits.
+   Deletion resequences mutable `Seq` and preserves remaining local candidate IDs.
+   `cross_section_vertex_labels()` identifies banks and optional bends. Add/Remove
+   floodplain bend changes the selected side, keeping banks/endpoints fixed and
+   refreshing bank indices. Manual additions start at the leg midpoint.
+8. Save draft re-resolves upstream evidence and `study_cross_section_store()`
+   publishes an immutable schema-5 / method-v6 GeoPackage revision with PENDING protection,
+   exact input/output hashes, and RDS/JSON indexes. Reopening restores controls
+   and corrections only for matching inputs and method. Old loess drafts remain
+   prior evidence and are not reused as polygon-centerline output.
+   Changing controls can also reuse a saved draft for that exact settings set;
+   readers verify the same lineage/output hashes before bypassing computation.
+
+Raw input changes clear candidates before the 400 ms debounce expires. Workers
+receive file paths and serializable inputs, validate their generation key, stop
+before session cleanup and do not transfer raster external pointers. A failed
+layout preserves valid inundation review. The analyst preview uses a fresh R
+process and the isolated development backend library.
 
 ## Data objects and storage
 
-| Object | Input or output | Representation and owner |
-| --- | --- | --- |
-| Flowline and Flowline Points | Saved Reach geometry and sampled elevations for the selected Event | Existing local GeoPackage candidates, resolved by the FG Studio store; not new FGDB records |
-| Hydro DEM | Saved Stream terrain used for the selected Reach | Existing external GeoTIFF owned by the local Hydro revision |
-| REM and display raster | Temporary analytical and map-display surfaces | Session-owned temporary GeoTIFFs; removed at session end |
-| Inundation footprints | Original and hole-filled channel/floodplain extents | Transient `sf` results; no saved layer or governed identity |
+| Object | Input/output | Representation and ownership |
+|---|---|---|
+| Flowline, Flowline Points, Hydro DEM | Exact saved Event/Reach inputs | Existing GeoPackage candidates and shared Stream GeoTIFF; resolved through the app store |
+| Analytical/display REM | Persistent local preparation | Study-local cross-section-preparation/<input-recipe-hash>/rem.tif and display.tif; preparation.json/RDS retain source and output hashes; prepared by cross_section_rem_artifact, read by Cross Sections |
+| Inundation and outer footprints | Selected levels and layout evidence | sf during review; saved source/outer polygon layers with draft |
+| Three hydraulic regions | Channel, left and right floodplain parent polygons | `hydraulic_regions`, three MULTIPOLYGON rows including explicitly empty sides; `region_components` retains disconnected parts and local region_id |
+| Skeletons and raw/smoothed centerlines | Independent polygon geometry and direction evidence | `centerline_skeleton`, `centerline_raw`, `centerline`; each row links to its source component and region role |
+| Cut-line polylines and samples | Editable candidate geometry and local diagnostics | Standard `cross_section` and `side_support`; explicit bank indices, optional bend flags, leg status, rotation in degrees and tangent/raw-source flags; opaque local candidate IDs survive edits/reopen, Seq is mutable |
+| Ordered edges and targets | Generated layout evidence | `boundary_chains` LINESTRINGs and `boundary_anchors` POINTs retain chain identity/role/orientation and candidate/Seq/side, planned boundary positions, status and explicit feature-CRS measure units. Whole-channel bank arcs check order across floodplain components. Actual section order flags are refreshed on edits/save. |
+| Method and review evidence | Settings, source lineage, component failure/rejection and software | `layout_metadata`, `region_diagnostics`, provenance JSON and local reopening index |
 
-The future cross-section producer must follow the legacy-derived compatibility
-workflow and FGDB profile before emitting a replacement vector. FGDB's physical
-binding for cross sections is not resolved by this preview.
+The owning schema is `dev/schemas/cross-section-drafts.md`. FGDB's naming contract
+requires standard names with descriptive variables in tables. The retired loess
+support-distance column is not repurposed: new drafts retain typed missing
+values and add distinct tangent/boundary-spacing/Chaikin fields. Region-specific
+hydraulic calculations, governed identity/acceptance, additions, cross-Reach
+collision management and legacy export remain open.
 
-## Verification and open work
+## Verification
 
-The `fluvgeo` tests for `water_surface_extents()` check elevation ordering,
-CRS, disconnected areas, empty inundation, holes and nested footprints. A
-whole-app Spencer Creek R1 review exercised the map, slider update and invalid
-level feedback. Initial REM preparation is slow, and caching, broader data
-coverage and other reaches require further qualification. The experimental
-path and collision diagnostic remains separate from the app and is not a
-production layout method. See the local feature record for its findings.
+Sibling `test_cross_section_regions.R` and `test_cross_section_layout.R` cover
+geometry, area/nonoverlap, side labels, containment, artifacts and cut lines.
+`test-cross-section-review.R` and `test-cross-section-store.R` cover interaction,
+invalidation, identity, metadata and GeoPackage reopening. Scientific acceptance
+requires review of actual polygons and centerlines, especially narrow/disconnected
+components, branching routes and end caps. The legacy toolbox Centerline
+raster-thinning/PAEK code is inspected context and is not copied or invoked.

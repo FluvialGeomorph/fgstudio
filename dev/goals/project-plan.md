@@ -271,8 +271,38 @@ not itself designate a base/comparison pair or perform calibration.
 The owner selected cross-section layout as the next feature. Develop an
 interactive inundation review and reusable geometry together, following
 [Cross-section layout exploration](../features/cross-section-layout.md). The
-review is available as a session-only prototype; layout and editing are not yet
-implemented. Future layout is a candidate for analyst editing, not a claim of
+review and exploratory layout are available as a local
+prototype with three hydraulic polygons, polygon-derived raw/smoothed
+centerlines, vertex correction, deletion, resequencing and immutable local
+draft save/reopen. Drafts use the standard `cross_section` table with explicit
+layout metadata. Governed publication, additions and legacy export remain open.
+Owner visual review accepts the three polygon regions, centerlines and smoothing
+as the current default. The active refinement preserves those artifacts, matches
+direction evidence inside the corresponding polygon, constructs full-coverage
+leg alternatives and reduces overlaps while retaining residual diagnostics.
+Deconfliction is the owner's highest-value capability. Prioritize intelligent
+automatic defaults with minimum input; further browser editing is lower priority.
+Default REM levels are 103 ft channel and 109 ft floodplain. Straight floodplain
+legs remain the default, with additional vertices explicitly unchecked. When
+enabled, polygon-contained routing may add multiple vertices anywhere within the
+corresponding floodplain, without a centerline-only restriction. Preserve section
+rank at channel banks and outer floodplain boundaries, then route to fixed
+ordered targets without intersections. Channel cuts remain perpendicular to
+their estimated flow direction; remove width minimization and conflict-driven
+rotation. Explicit bank indices preserve channel identity in polylines and
+schema-5 immutable drafts. Subdivision centerlines (informal quartile guides)
+remain a proposed adaptive extension for wide/ambiguous regions; channel bends
+would need an explicit geometry contract.
+Number sections on the map by Seq for troubleshooting. Precompute and persist
+analytical/display REM rasters from saved Flowline Points for reuse across review.
+The owner recognizes channel-only sections as legitimate: absent LOB/ROB must
+not require fabricated overbank geometry or be an error by itself. The next
+geometry-contract refinement should permit two-vertex channel-only cutlines
+and one-sided overbanks, preserving bank/endpoint roles explicitly. Deconflict
+channel cuts with perpendicularity as the primary preference, allowing reviewed
+angular flexibility rather than restoring width minimization. Distinguish no
+mapped overbank from truncated/uncertain coverage; neither should crash layout.
+Layout is a candidate for analyst editing, not a claim of
 HEC-RAS compliance. Preserve the legacy-derived output contract and reconcile confirmed
 storage and interoperability findings with FGDB.
 

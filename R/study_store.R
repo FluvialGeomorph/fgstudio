@@ -545,5 +545,6 @@ local_study_store <- function(data_dir) {
     rename_feature = rename_feature,preview_reach_split=preview_reach_split,split_reach=split_reach),
     study_dem_store(context_path,acquisition_groups,survey_collections),
     study_transform_store(transform_request,context_path),hydro,network,flowline,
-    flowline_points)
+    flowline_points,study_cross_section_store(context_path,function(key,event)
+      acquisition_groups(key)$groups[[event]]$path))
 }

@@ -87,5 +87,8 @@ demonstrated by the grounded workflow.
 
 The initial concrete contract is
 `../../../FGDB/dev/schemas/legacy-derived-feature-compatibility.md`. It currently
-covers `flowline` and `flowline_points`; extend it before implementing another
-legacy-derived feature family.
+covers `flowline`, `flowline_points` and inspected cross-section layout-stage
+evidence. FGDB's `cross-section-feature-contract.md` records the owner-directed
+standard `cross_section` name and table metadata; parameterized legacy names
+remain an import/export profile. Preserve established fields while applying
+that explicit naming migration.
