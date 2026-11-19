@@ -1,3 +1,45 @@
+test_that("optional overbanks round-trip mixed two, three and four vertex cross sections", {
+  directory <- withr::local_tempdir()
+  study <- file.path(directory,"study.gpkg");file.create(study)
+  event <- file.path(directory,"event.gpkg");file.create(event)
+  writeLines("points",file.path(directory,"points.gpkg"))
+  context <- list(key="study",path=study,group_id="event",group_path=event)
+  points <- list(path=directory,files=list(geopackage="points.gpkg"),inputs=list(hydro="sha"))
+  store <- study_cross_section_store(function(key)study,function(key,event)context$group_path)
+  f <- cross_section_review_fixture()
+  line <- sf::st_sf(ReachName="R1",geometry=sf::st_sfc(sf::st_linestring(rbind(c(0,0),c(200,0))),crs=26915))
+  fp <- sf::st_sf(geometry=sf::st_sfc(sf::st_polygon(list(rbind(
+    c(0,-5),c(40,-5),c(40,-30),c(200,-30),c(200,30),c(80,30),c(80,5),c(0,5),c(0,-5)))),crs=26915))
+  z <- fluvgeo::cross_section_layout(line,f$footprints$channel_outer,fp)
+  settings <- list(channel=103,floodplain=109,spacing_m=20,tangent_distance_m=20,
+    centerline_spacing_m=2,smoothing_refinements=2L,overbank_angle_limit_deg=30,allow_overbank_bends=TRUE)
+  saved <- store$cross_section_publish(context,points,"r1",settings,z,
+    list(channel_outer=f$footprints$channel_outer,floodplain_outer=fp),store$cross_section_inputs(context,points,"r1"))
+  reopened <- store$cross_section_reopen(store$cross_section_read(context,points,"r1",settings))
+  expect_setequal(vapply(sf::st_geometry(reopened$sections),nrow,integer(1)),2:4)
+  expect_identical(reopened$sections$left_bank_vertex,z$sections$left_bank_vertex)
+  expect_identical(reopened$sections$right_bank_vertex,z$sections$right_bank_vertex)
+  expect_identical(reopened$sections$candidate_id,z$sections$candidate_id)
+  expect_equal(sf::st_coordinates(reopened$sections),sf::st_coordinates(z$sections),ignore_attr=TRUE)
+  expect_true(fluvgeo::check_cross_section_layout(reopened$sections,"candidate_table"))
+  expect_true(all(reopened$sections$layout_channel_angle_limit_deg==30))
+  expect_true(all(reopened$sections$layout_channel_rotation_review_deg==15))
+  expect_identical(reopened$sections$channel_deconfliction_status,z$sections$channel_deconfliction_status)
+  expect_identical(saved$schema,"FGSTUDIO_CROSS_SECTION_DRAFT_9")
+  expect_true(all(c("channel_outer_raw","channel_reference_centerline","channel_branch_review") %in%
+    sf::st_layers(file.path(saved$path,"cross-sections.gpkg"))$name))
+  expect_identical(sf::st_as_binary(sf::st_geometry(reopened$source_channel)),
+    sf::st_as_binary(sf::st_geometry(z$source_channel)))
+  expect_identical(sf::st_as_binary(sf::st_geometry(reopened$channel_reference)),
+    sf::st_as_binary(sf::st_geometry(z$channel_reference)))
+  expect_identical(reopened$sections$left_geodesic_direction,z$sections$left_geodesic_direction)
+  expect_identical(reopened$sections$right_group_routed,z$sections$right_group_routed)
+  expect_identical(reopened$channel_branches$attachment_depth,z$channel_branches$attachment_depth)
+  expect_identical(reopened$channel_branches$cleanup_status,z$channel_branches$cleanup_status)
+  expect_identical(reopened$region_diagnostics$route_fragment_fallback,z$region_diagnostics$route_fragment_fallback)
+  expect_identical(reopened$region_diagnostics$route_span_fraction,z$region_diagnostics$route_span_fraction)
+})
+
 test_that("standard cross_section drafts round-trip metadata and retain corrected identity", {
   directory <- withr::local_tempdir()
   study <- file.path(directory,"study.gpkg");file.create(study)
@@ -71,6 +113,11 @@ test_that("standard cross_section drafts round-trip metadata and retain correcte
   dir.create(previous_directory)
   previous <- saved;previous$inputs$method <- "polygon-centerline-v2"
   saveRDS(previous,file.path(previous_directory,"result.rds"))
+  expect_false(identical(store$cross_section_read(context,points,"r1")$path,previous_directory))
+  expect_true(file.exists(file.path(previous_directory,"result.rds")))
+  previous$inputs$method <- "polygon-centerline-v10"
+  saveRDS(previous,file.path(previous_directory,"result.rds"))
+  expect_identical(inputs$method,"polygon-centerline-v11")
   expect_false(identical(store$cross_section_read(context,points,"r1")$path,previous_directory))
   expect_true(file.exists(file.path(previous_directory,"result.rds")))
   different <- settings;different$channel <- 104

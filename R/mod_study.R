@@ -76,13 +76,14 @@ mod_study_server <- function(id, store) {
     flowline_review_server("flowline",current,event_settings$context,store,
       active=function() identical(input$study_task,"Flowline"),events=event_settings,
       revision=hydro_revision,on_changed=function() advance(flowline_revision))
-    flowline_points_review_server("flowline_points",current,event_settings$context,
+    flowline_points <- flowline_points_review_server("flowline_points",current,event_settings$context,
       store,active=function() identical(input$study_task,"Flowline Points"),
       events=event_settings,revision=shiny::reactive(paste(hydro_revision(),
         flowline_revision(),sep=":")))
     cross_section_review_server("cross_sections",event_settings$context,store,
       events=event_settings,active=function() identical(input$study_task,"Cross Sections"),
-      revision=shiny::reactive(paste(hydro_revision(),flowline_revision(),sep=":")))
+      revision=shiny::reactive(paste(hydro_revision(),flowline_revision(),sep=":")),
+      upstream_inputs=flowline_points$loaded_inputs)
     shiny::observeEvent(input$continue_event,
       shiny::updateTabsetPanel(session,"study_task",selected="Define a Survey Event"),ignoreInit=TRUE)
     analysis_pending <- function() collections$has_pending() || event_settings$has_pending() ||

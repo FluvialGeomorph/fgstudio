@@ -1,3 +1,30 @@
+test_that("channel-only endpoint editing cannot invent a floodplain bend", {
+  f <- cross_section_review_fixture()
+  line <- sf::st_sf(ReachName="R1",geometry=sf::st_sfc(sf::st_linestring(rbind(c(0,0),c(200,0))),crs=26915))
+  f$footprints$floodplain_outer <- f$footprints$channel_outer
+  f$layout <- fluvgeo::cross_section_layout(line,f$footprints$channel_outer,f$footprints$floodplain_outer)
+  expect_identical(cross_section_vertex_labels(f$layout$sections[1,]),
+    c("Left bank / cross section endpoint","Right bank / cross section endpoint"))
+  shiny::testServer(cross_section_review_server,args=list(context=function()NULL,
+    store=list(),events=NULL,active=function()FALSE,revision=function()0L),{
+    session$flushReact();extents(f$footprints);layout(f$layout);session$flushReact()
+    before <- sf::st_as_binary(sf::st_geometry(layout()$sections))
+    session$setInputs(section="sample-3",vertex="1",add_bend=1)
+    expect_match(status(),"no constructed overbank")
+    expect_identical(sf::st_as_binary(sf::st_geometry(layout()$sections)),before)
+    session$setInputs(vertex="2",add_bend=2)
+    expect_match(status(),"no constructed overbank")
+    session$setInputs(vertex="1",move=1)
+    click <- sf::st_coordinates(sf::st_transform(sf::st_sfc(sf::st_point(c(51,-5)),crs=26915),4326))[1,]
+    session$setInputs(map_click=list(lng=click[1],lat=click[2]))
+    expect_identical(layout()$sections$left_leg_status[3],"no_floodplain")
+    expect_equal(nrow(sf::st_coordinates(layout()$sections[3,])),2)
+    expect_true(layout()$sections$channel_rotated[3])
+    expect_false(layout()$sections$channel_skewed[3])
+    expect_true(fluvgeo::check_cross_section_layout(layout()$sections))
+  })
+})
+
 test_that("manual vertex moves retain session identity and refresh coverage and sequence", {
   f <- cross_section_review_fixture()
   shiny::testServer(cross_section_review_server,args=list(context=function()NULL,

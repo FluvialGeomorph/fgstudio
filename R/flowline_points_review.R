@@ -437,6 +437,7 @@ flowline_points_review_server <- function(id,current,context,store,
       session_closed <<- TRUE
       stop_rem();if(!is.null(view_worker))view_worker$kill();unlink(cache,recursive=TRUE)
     })
-    list(review=review,points=points,selected=selected,poll=poll)
+    list(review=review,points=points,selected=selected,poll=poll,
+      loaded_inputs=shiny::reactive(list(value=review(),key=loaded_key)))
   })
 }

@@ -88,29 +88,53 @@ directories with `cross-sections.gpkg`, `result.rds` and `provenance.json`.
 lineage, rejects stale publication, hides PENDING writes and verifies output
 hashes on reopening. The standard feature table is `cross_section`; explicit
 layout/REM metadata columns and the `layout_metadata` table carry descriptive
-variables. Schema 2 adds three multipart hydraulic regions, disconnected
+variables. Drafts retain three multipart hydraulic regions, disconnected
 components, polygon skeletons, raw/smoothed centerlines and component diagnostics
-to the footprint/support evidence. Old loess drafts remain prior revisions and
-do not match the polygon-centerline method fingerprint. Tangent distance,
+with footprint/support evidence. Tangent distance,
 boundary spacing and Chaikin passes are distinct metadata; the retired support
 distance column is typed missing rather than repurposed.
-Method v6 / draft schema 5 retains perpendicular channel cuts, ordered boundary
+Method v10 / draft schema 9 retains perpendicular-first channel segments, ordered boundary
 targets and fixed-target polygon routing, leg status, rotation and diagnostics.
-Four or more vertices use explicit integer bank indices, bend counts and routed flags; manual
+cross_section_channel_deconflict() supplies joint angular repairs for channel-only
+contact windows. cross_section retains generated outcome status, actual rotation,
+typed degree-valued search/review bounds and rotation/limit review flags. Bounded
+search failure keeps original flagged geometry. Banks freeze before overbank routing.
+Endpoint bank indices permit channel-only and one-sided cross sections without
+duplicate edges; section_parts describes geometry separately from leg status
+and coverage. Two or more vertices use explicit integer bank indices, bend
+counts and routed flags; manual
 addition/removal retains candidate identity. boundary_chains LINESTRINGs and
 boundary_anchors POINTs add directed shared edges/whole-channel bank arcs and
 generated bank/planned outer targets, linked to candidate IDs/Seq with explicit
 feature-CRS chainage units. Actual order and channel skew refresh on edit/save;
 generated targets remain source planning evidence. Anchors follow candidate ID
 assignment, deletion and resequencing without creating governed identities.
-Older drafts remain on disk but do not match the new method fingerprint.
+Incompatible drafts do not match the current method fingerprint; explicit cleanup
+may retire obsolete automatic drafts while preserving accepted/edited evidence.
 REM preparation is a separate persistent local asset under
 cross-section-preparation/<input-recipe-hash>, with external analytical/display
 GeoTIFFs and preparation JSON/RDS retaining exact lineage and output hashes.
 Flowline Points queues preparation; Cross Sections reuses it or builds a missing
 Reach once. Water levels, bend permission and layout tuning do not invalidate it.
+Flowline Points can share its already-validated loaded inputs with Cross Sections
+within the same session and exact context/Event/revision key. This is reactive
+session state, not a new stored entity. Deferred opening paints progress before
+cold validation; the background layout worker reports three named phases and
+returns elapsed stage timings.
 The local draft profile is `dev/schemas/cross-section-drafts.md`. Opaque local
 candidate keys survive corrections and resequencing but do not establish
 governed cross-section identity or acceptance. FGDB's cross-section naming
 contract owns the naming rule; enterprise normalization and legacy export
 remain distinct unfinished bindings.
+
+Channel preparation retains channel_outer_raw, channel_reference_centerline and
+channel_branch_review beside the prepared channel_outer layer. Cleanup uses a
+native depth-screened, single-attachment envelope method; attachment_depth and
+cleanup_status add review evidence without changing chord depth/advance units.
+The one-pass removal guards validity, component count and the reference route.
+The raw polygon channel centerline supplies geometry and local width. Removed
+lobes remain within the LOB/ROB partition of the total floodplain. Branch dimensions
+declare feature-CRS measure_units. Logical per-side geodesic_direction/group_routed
+fields and side_support direction_status retain generated method evidence; run
+parameters carry lobe, clearance and group-budget policies. These additions do
+not create governed channel/branch identities or accepted hydraulic flow paths.

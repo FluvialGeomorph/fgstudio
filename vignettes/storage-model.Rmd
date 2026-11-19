@@ -230,18 +230,29 @@ reuse these when present and otherwise prepare only temporary viewport rasters;
 opening a DEM does not require building a full cache. These caches accelerate
 inspection and are not analytical terrain editions or portable FGDB products.
 
-The in-progress Cross Sections inundation review reads the selected Survey
+The accepted Cross Sections layout MVP reads the selected Survey
 Event's saved Reach Flowline, Flowline Points and Stream Hydro DEM. It derives
 precomputed analytical/display REM GeoTIFFs and transient channel/floodplain
 footprints. `cross_section_rem_artifact()` persists the rasters under Study-local
 cross-section-preparation/<input-recipe-hash> with source/output hashes and
 recipe metadata; Flowline Points queues Reaches and Cross Sections reuses those
-files. Regional geometry caches remain session-owned. `cross_section_layout()` adds candidate polylines,
+files. Matching already-validated Flowline Points inputs can be shared within the
+same session/context/revision; this creates no new persistent entity. A visible
+opening indicator precedes cold input loading, and background layout reports
+inundation, centerline and deconfliction phases. Regional geometry caches remain
+session-owned. `cross_section_layout()` adds candidate polylines,
 three polygon regions, independent polygon centerlines and direction support.
-Method v6 / draft schema 5 retains perpendicular channel cuts and ordered,
+Method v10 / draft schema 9 retains perpendicular-first channel segments and ordered,
 fixed-target floodplain routing, with explicit bank indices, multiple-bend flags,
 leg status, rotation bounds/angles and separate short-tangent/raw-route flags.
-The starting levels are 103/109 ft. Extra vertices are unchecked by default;
+Channel-only contact windows use bounded joint angular deconfliction before
+banks freeze for overbank routing. Generated deconfliction status, actual
+rotation and separate search/review bounds in degree-valued columns retain
+policy and diagnostics in cross_section. Failed/exhausted windows remain flagged.
+Endpoint bank indices permit two-vertex channel-only and one-sided cross sections;
+absent/failed legs contribute no duplicate coordinates. section_parts describes
+constructed geometry independently of leg status and coverage warnings.
+The starting levels are 103/109 ft. Extra vertices are checked by default;
 when enabled, polygon routing may place several away from the centerline.
 Permanent Seq labels support troubleshooting. Sides with no mapped floodplain width are distinct from incomplete legs. Manual
 bend addition/removal preserves candidate identity and banks/endpoints.
@@ -263,3 +274,16 @@ FGDB cross-section naming contract. Local draft keys and revisions do not create
 governed cross-section, Survey Event or Dataset Edition identities. Original
 inundation holes remain in source inundation layers when available; saved outer footprints document
 the geometry used for layout. Legacy export and enterprise binding remain open.
+
+Mainstem preparation retains `channel_outer_raw`, `channel_reference_centerline`
+and `channel_branch_review` beside prepared `channel_outer`. Cleanup uses
+depth-screened envelope pruning in one removal overlay.
+`attachment_depth` and `cleanup_status` supplement the established branch
+measurements; the mainstem route and source component count are protected. The polygon channel
+centerline supplies local geometry/width for lobe removal; the saved Flowline
+selects the longitudinal route. Removed lobes remain in the floodplain partition.
+Per-side `geodesic_direction` and `group_routed` fields retain generated association
+and group-selection evidence. Group repair can reconsider earlier reservations
+while preserving channel banks and ordered targets. Exact policies and limits
+remain in run metadata; these are local review artifacts rather than governed
+FGDB identities or hydraulic acceptance.

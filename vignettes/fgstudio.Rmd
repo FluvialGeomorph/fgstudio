@@ -14,7 +14,7 @@ and profiles. **FG Studio is the implementation-first browser workspace used to
 turn the open-source replacement workflow into a coherent, reviewable study.**
 It currently carries analysts from study definition through terrain-derived
 Flowlines and Flowline Points, with an initial interactive inundation review for
-cross-section development. Its next increments continue toward Level 1 analysis
+the accepted cross-section layout MVP. Its next increments continue toward Level 1 analysis
 and scientific deliverables using the project's shared R backend.
 
 ## Why the study comes before the analysis
@@ -109,7 +109,7 @@ choices as scope and evidence develop; this is not a rigid wizard.
 | Extract a synthetic stream network | Contributing area, explicit channel threshold and a saved network linked to its DEM | Implemented locally with immutable Hydro-revision binding |
 | Create Reach Flowlines | Automatic reference-constrained mainstem selection, selectable smoothing, deterministic Reach division and local save/reopen | Implemented locally; governed FGDB publication remains separate |
 | Create Flowline Points | Terrain-sampled point profile across all connected Study Area Streams and ordered Reaches, referenced to one outlet with exact legacy fields and explicit units | Implemented locally for current/base events at one-meter default spacing; comparison-event calibration and governed FGDB publication remain separate |
-| Lay out and correct cross-section drafts | Select channel/floodplain REM elevations, review four-vertex candidates, correct vertices, delete/resequence and save/reopen drafts | Exploratory geometry and immutable local drafts with standard cross_section table and explicit metadata; scientific acceptance, additions, legacy export and governed publication remain open |
+| Lay out and review cross-section drafts | Select any saved Stream/Reach, review three polygon centerlines and automatically deconflicted channel-only, one-sided or full sections; optionally correct and save/reopen | Owner-accepted layout MVP; immutable local drafts use standard cross_section and explicit metadata; hydraulic acceptance, additions, legacy export and governed publication remain open |
 | Analyze and report | Reach-level geometry evidence and a reviewable explanation of the study and its terrain | Shared backend capabilities and reporting designs inform the destination; app execution/report delivery remain future work |
 | Govern and share accepted content | Qualified enterprise records and relationships | Eventual FGDB integration; no Enterprise connection in this app |
 

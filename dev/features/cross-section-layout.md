@@ -1,146 +1,227 @@
-# Cross-section deconfliction, regions and layout
+# Cross-section layout MVP
 
-Status: local prototype. The owner accepts the channel, left descending-bank
-floodplain (LOB), right descending-bank floodplain (ROB), their polygon-derived
-centerlines and default cartographic smoothing as the starting artifacts.
-Deconfliction is the high-value workflow; intelligent defaults take priority over
-further browser editing. Hydraulic acceptance, calculations, governed publication,
-whole-section additions and legacy export remain open.
+Status: owner-accepted MVP requirements and method-v10 channel polygon pruning.
+Method v11 extends bank-order repair and joint endpoint/bend routing while
+retaining that pruning baseline. The accepted result establishes the feature
+requirements below. It is a per-Reach geometric workflow; hydraulic calculations,
+model acceptance, enterprise publication and legacy-format export have their own
+contracts.
 
-## Analyst outcome
+## Final requirements and intelligent defaults
 
-Cross Sections reads the selected Event's saved Flowline, Flowline Points and
-Hydro DEM. Midwest REM starting levels are 103/109 ft, relative to 100. Channel
-must be below floodplain. Analytical/display REMs are precomputed and reused.
-The analyst reviews three polygons, independent raw/smoothed centerlines,
-numbered candidates, ordered boundary targets and remaining geometry warnings.
-Drafts use standard cross_section naming with explicit table metadata.
+- Represent channel, left descending-bank floodplain (LOB) and right
+  descending-bank floodplain (ROB) as separate review polygons, each with an
+  independently derived centerline. Preserve disconnected components and source
+  inundation evidence. Use maintained Voronoi skeleton/route and cartographic
+  smoothing facilities rather than the copied legacy toolbox Centerline code.
+- Start at channel REM 103 ft and floodplain REM 109 ft, relative to 100. Keep
+  channel below floodplain. Precompute and persist analytical/display REMs for
+  reuse across sessions and layout settings.
+- Use 20 m cross-section spacing, beginning half a spacing upstream of the Reach
+  outlet. Number sections by mutable integer Seq increasing upstream. Use 20 m
+  centerline tangent distance, 2 m polygon-boundary spacing and two Chaikin
+  smoothing passes. Tangent distance measures direction; the latter two settings
+  control geometric centerline construction and smoothing.
+- Prefer channel XS segments perpendicular to local channel-centerline direction.
+  Preserve their sampled stations and complete connected channel crossings.
+  Width/length minimization is excluded. Available Flowline direction is an
+  explicitly flagged fallback when polygon-centerline direction is unavailable.
+- Deconflict automatically with minimal analyst input. Bank and outer-endpoint
+  rank must follow section station order. Cross sections must not intersect or
+  touch one another. Preserve geometry/coverage evidence when a complete valid
+  result cannot be constructed; never shorten a segment to conceal a conflict.
+- Allow additional floodplain vertices by default. Prefer feasible straight
+  segments, adding multiple bends when needed anywhere inside their component.
+  There is no one-bend cap or centerline-only placement restriction. Maintain
+  ordered outer targets during joint planning; final routes must reach their
+  assigned targets and cannot slide an endpoint past a neighbor.
+- Treat channel-only and either one-sided overbank as legitimate. A channel-only
+  cross section has two bank vertices. A straight one-sided cross section has
+  three. Do not fabricate a floodplain or duplicate a bank coordinate to satisfy
+  a vertex minimum. Distinguish absent mapped overbanks from failed construction
+  or incomplete terrain evidence.
+- Make polygons, independent raw/smoothed centerlines, section numbers, ordering
+  boundaries, planned outer targets and current geometry diagnostics reviewable.
+  Use channel XS segment, LOB XS segment and ROB XS segment. Reserve cutline for
+  Hydro Modify drawings. Existing manual corrections are optional; further
+  in-browser editing is lower priority than automatic defaults.
+- Support every saved Stream and Reach with matching Flowline Points and Hydro
+  inputs. Retain valid Reach selection while inputs reopen. Present loading and
+  computation feedback above the map before potentially slow work begins.
+- Save/reopen immutable local drafts using the standard cross_section table and
+  explicit parameter/provenance metadata. Preserve established ReachName, Seq
+  and endpoint names, types and coordinate units. Keep local candidate identity
+  distinct from governed FGDB identity. Save-time validation rechecks lineage;
+  draft persistence does not confer hydraulic acceptance.
 
-Additional floodplain vertices are unchecked by default. When enabled, multiple
-vertices may occur anywhere within their own floodplain component; there is no
-one-bend cap or centerline-only restriction. Saving a draft retains geometry
-and exact lineage without accepting its hydraulic suitability.
-
-## Regions and direction evidence
+## Current geometric method
 
 cross_section_regions() partitions the hole-filled outer footprint into three
-multipart regions and disconnected components, without joining gaps. The saved
-Flowline runs downstream to upstream; its right side is LOB. Voronoi skeletons
-and longitudinal routes use maintained centerline facilities. Douglas-Peucker
-simplification and smoothr Chaikin passes propose cartographic smoothing; paths
-leaving their own polygon or becoming nonsimple retain the raw route and a flag.
-Default boundary spacing is 2 m and smoothing uses two Chaikin passes. The copied
-legacy toolbox Centerline raster-thinning implementation is not used.
+multipart parent regions and disconnected components without joining gaps.
+Voronoi skeletons and longitudinal routes use maintained centerline facilities.
+Douglas-Peucker simplification and smoothr Chaikin passes propose smoothing;
+paths leaving their polygon or becoming nonsimple retain the raw route and a
+flag. Visibility-aware direction matching remains within its own component.
+Short tangent windows, raw paths and unavailable direction are distinct evidence.
+These centerlines are geometric direction proxies, not measured hydraulic flow
+paths. See [HEC cross-section geometry guidance](https://www.hec.usace.army.mil/confluence/rasdocs/ras1dtechref/6.3/basic-data-requirements/geometric-data/cross-section-geometry).
 
-Tangent distance (20 m initially) measures a local chord along a polygon
-centerline. It is separate from cartographic smoothing. Visibility-adjusted
-floodplain matching prevents a connector from jumping across a channel
-indentation. Short tangent windows and raw-source use are distinct from missing
-direction evidence. Centerlines remain geometric proxies, consistent with the
-owner's proposed three-region model, rather than measured flow paths. See
-[HEC guidance](https://www.hec.usace.army.mil/confluence/rasdocs/ras1dtechref/6.3/basic-data-requirements/geometric-data/cross-section-geometry).
+cross_section_layout() constructs full channel crossings through the sampled
+stations. Contacting or bank-order-conflicted channel sections, with or without
+mapped overbanks, and up to two eligible neighbors on
+either side receive joint angular search; other sections remain fixed. The
+2.5-degree grid is searched within 30 degrees by default, preferring smaller
+maximum tested departures. Strict bank rank and all-pair nonintersection are
+hard constraints. Cyclic boundary chainage prunes finite constraint search;
+actual directed bank arcs and GEOS contacts independently audit the result.
+Windows are bounded to 64 sections and 50,000 nodes. Failed, ambiguous or
+exhausted windows retain original flagged geometry. Larger-angle review begins
+above 15 degrees; that threshold and the search bound are local review policy,
+not universal hydraulic limits. The owner accepted the baseline's remaining
+angular-review candidates for this MVP.
 
-## Perpendicular channel cuts
+cross_section_order.R extracts directed shared bank/outer edges and whole-channel
+bank arcs. Proposed outer positions are assigned in Seq order and, when needed,
+refined within ordered neighbor intervals before freezing. Ambiguous/closed
+chains and disconnected components retain explicit diagnostics.
 
-Sections begin half a spacing upstream of the Reach outlet and increase in
-mutable Seq order. These are Reach-local layout distances, not calibrated river
-measures. Each channel cut follows the normal to the local channel-centerline
-chord, using the saved Flowline tangent with an explicit warning when channel
-centerline direction is unavailable. It contains its sampled Flowline station
-and uses the connected channel interval containing that station.
+cross_section_ordered_routes() reserves feasible straight overbank segments
+before routing missing ones. Accepted segments and other channel crossings are
+barriers. GEOS constrained triangulation, igraph triangle-portal routing and
+visibility shortcuts supply contained routes to fixed targets. Bends require
+sf >= 1.1-2 and GEOS >= 3.10. Every constructed segment reaches its assigned
+outer target and remains in its own component. Missing routes retain a bank
+endpoint and an explicit status, independently of legitimate no_floodplain.
 
-Method polygon-centerline-v6 removes channel-width minimization and channel
-rotation for conflict reduction. Confluences may therefore produce wide cuts.
-Channel contacts remain explicit instead of being hidden by a narrower skewed
-cut. Actual departure from perpendicular is recalculated after manual edits.
-The historical channel angle_limit_deg argument remains accepted for API
-compatibility; v6 constructs zero-rotation channel cuts.
+## Review, persistence and operation
 
-## Ordered anchors and nonintersecting routes
+Orange identifies geometry or direction review; it does not alone mean a
+candidate is unusable. Review recomputes actual contacts, bank order, orientation,
+angular departure, boundary gaps and containment after edits. Generated targets
+remain planning evidence. A zero boundary gap alone does not establish coverage.
 
-The owner requires the same station rank at both channel banks and the LOB/ROB
-outer edges. cross_section_boundary_chains() intersects each participating
-floodplain component's boundary with channel and outer-floodplain boundaries,
-merges connected linework and orients open chains with the corresponding
-centerline (Flowline fallback). Chainage follows the actual shared edge, avoiding
-nearest-centerline projections that can fold in bends. Closed/ambiguous chains
-and disconnected components are not forced into a fabricated global sequence.
+The owning [draft schema](../schemas/cross-section-drafts.md) specifies versioned
+storage, typed fields, layers and readers/writers. The [FGDB contract](../../../FGDB/dev/schemas/cross-section-feature-contract.md)
+owns standard naming and records the portable draft binding. Parameters belong
+in tables rather than descriptive feature-class names. The retired compatibility
+column is documented only in the structural contract.
 
-cross_section_order_anchors() verifies bank rank and assigns the proposed outer
-positions as a sorted set to increasing Seq on each connected boundary chain.
-A bounded angular proposal search reduces contacts and angular departure before
-rank assignment. Infeasible sorted targets can then be refined inside their
-neighbors' ordered interval using containment and angle checks, before freezing.
-A small numerical separation prevents coincident targets. Channel banks remain
-fixed. Bank-order conflicts or unavailable chains remain explicit rather than
-rotating the channel. These boundary chains and planned outer targets are
-reviewable artifacts. Chainage uses the feature CRS unit, recorded in measure_units.
+Cross-section REMs are persistent local preparation assets with exact input,
+recipe and output hashes. Water levels and layout settings do not invalidate
+those rasters. Matching saved drafts reopen without recomputing geometry.
+Loading reuses already validated Flowline Points within the same context and
+revision; source changes invalidate that session reuse. New input validation,
+REM preparation and the polygon/centerline/deconfliction stages have visible
+feedback. Publication still revalidates exact upstream lineage.
 
-cross_section_ordered_routes() constructs legs to those fixed targets in station
-order. Contained straight connections within the floodplain rotation bound are
-preferred. Previously accepted legs and all other channel cuts are barriers.
-Feasible straight legs are reserved before missing legs receive detours, so an
-early added route does not unnecessarily force later straight legs to bend.
-If extra vertices are enabled, constrained GEOS triangulation, igraph paths
-through triangle portals and visibility shortcuts provide polygon-contained
-alternatives. A routed endpoint cannot slide along the boundary to evade a
-neighbor. Every accepted leg reaches its assigned target and stays in its own
-component; legs are never shortened to hide contacts. Multiple-segment routes
-have no single rotation angle, so that field is missing. A failed complete route
-leaves a flagged bank-only leg and retains its planned target for review.
+## Verification and scope boundaries
 
-This is a deterministic geometric method, not a universal feasibility guarantee.
-Order is a structural constraint alongside all-pair contact, self-crossing,
-orientation, boundary-gap and containment checks. Ambiguous branch directions,
-end caps, insufficient boundary extent and channel contacts require review.
+Controlled package tests cover region containment, descending-bank labels,
+channel station/width preservation, joint nonintersection/bank ordering,
+infeasible-search fallback, fixed-target multi-bend routing, legitimate absent
+and one-sided overbanks, explicit failure/coverage statuses, geometry editing,
+legacy fields and mixed-size GeoPackage round trips. Real Study results are
+opt-in qualification evidence, not automatic fixtures. The performance audit
+records measured stage costs and representative Reach checks in
+[cross-section performance](../performance/cross-sections.md).
 
-## Review and persistence
+Processing is per Reach. Cross-Reach deconfliction, unresolved bounded channel
+searches, ambiguous branch directions, further subdivision guides,
+hydraulic calculations, governed publication and legacy export remain separate
+work. The existing REM corridor may truncate terrain evidence; data coverage is
+always separate from geometric validity.
 
-Candidates and permanent Seq labels appear by default. Advanced tuning and
-existing manual correction controls are collapsed. Ordering boundaries and
-Ordered boundary targets are optional Layers; the latter show generated planned
-positions, including targets without a completed leg. Candidate popups describe
-actual bank/outer order and departure from perpendicular. Editing with boundary
-chains supplied refreshes actual order diagnostics without moving geometry.
-Generated planning evidence remains distinct from later manual edits.
+## Accepted channel polygon pruning
 
-Polylines have at least four vertices, with adjacent left_bank_vertex and
-right_bank_vertex identifying the channel. Floodplain bend counts, routed flags,
-normal-direction components, anchor construction status and actual order flags
-are additive diagnostics. Manual editing retains candidate IDs; deletion
-resequences Seq. Extra vertices do not change the legacy endpoint fields' names,
-types or coordinate units.
+The owner accepts the method-v10 channel polygon pruning approach and its
+defaults after reviewing large, hooked, stubby and narrow arms on R2. This is
+the channel-preparation baseline for cross-section development, not a pending
+proposal. Channel preparation uses the **channel polygon's own raw medial
+centerline** as its geometric reference. The saved Flowline identifies the
+longitudinal skeleton route; it does not supply the cleanup envelope or local
+width. Boundary-distance discs along the channel centerline, padded by 0.5 m,
+identify off-route lobes. A native overlay against the envelope expanded by 1 m
+screens out shallow raster-edge chips before per-lobe evaluation. Eligible lobes
+have one connected attachment curve, at least 1 m attachment depth, and depth
+at least half the attachment endpoint chord width. Tangent advance is retained
+as a diagnostic, not a rejection rule for hooked/parallel arms. A numerical band
+of boundary spacing times 1e-7 stabilizes attachment extraction. Eligible lobes
+are removed in one overlay along the envelope; no repeated whole-channel splits
+or recursive pruning occur. The reference route, component count and valid
+geometry are protected; all other original banks remain unchanged. Failed
+topology guards retain the source channel with explicit review status.
+Padding/depth defaults are independent of boundary sampling and converted from
+metres to feature-CRS units. They are geometric review defaults, not universal
+hydraulic or tributary classification rules. Raw channel, depth-screened
+candidate/removed lobes and reference centerline are
+retained for review. Removed areas remain in the total floodplain partition.
 
-Draft/input schema 5 and method v6 save cross_section, boundary_chains,
-boundary_anchors, hydraulic_regions, region_components, centerline/raw/skeleton,
-source footprints, side_support and layout_metadata. Prior drafts remain on disk
-and do not match v6 fingerprints. The retired loess support field stays typed
-missing; tangent and cartographic parameters retain separate fields. Local IDs
-do not settle governed FGDB identity. See [draft storage](../schemas/cross-section-drafts.md),
-article 18 and the [FGDB contract](../../../FGDB/dev/schemas/cross-section-feature-contract.md).
+Keep this accepted pruning recipe stable while addressing remaining stationing,
+bank-order and floodplain-routing issues. A routing failure is not evidence
+that pruning should be weakened or its removed areas excluded from overbanks.
 
-cross_section_rem_artifact() publishes persistent analytical/display GeoTIFFs,
-limits and exact source/recipe/output hashes. Flowline Points queues Reaches
-sequentially while active; Cross Sections reuses these files or prepares a
-missing Reach. Water levels and layout controls do not invalidate the REM.
-A matching saved draft reopens without recalculating layout. Changing controls
-can also reuse another saved draft for those exact settings. The inherited
-150-coordinate-unit corridor can truncate floodplain evidence (150 m in this
-project); these are local preparation assets rather than governed REM products.
+## Current centerline and bend routing
 
-## Verification and further development
+If global skeleton anchors fall in disconnected fragments and route extraction
+fails, centerline construction retries within the connected skeleton component
+with the greatest longitudinal span. Boundary clearance and coordinates break
+ties. Existing successful routes remain unchanged, and fragments are never
+joined. Region diagnostics record route_fragment_fallback and the selected
+route_span_fraction. This prevents a tiny detached endpoint fragment from
+discarding the main route of an otherwise usable polygon.
 
-Focused tests cover partition/containment, descending-bank labeling, explicit
-missing evidence, endpoint rank repair, fixed-target routing, multi-bend routes,
-perpendicularity at a synthetic confluence with a shorter skewed alternative,
-manual order diagnostics, exact field contracts and GeoPackage reopening.
-Saved R1 sections 19/30 and LOB 35-39 are opt-in real-data review cases. Current
-measurements and preview state belong in the resumable checkpoint.
+When ordered targets put a straight leg beyond its angular bound, optional
+routing can first try one genuine bend at half the endpoint distance, with its
+initial direction clamped to the angular bound. Both endpoints stay fixed;
+containment and all-pair nonintersection still apply. This single proposal is
+only used when needed, not a default bend on every leg, and does not relax the
+straight-leg bound. Existing polygon/group routing remains the fallback.
 
-The owner's proposed subdivision centerlines (informal quartile guides) are a
-potential adaptive extension for wide/ambiguous channel, LOB or ROB polygons.
-Centerlining two halves does not guarantee equal quarter widths, areas or flow.
-Such guides could supply deterministic extra waypoints/directions while ordered
-anchors and nonintersection remain constraints. This proposal is not implemented
-or a new default; channel bend geometry would require a separate explicit contract.
-Cross-Reach handling, broad data/performance qualification and legacy export remain open.
+When a bank cannot see its floodplain centerline directly, a contained geodesic
+association supplies explicitly inferred direction evidence. Contained paths can
+also seed full outer-boundary targets. Group repair releases earlier reservations
+in difficult neighborhoods, reuses a constrained mesh, and tries four priorities.
+It first maximizes complete routes, then reduces crowding of their interiors.
+Clearance preference is derived from neighboring bank spacing, not a channel-width
+or section-length objective. Banks and ordered targets stay fixed. Search is
+bounded and unresolved cases remain flagged. The [R2 investigation](../performance/cross-sections.md#r2-sinuosity-investigation)
+owns qualification evidence; the accepted R1 draft remains an immutable reference.
+
+The loading cue occupies a reserved status slot. Its synchronous-work fallback
+appears only after 650 ms of continuous Shiny busy time; short worker polls do not
+replace phase text or shift the controls/map.
+
+## Whole-bend endpoint distribution and route quality
+
+The accepted pruning recipe does not resolve the remaining R2 layout issues.
+The [tight-bend audit](../performance/cross-sections.md#remaining-tight-bends-and-endpoint-distribution)
+records the original causes and current qualification. Current stations
+are sampled along the saved Flowline, while channel direction comes from the
+polygon centerline. These references can diverge in tight bends. Map numbers
+currently sit at channel-bank midpoints rather than at sampled stations.
+Changing the spacing reference requires an explicit placement decision and
+preservation of established Flowline distance metadata.
+
+Bank-order/contact repair precedes overbank construction also where mapped
+overbanks exist. After initial fixed-target routing, a whole-bend pass considers
+crowded endpoints, incomplete legs and legs with multiple bends. Overlapping
+neighborhoods form families of at most 32 sections. Bank vertices remain fixed;
+other sections are barriers. The planner jointly tests isotonic spreading,
+two relaxed allocations, an even allocation and the incumbent targets, with three
+deterministic routing priorities and one reusable mesh per component.
+Existing valid paths can guide continuous, contained deformation to the new
+targets before rebuilding routes from the mesh. Fixed graph geometry, boundary
+clearance and point/triangle associations are reused; current obstacle contacts
+are always recomputed.
+
+Useful target separation is derived from median neighboring bank spacing / 4,
+capped at 0.7 of the available boundary arc per slot. This is an adaptive
+geometric preference, not a hydraulic minimum. Completion takes precedence over
+spacing deficits, then unnecessary turns and backtracking. A replacement must
+complete the entire family and preserve every already complete leg. Target order,
+polygon containment and nonintersection remain hard constraints. If no feasible
+improvement is found, the existing family is retained. Changed target measures
+and group-selection flags are persisted with method v11; pruning artifacts and
+the schema-9 field contract are unchanged. No section-length objective is used.
+The near-term [XS 268 decision gate](../goals/project-plan.md#near-term-decision-gate-the-xs-268-issue)
+owns the deferred question of changing the linear-reference basis.

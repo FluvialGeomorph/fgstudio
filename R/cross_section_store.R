@@ -8,7 +8,7 @@ study_cross_section_store <- function(context_path,current_group_path=NULL) {
   fingerprint <- function(context,points,reach_id) {
     path <- file.path(points$path,points$files$geopackage)
     if(!file.exists(path)) stop("The saved Flowline Points input is unavailable.")
-    list(schema="FGSTUDIO_CROSS_SECTION_INPUTS_5",method="polygon-centerline-v6",study=context$key,
+    list(schema="FGSTUDIO_CROSS_SECTION_INPUTS_9",method="polygon-centerline-v11",study=context$key,
       context_file=basename(context$path),context_sha256=hash(context$path),event=context$group_id,
       event_file=basename(context$group_path),event_sha256=hash(context$group_path),reach_id=as.character(reach_id),
       points_revision=basename(points$path),points_sha256=hash(path),points_inputs=points$inputs)
@@ -46,6 +46,9 @@ study_cross_section_store <- function(context_path,current_group_path=NULL) {
   publish <- function(context,points,reach_id,settings,candidate,footprints,expected_inputs) {
     if(!identical(candidate$parameters$method,expected_inputs$method))
       stop("Layout method does not match the current input contract; regenerate the layout.")
+    if(!all(vapply(candidate[c("channel_footprint","source_channel","channel_branches","channel_reference")],
+        inherits,logical(1),what="sf")))
+      stop("Regenerate the layout to retain channel preparation evidence.")
     if(!is.null(candidate$boundary_anchors)) {
       if(anyNA(candidate$boundary_anchors$candidate_id) ||
           any(!candidate$boundary_anchors$candidate_id %in% candidate$sections$candidate_id))
@@ -66,6 +69,8 @@ study_cross_section_store <- function(context_path,current_group_path=NULL) {
     sections$layout_centerline_spacing_m <- as.numeric(candidate$parameters$centerline_spacing_m)
     sections$layout_smoothing_refinements <- as.integer(settings$smoothing_refinements)
     sections$layout_overbank_angle_limit_deg <- as.numeric(candidate$parameters$overbank_angle_limit_deg)
+    sections$layout_channel_angle_limit_deg <- as.numeric(candidate$parameters$angle_limit_deg)
+    sections$layout_channel_rotation_review_deg <- as.numeric(candidate$parameters$channel_rotation_review_deg)
     sections$layout_allow_overbank_bends <- isTRUE(settings$allow_overbank_bends)
     sections$layout_width_mode <- "floodplain_extent"
     sections$channel_rem_elevation <- as.numeric(settings$channel)
@@ -82,7 +87,10 @@ study_cross_section_store <- function(context_path,current_group_path=NULL) {
     on.exit(if(!complete)unlink(directory,recursive=TRUE),add=TRUE)
     path <- file.path(directory,"cross-sections.gpkg")
     sf::st_write(sections,path,"cross_section",quiet=TRUE)
-    sf::st_write(footprints$channel_outer,path,"channel_outer",quiet=TRUE)
+    sf::st_write(candidate$channel_footprint,path,"channel_outer",quiet=TRUE)
+    if(!is.null(candidate$source_channel))sf::st_write(candidate$source_channel,path,"channel_outer_raw",quiet=TRUE)
+    if(!is.null(candidate$channel_branches))sf::st_write(candidate$channel_branches,path,"channel_branch_review",quiet=TRUE)
+    if(!is.null(candidate$channel_reference))sf::st_write(candidate$channel_reference,path,"channel_reference_centerline",quiet=TRUE)
     sf::st_write(footprints$floodplain_outer,path,"floodplain_outer",quiet=TRUE)
     sf::st_write(candidate$region_polygons,path,"hydraulic_regions",quiet=TRUE)
     sf::st_write(candidate$regions,path,"region_components",quiet=TRUE)
@@ -97,7 +105,7 @@ study_cross_section_store <- function(context_path,current_group_path=NULL) {
     if(!is.null(footprints$channel))sf::st_write(footprints$channel,path,"channel_inundation",quiet=TRUE)
     if(!is.null(footprints$floodplain))sf::st_write(footprints$floodplain,path,"floodplain_inundation",quiet=TRUE)
     sf::st_write(candidate$samples,path,"side_support",quiet=TRUE)
-    metadata <- data.frame(schema="FGSTUDIO_CROSS_SECTION_DRAFT_5",
+    metadata <- data.frame(schema="FGSTUDIO_CROSS_SECTION_DRAFT_9",
       review_state="draft",reach_id=as.character(reach_id),
       inputs_json=as.character(jsonlite::toJSON(expected_inputs,auto_unbox=TRUE,null="null",digits=NA)),
       settings_json=as.character(jsonlite::toJSON(settings,auto_unbox=TRUE,digits=NA)),
@@ -121,9 +129,16 @@ study_cross_section_store <- function(context_path,current_group_path=NULL) {
   }
   reopen <- function(record) {
     path <- file.path(record$path,"cross-sections.gpkg")
+    layers <- sf::st_layers(path)$name
+    optional <- function(layer)if(layer %in% layers)sf::st_read(path,layer,quiet=TRUE) else NULL
+    channel <- sf::st_read(path,"channel_outer",quiet=TRUE)
     list(sections=record$sections,parameters=record$parameters,failures=record$failures,
-      footprints=list(channel_outer=sf::st_read(path,"channel_outer",quiet=TRUE),
+      channel_footprint=channel,
+      footprints=list(channel_outer=channel,
+        channel_outer_raw=optional("channel_outer_raw"),
         floodplain_outer=sf::st_read(path,"floodplain_outer",quiet=TRUE)),
+      source_channel=optional("channel_outer_raw"),channel_branches=optional("channel_branch_review"),
+      channel_reference=optional("channel_reference_centerline"),
       paths=if("centerline" %in% sf::st_layers(path)$name)sf::st_read(path,"centerline",quiet=TRUE) else
         sf::st_sf(region=character(),side=character(),region_id=character(),smoothing_rejected=logical(),geometry=sf::st_sfc(crs=sf::st_crs(record$sections))),
       region_polygons=sf::st_read(path,"hydraulic_regions",quiet=TRUE),

@@ -605,10 +605,14 @@ Those historical fields are intentionally retained for downstream and legacy
 compatibility. Comparison-event calibration and governed FGDB publication are
 later workflow boundaries.
 
-## Review channel and floodplain inundation
+## Lay out and review cross sections
 
 After saving Flowline Points, open **Cross Sections** and choose the Survey
-Event, Stream and Reach. FG Studio prepares an REM in the background from the
+Event, Stream and Reach. All saved Reaches are supported; there is no R1-only
+restriction. The status and progress indicator above the map show input opening,
+REM preparation and the inundation, centerline and deconfliction phases. The
+first calculation for a new Reach can take several minutes. A matching saved
+draft reopens without repeating layout. FG Studio prepares an REM in the background from the
 selected Reach Flowline and Flowline Points and its Stream Hydro DEM. The map
 shows the REM and flowline over imagery; the layers control lets you show or
 hide the channel and floodplain footprints. REM colors use the project terrain
@@ -637,6 +641,24 @@ reported rather than hidden. Use **Layers** to compare **Raw centerlines** and
 **Section numbers** appear by default; their Seq numbers identify troubleshooting
 references and popups. Either layer can be hidden through Layers.
 
+Before partitioning LOB/ROB, channel preparation prunes eligible off-mainstem arms
+using the owner-accepted method-v10 recipe and defaults. It uses
+the channel polygon's own centerline and local width. It preserves the
+original banks outside removed protrusions and checks that the mainstem remains
+connected. Hooked, short and narrow arms are eligible; broad/shallow bank
+expansions remain protected by the shape test. These are geometric review
+defaults rather than an identification of hydraulic tributaries. In **Layers**, compare **Channel
+before cleanup**, **Removed channel arms**, and **Channel cleanup reference**.
+The raw inundation is retained. Removed channel areas become part of the mapped
+overbank regions rather than being discarded from the total footprint.
+
+In tight bends, a contained geodesic path can associate a bank with a centerline
+that is not visible along a straight segment. These matches remain flagged as
+inferred direction evidence. Difficult neighborhoods can be routed as a group,
+reconsidering earlier legs to leave room for neighbors while retaining their
+bank positions and ordered outer endpoints. The summary reports these cases;
+remaining failures stay explicit.
+
 **Centerline boundary spacing** (initially 2 m) controls densification for
 polygon skeleton extraction and the working centerline simplification scale.
 The source polygons stay unchanged. **Centerline smoothing (Chaikin passes)**
@@ -647,11 +669,16 @@ estimates; compare both artifacts.
 
 **Centerline tangent distance** (initially 20 m) measures direction using a chord
 along the centerline. It is independent of cartographic smoothing. **Cross-section
-spacing** places centers half that metre distance upstream of the Reach outlet,
-then at equal intervals. Changing these two layout distances reuses the polygon
+spacing** places centers half that metre distance upstream of the Reach outlet
+along the saved Flowline, then at equal intervals on that Flowline. Changing
+these two layout distances reuses the polygon
 centerlines. Orange candidates indicate unresolved direction, unsupported ends,
 conflicts or coverage problems. White also requires hydraulic review. A missing
 overbank path leaves an endpoint at its bank rather than inventing a path.
+Channel-only sections use two vertices; one-sided overbanks are also valid.
+The cross-section summary and popups describe constructed parts. No mapped overbank
+is distinct from a failed leg; terrain coverage, channel contacts and ordering
+still require review. A bank at a cross-section endpoint remains a bank when edited.
 The layout searches rotations up to **Maximum floodplain leg rotation** around each floodplain centerline
 normal to reach the outer boundary and reduce overlaps, keeping channel-bank
 vertices fixed. It does not shorten legs to clear collisions; unresolved
@@ -660,13 +687,23 @@ floodplain is counted separately as a side with no floodplain width.
 The initial rotation limit is 30 degrees; it can be increased to 60, with rotations
 over 30 remaining orange for review. Direction matches must stay inside the
 region so nearest-point matching cannot jump across a channel indentation.
-**Allow additional floodplain vertices for deconfliction** is unchecked by
-default. When enabled, the solver may route around neighboring sections using
-multiple bends, including points away from the centerline. Channel cuts stay
-perpendicular to their local centerline direction without width minimization.
-Banks remain fixed. Outer targets follow section order along connected boundaries;
+**Allow additional floodplain vertices for deconfliction** is checked by
+default. The solver may route around neighboring sections using multiple bends,
+including points away from the centerline. Channel XS segments begin perpendicular.
+Contacting or bank-order-conflicted channel sections, including those with
+mapped overbanks, can rotate within a 30-degree bound before overbank construction while
+retaining stations, full width, bank order and nonintersection. Rotations above
+the provisional 15-degree review threshold stay highlighted. These are geometric
+defaults requiring hydraulic review. Width minimization is absent.
+Banks then remain fixed. Outer targets follow section order along connected boundaries;
 routing cannot slide a target past its neighbor. Remaining channel contacts and
 unavailable complete routes stay flagged. Straight legs remain the starting point.
+A bounded whole-bend pass also considers complete but crowded or awkward legs.
+It tests endpoint distributions and routes together, preserving bank vertices,
+station order and containment. Complete coverage precedes useful endpoint
+spacing and fewer unnecessary turns. A proposal that loses a complete leg is
+rejected; an unsuccessful search retains the existing family. This uses the
+same automatic defaults and requires no additional input.
 Use **Ordering boundaries** and **Ordered boundary targets** in Layers to review
 the shared edges and planned endpoints. Popups distinguish actual bank/outer
 order, planned targets and channel departure from perpendicular. A planned target
@@ -692,7 +729,7 @@ numbers. Changing Reach, Event, elevation, spacing, centerline extraction/smooth
 unsaved edits. **Save draft** retains corrected geometry and layout metadata;
 selecting that Reach again with unchanged saved inputs restores the draft.
 Drafts may retain unresolved warnings for later correction. Saving does not
-accept the geometry scientifically. Old loess drafts remain saved as prior evidence and are not reopened under this polygon-centerline method. Adding sections and legacy export remain
+accept the geometry scientifically. Adding sections and legacy export remain
 unavailable.
 
 ## Map basemaps
@@ -705,7 +742,7 @@ Survey Collections/DEM files, Hydro Modify, Flowline, and Flowline Points.
 distinct from the basemap. Imagery and Street map remain available where
 applicable. The selected basemap remains active until you switch. Basemaps stay
 below data overlays; OpenTopoMap tiles remain visible when zooming closer for DEM
-inspection. The in-progress Cross Sections inundation review currently uses
+inspection. Cross Sections uses
 Esri imagery and offers overlay toggles rather than basemap choices.
 
 ## Storage, privacy, and deployment boundary

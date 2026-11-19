@@ -1,9 +1,12 @@
-# Interactive inundation review is a session candidate; no dataset is published.
+# Cross-section MVP: geometry review and immutable local drafts.
 cross_section_vertex_labels <- function(section) {
   count <- nrow(sf::st_coordinates(section))
   left <- section$left_bank_vertex[1];right <- section$right_bank_vertex[1]
   labels <- character(count)
-  labels[c(1L,left,right,count)] <- c("Left outer endpoint","Left bank","Right bank","Right outer endpoint")
+  labels[c(1L,count)] <- c("Left outer endpoint","Right outer endpoint")
+  labels[c(left,right)] <- c("Left bank","Right bank")
+  if(left==1L)labels[left] <- "Left bank / cross section endpoint"
+  if(right==count)labels[right] <- "Right bank / cross section endpoint"
   if(left>2L)labels[2:(left-1L)] <- if(left==3L)"Left floodplain bend" else paste("Left floodplain bend",seq_len(left-2L))
   if(count-right>1L)labels[(right+1L):(count-1L)] <- if(count-right==2L)"Right floodplain bend" else paste("Right floodplain bend",seq_len(count-right-1L))
   labels
@@ -19,26 +22,39 @@ cross_section_review_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::card(bslib::card_header("Cross Sections: layout and deconfliction"),
     shiny::p("Select a Survey Event, Stream and Reach. FG Studio lays out candidate cross sections and reduces overlaps automatically. Review the mapped extents and any remaining highlighted conflicts."),
+    # Polling briefly marks Shiny busy. Delay its fallback cue and reserve one
+    # status slot so polls neither replace the phase text nor move the map.
+    shiny::tags$style(shiny::HTML(paste0(
+      ".fg-xs-status{position:relative;min-height:4rem}",
+      ".fg-xs-loading{position:absolute;inset:0;z-index:1;background:var(--bs-body-bg,#fff);",
+      "visibility:hidden;opacity:0;transition:opacity .1s,visibility 0s}",
+      "html.shiny-busy .fg-xs-loading{visibility:visible;opacity:1;transition-delay:.65s}"))),
+    shiny::div(class="fg-xs-status",
+      shiny::div(class="fg-xs-loading",role="status",`aria-live`="polite",
+      "Opening cross-section inputs and map...",shiny::tags$progress(style="display:block;width:100%",
+        `aria-label`="Opening cross-section inputs and map")),
+      shiny::uiOutput(ns("status"))),
     bslib::layout_columns(col_widths=c(4,8),
       shiny::div(shiny::uiOutput(ns("events")), shiny::uiOutput(ns("selection")),
         shiny::sliderInput(ns("channel"), "Channel REM elevation (ft)", 100, 130, 103, step=.1),
         shiny::sliderInput(ns("floodplain"), "Floodplain REM elevation (ft)", 100, 130, 109, step=.1),
         shiny::numericInput(ns("spacing"), "Cross-section spacing (m)", 20, min=1),
-        shiny::checkboxInput(ns("overbank_bends"),"Allow additional floodplain vertices for deconfliction",FALSE),
+        shiny::checkboxInput(ns("overbank_bends"),"Allow additional floodplain vertices for deconfliction",TRUE),
         shiny::tags$details(shiny::tags$summary("Advanced layout"),
         shiny::numericInput(ns("tangent_distance"), "Centerline tangent distance (m)", 20, min=1),
         shiny::numericInput(ns("centerline_spacing"), "Centerline boundary spacing (m)", 2, min=0),
         shiny::numericInput(ns("smoothing"), "Centerline smoothing (Chaikin passes)", 2, min=0, max=10, step=1),
         shiny::numericInput(ns("overbank_angle"), "Maximum floodplain leg rotation (degrees)", 30, min=0, max=60, step=5),
-        shiny::p(class="small","Extra vertices are optional and need not lie on a centerline. Rotation changes cut lines, not centerline smoothing; rotations over 30 degrees remain flagged for review.")),
-        shiny::p(class="small", "Review the channel, left floodplain and right floodplain polygons and their independent polygon centerlines. Raw centerlines and skeletons are available in Layers. Orange sections need correction. Changing levels or layout settings replaces unsaved edits. Save a draft to retain corrections for these exact inputs."),
+        shiny::p(class="small","Extra vertices are optional and need not lie on a centerline. Rotation changes cross sections, not centerline smoothing; rotations over 30 degrees remain flagged for review.")),
+        shiny::p(class="small", "Review the channel, left floodplain and right floodplain polygons and their independent polygon centerlines. Raw centerlines and skeletons are available in Layers. Orange sections identify geometry or direction review. Changing levels or layout settings replaces unsaved edits. Save a draft to retain results for these exact inputs."),
         shiny::uiOutput(ns("editor")),
-        shiny::p(class="small", "Midwest starting REM levels: channel 103 ft and floodplain 109 ft, relative to the 100-ft reference. The current REM corridor can truncate mapped floodplain evidence."),
-        shiny::uiOutput(ns("status"))),
-      leaflet::leafletOutput(ns("map"), height="650px")))
+        shiny::p(class="small", "Midwest starting REM levels: channel 103 ft and floodplain 109 ft, relative to the 100-ft reference. The current REM corridor can truncate mapped floodplain evidence.")),
+      shiny::div(style="width:100%;height:650px;max-height:650px;align-self:start",
+        leaflet::leafletOutput(ns("map"), height="650px"))))
 }
 
-cross_section_review_server <- function(id, context, store, events, active, revision) {
+cross_section_review_server <- function(id, context, store, events, active, revision,
+                                        upstream_inputs=function()NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     linked_survey_event_selector(input, output, session, events, context)
     review <- shiny::reactiveVal(NULL); selected <- shiny::reactiveVal(NULL)
@@ -46,6 +62,7 @@ cross_section_review_server <- function(id, context, store, events, active, revi
     layout <- shiny::reactiveVal(NULL)
     saved_draft <- shiny::reactiveVal(NULL)
     editing <- shiny::reactiveVal(NULL)
+    opening <- shiny::reactiveVal(FALSE);load_generation <- 0L;session_closed <- FALSE
     status <- shiny::reactiveVal(""); job <- NULL; job_kind <- NULL
     job_revision <- shiny::reactiveVal(0L)
     watch_job <- function(value) {
@@ -55,40 +72,70 @@ cross_section_review_server <- function(id, context, store, events, active, revi
     job_key <- NULL; loaded <- NULL; generation <- 0L
     cache <- tempfile("cross-section-review-"); dir.create(cache)
     stop_job <- function() { if (!is.null(job) && job$is_alive()) {job$kill();job$wait(timeout=2000)}; job <<- NULL; job_kind <<- NULL }
-    session$onSessionEnded(function() { stop_job(); unlink(cache, recursive=TRUE) })
+    session$onSessionEnded(function() {session_closed <<- TRUE;stop_job();unlink(cache,recursive=TRUE)})
     output$selection <- shiny::renderUI({
       x <- review(); if (is.null(x)) return(NULL)
       streams <- vapply(x$bundle, `[[`, character(1), "stream_name")
       id <- input$stream
       if (is.null(id) || !id %in% names(streams)) id <- names(streams)[1]
       lines <- x$bundle[[id]]$flowline$flowlines
+      reach <- shiny::isolate(input$reach)
+      if(is.null(reach) || !reach %in% lines$reach_id)reach <- lines$reach_id[1]
       shiny::tagList(shiny::selectInput(session$ns("stream"), "Stream", choices=stats::setNames(names(streams),streams), selected=id),
-        shiny::selectInput(session$ns("reach"), "Reach", choices=stats::setNames(as.character(lines$reach_id), as.character(lines$ReachName))))
+        shiny::selectInput(session$ns("reach"), "Reach", choices=stats::setNames(as.character(lines$reach_id), as.character(lines$ReachName)),
+          selected=reach))
     })
-    output$status <- shiny::renderUI(shiny::tagList(shiny::p(role="status", status()),
-      if(grepl("^(Preparing|Precomputing|Updating)",status())) shiny::tags$progress(
-        style="width:100%",`aria-label`=status())))
-    shiny::observeEvent(list(context(), active(), revision()), {
+    output$status <- shiny::renderUI({job_revision();shiny::tagList(shiny::p(role="status",`aria-live`="polite",status()),
+      if(opening() || !is.null(job)) shiny::tags$progress(
+        style="width:100%",`aria-label`=status()))
+    })
+    load_review <- function(ctx,key,token,shared_key) {
+      if(session_closed || !identical(token,load_generation) || !isTRUE(shiny::isolate(active())))return()
+      on.exit(if(identical(token,load_generation))opening(FALSE),add=TRUE)
+      tryCatch({
+        shared <- if(is.function(upstream_inputs))shiny::isolate(upstream_inputs()) else NULL
+        value <- if(!is.null(shared$value$saved) && identical(shared$key,shared_key))
+          shared$value else load_flowline_points_review(store,ctx)
+        if(session_closed || !identical(token,load_generation))return()
+        if(is.null(value$saved))stop("Create and save Flowline Points before reviewing inundation.")
+        review(value);loaded <<- key;status("Choose a Stream and Reach.")
+      },error=function(e){loaded <<- NULL;status(conditionMessage(e))})
+    }
+    shiny::observeEvent(list(context(), active(), revision(),
+      if(is.function(upstream_inputs))upstream_inputs() else NULL), {
       if (!isTRUE(active())) {
+        load_generation <<- load_generation+1L;opening(FALSE)
         if(!is.null(job) || is.null(layout())) {stop_job();loaded <<- NULL}
         return()
       }
       ctx <- context()
       if (is.null(ctx)) {
+        load_generation <<- load_generation+1L;opening(FALSE)
         stop_job(); rem(NULL); extents(NULL); layout(NULL); review(NULL); selected(NULL)
         loaded <<- NULL; status("Choose a saved Survey Event."); return()
       }
       key <- paste(ctx$path, ctx$group_path, revision(), sep="|")
-      if (identical(key, loaded)) return()
+      shared_key <- paste(ctx$path,ctx$group_path,shiny::isolate(revision()),sep="\r")
+      shared <- if(is.function(upstream_inputs))upstream_inputs() else NULL
+      same_points <- is.null(shared$value$saved) || !identical(shared$key,shared_key) ||
+        identical(shared$value$saved$path,shiny::isolate(review())$saved$path)
+      if (identical(key, loaded) && same_points) return()
       stop_job(); rem(NULL); extents(NULL); layout(NULL); editing(NULL); review(NULL); selected(NULL)
-      tryCatch({
-        value <- load_flowline_points_review(store, ctx)
-        if (is.null(value$saved)) stop("Create and save Flowline Points before reviewing inundation.")
-        review(value); loaded <<- key; status("Choose a Stream and Reach.")
-      }, error=function(e) { loaded <<- NULL; status(conditionMessage(e)) })
+      load_generation <<- load_generation+1L;token <- load_generation
+      status("Opening saved Flowlines and Flowline Points...");opening(TRUE)
+      # Yield a browser paint before validating saved inputs, as in Flowline Points.
+      session$onFlushed(function() {
+        if(session_closed)return()
+        later::later(function() {
+          if(!session_closed)shiny::withReactiveDomain(session,load_review(ctx,key,token,shared_key))
+        },.05)
+      },once=TRUE)
     }, ignoreNULL=FALSE,priority=30)
-    shiny::observeEvent(list(input$stream, input$reach, review()), {
+    shiny::observeEvent(list(input$stream, input$reach, review(),active()), {
+      if(!isTRUE(active()))return()
       value <- review(); if (is.null(value) || is.null(input$stream) || is.null(input$reach)) return()
+      if(!is.null(layout()) && !is.null(selected()) &&
+          identical(as.character(selected()$line$reach_id),as.character(input$reach)))return()
       bundle <- value$bundle[[input$stream]]; if (is.null(bundle)) return()
       line <- bundle$flowline$flowlines[bundle$flowline$flowlines$reach_id == input$reach,,drop=FALSE]
       points <- value$saved$points[value$saved$points$reach_id == input$reach,,drop=FALSE]
@@ -165,36 +212,20 @@ cross_section_review_server <- function(id, context, store, events, active, revi
       }
       region_directory <- file.path(cache,x$key);dir.create(region_directory,showWarnings=FALSE)
       job_kind <<- "extent"; job_key <<- list(s$key, v$channel, v$floodplain,v$spacing,v$tangent_distance,v$smoothing,v$centerline_spacing,v$overbank_angle,v$overbank_bends)
-      watch_job(callr::r_bg(function(path,line,channel,floodplain,spacing,window,smoothing,boundary_spacing,overbank_angle,overbank_bends,region_directory) {
-        footprints <- fluvgeo::water_surface_extents(terra::rast(path),line,channel,floodplain)
-        candidate <- tryCatch({
-        key <- paste(format(openssl::sha256(serialize(list(channel,floodplain,boundary_spacing,smoothing,"polygon-centerline-v2"),NULL))),collapse="")
-        cached <- file.path(region_directory,paste0("regions-",key,".rds"))
-        artifacts <- if(file.exists(cached))readRDS(cached) else NULL
-        if(is.null(artifacts)) {
-          artifacts <- fluvgeo::cross_section_regions(line,footprints$channel_outer,footprints$floodplain_outer,
-            centerline_spacing_m=boundary_spacing,smoothing_refinements=smoothing)
-          pending <- paste0(cached,".pending")
-          saveRDS(artifacts,pending)
-          if(!file.rename(pending,cached))stop("Could not retain the centerline review cache.")
-        }
-        fluvgeo::cross_section_layout(line,footprints$channel_outer,
-          footprints$floodplain_outer,spacing_m=spacing,tangent_distance_m=window,
-          centerline_spacing_m=boundary_spacing,
-          smoothing_refinements=smoothing,region_artifacts=artifacts,overbank_angle_limit_deg=overbank_angle,allow_overbank_bends=overbank_bends)
-        },
-          error=function(e)list(error=conditionMessage(e)))
-        list(footprints=footprints,layout=if(is.null(candidate$error))candidate else NULL,
-          layout_error=candidate$error)
-      },
+      watch_job(callr::r_bg(cross_section_layout_job,
         args=list(path=x$path,line=s$line,channel=v$channel,floodplain=v$floodplain,
           spacing=v$spacing,window=v$tangent_distance,smoothing=v$smoothing,boundary_spacing=v$centerline_spacing,overbank_angle=v$overbank_angle,overbank_bends=v$overbank_bends,region_directory=region_directory),
-        libpath=.libPaths(),supervise=TRUE,stdout=NULL,stderr=NULL))
+        libpath=.libPaths(),supervise=TRUE,stdout="|",stderr=NULL))
     }, ignoreInit=TRUE)
     shiny::observe({
       job_revision() # Every replacement wakes polling, even when its status text is unchanged.
       if(is.null(job))return()
       shiny::invalidateLater(200, session)
+      if(identical(job_kind,"extent") && is.function(job$read_output_lines)) {
+        messages <- tryCatch(job$read_output_lines(),error=function(e)character())
+        phases <- grep("^FGSTUDIO_PHASE:",messages,value=TRUE)
+        if(length(phases))status(sub("^FGSTUDIO_PHASE:","",tail(phases,1L)))
+      }
       if (job$is_alive()) return()
       kind <- job_kind; key <- job_key
       result <- tryCatch(job$get_result(), error=function(e) e); job <<- NULL; job_kind <<- NULL
@@ -233,8 +264,8 @@ cross_section_review_server <- function(id, context, store, events, active, revi
         leaflet::addLegend(pal=pal,values=limits,title="REM elevation (ft)",position="bottomright") |>
         leaflet::fitBounds(unname(b[["xmin"]]),unname(b[["ymin"]]),
           unname(b[["xmax"]]),unname(b[["ymax"]])) |>
-        leaflet::addLayersControl(overlayGroups=c("REM","Flowline","Channel","Floodplain","Left floodplain","Right floodplain","Centerlines","Raw centerlines","Polygon skeletons","Candidates","Section numbers","Direction review points","Ordering boundaries","Ordered boundary targets")) |>
-        leaflet::hideGroup(c("Raw centerlines","Polygon skeletons","Direction review points","Ordering boundaries","Ordered boundary targets"))
+        leaflet::addLayersControl(overlayGroups=c("REM","Flowline","Channel","Channel before cleanup","Removed channel arms","Channel cleanup reference","Floodplain","Left floodplain","Right floodplain","Centerlines","Raw centerlines","Polygon skeletons","Candidates","Section numbers","Direction review points","Ordering boundaries","Ordered boundary targets")) |>
+        leaflet::hideGroup(c("Channel before cleanup","Removed channel arms","Channel cleanup reference","Raw centerlines","Polygon skeletons","Direction review points","Ordering boundaries","Ordered boundary targets"))
     })
     shiny::observeEvent(extents(), {
       x <- extents(); proxy <- leaflet::leafletProxy("map",session)
@@ -250,6 +281,16 @@ cross_section_review_server <- function(id, context, store, events, active, revi
       if(!length(selected_row) || is.na(selected_row))selected_row <- 1L
       labels <- if(nrow(sections))cross_section_vertex_labels(sections[selected_row,]) else character()
       shiny::tagList(
+        if(!is.null(x$channel_branches)) shiny::p(class="small",sprintf(
+          "Channel preparation: %d off-mainstem channel lobes removed using the polygon channel centerline. Raw channel, removed arms and the cleanup reference are available in Layers.",
+          sum(x$channel_branches$removed))),
+        if("left_geodesic_direction" %in% names(sections)) shiny::p(class="small",sprintf(
+          "Bend handling: %d contained geodesic direction matches; %d overbank legs selected through group rerouting. Banks remain fixed; tight-bend groups consider outer endpoint spacing and route shape together.",
+          sum(sections$left_geodesic_direction)+sum(sections$right_geodesic_direction),
+          sum(sections$left_group_routed)+sum(sections$right_group_routed))),
+        if("outer_chord_oriented" %in% names(sections) && any(!sections$outer_chord_oriented & sections$channel_oriented))
+          shiny::p(class="small",sprintf("%d curved sections have endpoint chords that turn relative to local channel direction; their channel banks remain left to right. This chord diagnostic is separate from bank order and intersections.",
+            sum(!sections$outer_chord_oriented & sections$channel_oriented))),
         if(!is.null(x$region_diagnostics)) shiny::p(sprintf(
           "%d polygon components; %d centerlines unavailable; %d smoothing proposals rejected to keep paths inside their polygons.",
           nrow(x$region_diagnostics),sum(!x$region_diagnostics$centerline_available),sum(x$region_diagnostics$smoothing_rejected))),
@@ -258,6 +299,10 @@ cross_section_review_server <- function(id, context, store, events, active, revi
           sum(!sections$left_supported & sections$left_leg_status!="no_floodplain")+
             sum(!sections$right_supported & sections$right_leg_status!="no_floodplain"),
           sum(sections$left_leg_status=="no_floodplain")+sum(sections$right_leg_status=="no_floodplain"))),
+        shiny::p(class="small",sprintf("Cross sections: %d channel only; %d with one overbank; %d with both overbanks. Each contains a channel XS segment and optional LOB/ROB XS segments. Absent mapped overbanks are valid; failed segments and data coverage still require review.",
+          sum(sections$section_parts=="channel_only"),
+          sum(sections$section_parts %in% c("channel_left_overbank","channel_right_overbank")),
+          sum(sections$section_parts=="channel_both_overbanks"))),
         shiny::p(class="small",sprintf("Direction evidence: %d shortened tangent windows; %d raw-centerline measurements; %d floodplain legs rotated from their centerline normal. These are separate from missing geometry. Rotations are limited to %.0f degrees and retain full floodplain coverage; remaining conflicts need correction.",
           sum(sections$channel_short_tangent)+sum(sections$left_short_tangent)+sum(sections$right_short_tangent),
           sum(sections$channel_raw_centerline)+sum(sections$left_raw_centerline)+sum(sections$right_raw_centerline),
@@ -265,10 +310,13 @@ cross_section_review_server <- function(id, context, store, events, active, revi
           x$parameters$overbank_angle_limit_deg)),
         shiny::p(class="small",sprintf("%d floodplain direction matches adjusted to stay inside their polygon instead of jumping across a channel indentation.",
           sum(sections$left_visibility_adjusted)+sum(sections$right_visibility_adjusted))),
-        shiny::p(class="small",sprintf("Conflicts: %d sections with channel contacts; %d floodplain legs with contacts. %d added floodplain vertices. Channel cuts stay perpendicular to their centerline direction; outer boundary targets follow section order.",
+        shiny::p(class="small",sprintf("Conflicts: %d sections with channel contacts; %d floodplain legs with contacts. %d added floodplain vertices. Channel segments prefer perpendicular; outer boundary targets follow section order.",
           sum(sections$channel_conflict),sum(sections$left_conflict)+sum(sections$right_conflict),
           sum(sections$left_bend_count)+sum(sections$right_bend_count))),
-        shiny::p(class="small",sprintf("Floodplain boundary-order conflicts: %d sections; channel-bank order needs review at %d sections. Ordered boundary targets and Ordering boundaries are available in Layers; targets remain fixed during routing.",
+        shiny::p(class="small",sprintf("Channel deconfliction: %d segments rotated; %d exceed the %.0f-degree review threshold. Channel contact and bank-order windows, including sections with overbanks, use ordered, nonintersecting full-width segments within a %.0f-degree search bound. These provisional angles require hydraulic review.",
+          sum(sections$channel_rotated),sum(sections$channel_skewed),
+          x$parameters$channel_rotation_review_deg,x$parameters$angle_limit_deg)),
+        shiny::p(class="small",sprintf("Floodplain boundary-order conflicts: %d sections; channel-bank order needs review at %d sections. Ordered boundary targets and Ordering boundaries are available in Layers; targets show final positions after bend planning.",
           sum(sections$left_order_conflict | sections$right_order_conflict),sum(sections$channel_order_review))),
         shiny::tags$details(shiny::tags$summary("Optional manual correction"),
         shiny::selectInput(session$ns("section"),"Section to correct",
@@ -301,16 +349,20 @@ cross_section_review_server <- function(id, context, store, events, active, revi
         xy[edit$vertex,] <- sf::st_coordinates(click)[1,1:2]
         sf::st_geometry(x$sections)[[i]] <- sf::st_linestring(xy)
         x$sections$edited[i] <- TRUE
+        if(edit$vertex %in% c(x$sections$left_bank_vertex[i],x$sections$right_bank_vertex[i]))
+          x$sections$channel_deconfliction_status[i] <- "manual_review"
         side <- if(edit$vertex<=x$sections$left_bank_vertex[i])"left" else "right"
         bank <- x$sections[[paste0(side,"_bank_vertex")]][i]
-        x$sections[[paste0(side,"_leg_status")]][i] <- "manual_review"
+        # A moved endpoint bank is still a bank, not a newly invented overbank.
+        if(x$sections[[paste0(side,"_leg_status")]][i]!="no_floodplain")
+          x$sections[[paste0(side,"_leg_status")]][i] <- "manual_review"
         x$sections[[paste0(side,"_supported")]][i] <- sqrt(sum((xy[if(side=="left")1 else nrow(xy),]-xy[bank,])^2))>1e-7
         x$sections[[paste0(side,"_rotation_deg")]][i] <- NA_real_
         x$sections <- fluvgeo::cross_section_layout_review(x$sections,footprint$floodplain_outer,boundary_chains=x$boundary_chains)
         layout(x); editing(NULL)
         status(sprintf("Section %d updated. Boundary gaps: left %.1f m, right %.1f m. %s",
           x$sections$Seq[i],x$sections$left_boundary_gap_m[i],x$sections$right_boundary_gap_m[i],
-          if(x$sections$conflict[i] || x$sections$self_crossing[i] || !x$sections$oriented[i]) "Geometry still needs correction." else "Review orientation and floodplain coverage."))
+          if(x$sections$conflict[i] || x$sections$self_crossing[i] || !x$sections$channel_oriented[i]) "Geometry still needs correction." else "Review orientation and floodplain coverage."))
       },error=function(e)status(conditionMessage(e)))
     })
     change_bend <- function(add) {
@@ -322,6 +374,8 @@ cross_section_review_server <- function(id, context, store, events, active, revi
         xy <- sf::st_coordinates(x$sections[i,])[,1:2,drop=FALSE]
         left <- x$sections$left_bank_vertex[i];right <- x$sections$right_bank_vertex[i]
         side <- if(as.integer(input$vertex)<=left)"left" else "right"
+        if((side=="left" && left==1L) || (side=="right" && right==nrow(xy)))
+          stop("This side has no constructed overbank leg to bend.")
         has_bend <- if(side=="left")left>2L else nrow(xy)-right>1L
         if(!add && !has_bend)stop("This side has no bend to remove.")
         if(add) {
@@ -380,12 +434,23 @@ cross_section_review_server <- function(id, context, store, events, active, revi
     shiny::observeEvent(list(layout(),input$section), {
       x <- layout(); proxy <- leaflet::leafletProxy("map",session)
       proxy <- leaflet::clearGroup(proxy,"Candidates") |> leaflet::clearGroup("Centerlines") |>
+        leaflet::clearGroup("Channel before cleanup") |> leaflet::clearGroup("Removed channel arms") |>
+        leaflet::clearGroup("Channel cleanup reference") |>
         leaflet::clearGroup("Ordering boundaries") |> leaflet::clearGroup("Ordered boundary targets") |>
         leaflet::clearGroup("Section numbers") |>
         leaflet::clearGroup("Direction review points") |> leaflet::clearGroup("Selected section") |>
         leaflet::clearGroup("Left floodplain") |> leaflet::clearGroup("Right floodplain") |>
         leaflet::clearGroup("Raw centerlines") |> leaflet::clearGroup("Polygon skeletons")
       if(is.null(x)) return()
+      if(!is.null(x$source_channel))proxy <- leaflet::addPolygons(proxy,
+        data=sf::st_transform(x$source_channel,4326),group="Channel before cleanup",color="#a65628",weight=2,fillOpacity=.15)
+      if(!is.null(x$channel_branches)) {
+        removed <- x$channel_branches[x$channel_branches$removed,]
+        if(nrow(removed))proxy <- leaflet::addPolygons(proxy,data=sf::st_transform(removed,4326),
+          group="Removed channel arms",color="#d73027",weight=2,fillOpacity=.5,label=~paste("Removed arm",branch_id))
+      }
+      if(!is.null(x$channel_reference) && nrow(x$channel_reference))proxy <- leaflet::addPolylines(proxy,
+        data=sf::st_transform(x$channel_reference,4326),group="Channel cleanup reference",color="#a65628",weight=3,dashArray="5 4")
       sections <- sf::st_transform(x$sections,4326)
       if(!is.null(x$boundary_chains) && nrow(x$boundary_chains))proxy <- leaflet::addPolylines(proxy,
         data=sf::st_transform(x$boundary_chains,4326),group="Ordering boundaries",color="#555555",weight=3,
@@ -405,8 +470,11 @@ cross_section_review_server <- function(id, context, store, events, active, revi
           group="Section numbers",label=as.character(number_points$Seq),
           labelOptions=leaflet::labelOptions(noHide=TRUE,direction="center",textOnly=FALSE,
             style=list("color"="#111","background"="white","font-size"="11px","padding"="1px 3px")))
-      flagged <- sections$conflict | sections$self_crossing | !sections$oriented | sections$channel_direction_unavailable |
-          sections$channel_skewed | sections$channel_order_review | sections$left_order_conflict | sections$right_order_conflict |
+      bank_oriented <- if("channel_oriented" %in% names(sections))sections$channel_oriented else sections$oriented
+      chord_oriented <- if("outer_chord_oriented" %in% names(sections))sections$outer_chord_oriented else sections$oriented
+      evidence_flag <- function(name)if(name %in% names(sections))sections[[name]] else rep(NA,nrow(sections))
+      flagged <- sections$conflict | sections$self_crossing | !bank_oriented | sections$channel_direction_unavailable |
+          sections$channel_skewed | sections$channel_limit_exceeded | sections$channel_order_review | sections$left_order_conflict | sections$right_order_conflict |
           (!is.na(sections$left_rotation_deg) & abs(sections$left_rotation_deg)>30+1e-7) |
           (!is.na(sections$right_rotation_deg) & abs(sections$right_rotation_deg)>30+1e-7) |
           (!sections$left_supported & sections$left_leg_status!="no_floodplain") |
@@ -415,12 +483,18 @@ cross_section_review_server <- function(id, context, store, events, active, revi
         proxy <- leaflet::addPolylines(proxy,data=sections,group="Candidates",layerId=~candidate_id,
           color=ifelse(flagged,"#ff8c00","white"),weight=3,
           label=paste("Section",sections$Seq),popup=paste0("Section ",sections$Seq,
+            "<br>Cross section: ",gsub("_"," ",sections$section_parts),"; ",
+            vapply(sf::st_geometry(sections),function(z)nrow(z),integer(1))," vertices",
             "<br>Conflicts with: ",sections$conflicts_with,"<br>Left boundary gap: ",round(sections$left_boundary_gap_m,1),
             " m<br>Right boundary gap: ",round(sections$right_boundary_gap_m,1)," m<br>Outside floodplain: ",
-            round(sections$outside_floodplain_m,1)," m<br>Left to right: ",sections$oriented,
-            "<br>Left leg: ",gsub("_"," ",sections$left_leg_status),"; rotation: ",round(sections$left_rotation_deg,3)," degrees",
-            "<br>Right leg: ",gsub("_"," ",sections$right_leg_status),"; rotation: ",round(sections$right_rotation_deg,3)," degrees",
+            round(sections$outside_floodplain_m,1)," m<br>Channel banks left to right: ",bank_oriented,
+            "<br>Endpoint chord follows local channel orientation: ",chord_oriented,
+            "<br>LOB XS segment: ",gsub("_"," ",sections$left_leg_status),"; rotation: ",round(sections$left_rotation_deg,3)," degrees",
+            "<br>ROB XS segment: ",gsub("_"," ",sections$right_leg_status),"; rotation: ",round(sections$right_rotation_deg,3)," degrees",
+            "<br>Geodesic direction association: LOB ",evidence_flag("left_geodesic_direction"),"; ROB ",evidence_flag("right_geodesic_direction"),
+            "<br>Group-selected route: LOB ",evidence_flag("left_group_routed"),"; ROB ",evidence_flag("right_group_routed"),
             "<br>Channel departure from perpendicular: ",round(sections$channel_rotation_deg,3)," degrees",
+            "<br>Channel deconfliction: ",gsub("_"," ",sections$channel_deconfliction_status),
             "<br>Boundary order: left ",sections$left_order_status,"; right ",sections$right_order_status,
             "<br>Channel bank order: left ",sections$channel_left_order_status,"; right ",sections$channel_right_order_status,
             "<br>Added vertices: left ",sections$left_bend_count,"; right ",sections$right_bend_count))

@@ -72,7 +72,7 @@ articles:
       - fgstudio
       - guide-study-workflow
   - title: Developer guide — read in order
-    desc: Begin with context routing and follow the app workflow through exploratory cross-section layout, correction and local drafts.
+    desc: Begin with context routing and follow the app workflow through cross-section layout, automatic deconfliction and local drafts.
     navbar: Developer guide
     contents:
       - dev-01-code-navigation

@@ -1,4 +1,45 @@
-# File-backed preparation assets, independent of water levels and cut-line settings.
+# File-backed preparation assets, independent of water levels and cross-section settings.
+# Self-contained worker; callr uses ordinary arguments and its stdout pipe for phases.
+cross_section_layout_job <- function(path,line,channel,floodplain,spacing,window,smoothing,
+                                     boundary_spacing,overbank_angle,overbank_bends,
+                                     region_directory,profile=FALSE) {
+  phase <- function(label) {cat("FGSTUDIO_PHASE:",label,"\n",sep="");flush(stdout())}
+  timings <- numeric();started <- proc.time()[["elapsed"]]
+  phase("Preparing inundation polygons (stage 1 of 3)...")
+  footprints <- fluvgeo::water_surface_extents(terra::rast(path),line,channel,floodplain)
+  timings["inundation"] <- proc.time()[["elapsed"]]-started
+  candidate <- tryCatch({
+    key <- paste(format(openssl::sha256(serialize(list(channel,floodplain,boundary_spacing,smoothing,"polygon-centerline-v4"),NULL))),collapse="")
+    cached <- file.path(region_directory,paste0("regions-",key,".rds"))
+    started <- proc.time()[["elapsed"]]
+    phase("Building polygon centerlines (stage 2 of 3)...")
+    artifacts <- if(file.exists(cached))readRDS(cached) else NULL
+    if(is.null(artifacts)) {
+      artifacts <- fluvgeo::cross_section_regions(line,footprints$channel_outer,footprints$floodplain_outer,
+        centerline_spacing_m=boundary_spacing,smoothing_refinements=smoothing)
+      pending <- paste0(cached,".pending");saveRDS(artifacts,pending)
+      if(!file.rename(pending,cached))stop("Could not retain the centerline review cache.")
+    }
+    timings["centerlines"] <- proc.time()[["elapsed"]]-started
+    phase("Deconflicting cross sections (stage 3 of 3)...")
+    started <- proc.time()[["elapsed"]]
+    if(profile) {
+      utils::Rprof(file.path(region_directory,"layout.Rprof"),interval=.02)
+      on.exit(utils::Rprof(NULL),add=TRUE)
+    }
+    result <- fluvgeo::cross_section_layout(line,footprints$channel_outer,footprints$floodplain_outer,
+      spacing_m=spacing,tangent_distance_m=window,centerline_spacing_m=boundary_spacing,
+      smoothing_refinements=smoothing,region_artifacts=artifacts,
+      overbank_angle_limit_deg=overbank_angle,allow_overbank_bends=overbank_bends)
+    timings["layout"] <- proc.time()[["elapsed"]]-started
+    footprints$channel_outer_raw <- footprints$channel_outer
+    footprints$channel_outer <- result$channel_footprint
+    result
+  },error=function(e)list(error=conditionMessage(e)))
+  list(footprints=footprints,layout=if(is.null(candidate$error))candidate else NULL,
+    layout_error=candidate$error,timings=timings)
+}
+
 # This worker is self-contained so callr can run it without a development namespace.
 cross_section_rem_artifact <- function(request,dem=NULL,line=NULL,points=NULL) {
   hash <- function(path) {con<-file(path,"rb");on.exit(close(con));as.character(openssl::sha256(con))}

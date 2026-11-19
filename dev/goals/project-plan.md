@@ -266,50 +266,54 @@ support any number of locally defined Survey Events through one synchronized
 selector and keep each Event's saved candidates separate. That navigation does
 not itself designate a base/comparison pair or perform calibration.
 
-## Cross sections: interactive review and ongoing layout development
+## Cross sections: accepted MVP and operational qualification
 
-The owner selected cross-section layout as the next feature. Develop an
-interactive inundation review and reusable geometry together, following
-[Cross-section layout exploration](../features/cross-section-layout.md). The
-review and exploratory layout are available as a local
-prototype with three hydraulic polygons, polygon-derived raw/smoothed
-centerlines, vertex correction, deletion, resequencing and immutable local
-draft save/reopen. Drafts use the standard `cross_section` table with explicit
-layout metadata. Governed publication, additions and legacy export remain open.
-Owner visual review accepts the three polygon regions, centerlines and smoothing
-as the current default. The active refinement preserves those artifacts, matches
-direction evidence inside the corresponding polygon, constructs full-coverage
-leg alternatives and reduces overlaps while retaining residual diagnostics.
-Deconfliction is the owner's highest-value capability. Prioritize intelligent
-automatic defaults with minimum input; further browser editing is lower priority.
-Default REM levels are 103 ft channel and 109 ft floodplain. Straight floodplain
-legs remain the default, with additional vertices explicitly unchecked. When
-enabled, polygon-contained routing may add multiple vertices anywhere within the
-corresponding floodplain, without a centerline-only restriction. Preserve section
-rank at channel banks and outer floodplain boundaries, then route to fixed
-ordered targets without intersections. Channel cuts remain perpendicular to
-their estimated flow direction; remove width minimization and conflict-driven
-rotation. Explicit bank indices preserve channel identity in polylines and
-schema-5 immutable drafts. Subdivision centerlines (informal quartile guides)
-remain a proposed adaptive extension for wide/ambiguous regions; channel bends
-would need an explicit geometry contract.
-Number sections on the map by Seq for troubleshooting. Precompute and persist
-analytical/display REM rasters from saved Flowline Points for reuse across review.
-The owner recognizes channel-only sections as legitimate: absent LOB/ROB must
-not require fabricated overbank geometry or be an error by itself. The next
-geometry-contract refinement should permit two-vertex channel-only cutlines
-and one-sided overbanks, preserving bank/endpoint roles explicitly. Deconflict
-channel cuts with perpendicularity as the primary preference, allowing reviewed
-angular flexibility rather than restoring width minimization. Distinguish no
-mapped overbank from truncated/uncertain coverage; neither should crash layout.
-Layout is a candidate for analyst editing, not a claim of
-HEC-RAS compliance. Preserve the legacy-derived output contract and reconcile confirmed
-storage and interoperability findings with FGDB.
+### Near-term decision gate: the XS 268 issue
 
-Resolve routine intermediate steps without separate owner handoffs. Ask only for
-unresolved consequential choices and continue independent authorized work while
-waiting. Small real DEM windows are the default development evidence; use a full
-Stream only when needed to verify integration or performance.
+Owner direction: defer analysis today, but make a stay-or-go decision before
+further feature expansion. Should all Study Area stream linear referencing
+continue to use the saved Flowline, as it has for a decade, or migrate to a
+polygon-derived channel centerline? XS 268 exposes the difference between
+Flowline station spacing and channel-centerline geometry. This question affects
+the entire referencing system, not just cross-section labels or directions.
+
+The later analysis must compare scientific rationale, reproducibility and
+reference stability across Survey Events, channel thresholds/pruning and route
+versions; network/confluence continuity; historical calibration, reports,
+identities and downstream consumers; and the effort and validation needed to
+reprocess prior projects. Assess whether FGDB reconstruction already entails
+that reprocessing; it is not an established commitment. Evaluate explicit
+versioned migration/crosswalk options and produce a reviewed stay-or-go decision
+with consequences. FGDB's longitudinal-reference model owns the governing
+contract. Current routing work preserves Flowline stationing and all established
+distance meanings. No migration or reprocessing is authorized by this reminder.
+
+### Current cross-section refinement
+
+The owner accepts the cross-section layout and deconfliction MVP. The
+[feature baseline](../features/cross-section-layout.md) owns the final
+requirements, intelligent defaults and scope; the draft schema owns exact
+storage. Keep those artifacts current rather than repeating requirements here.
+
+Documentation/artifact cleanup, computational performance auditing and visible
+loading feedback support continued qualification on other saved Reaches.
+The [performance audit](../performance/cross-sections.md) owns measurements and
+verification limits. Preserve the accepted R1 result and upstream assets.
+There is no R1-only product restriction. Further browser editing, cross-Reach
+handling, hydraulic calculations, governed publication and legacy export are
+separate increments.
+
+The owner accepts method-v10 channel polygon pruning as the preparation baseline:
+it removes large, hooked, stubby and narrow arms while retaining the mainstem
+and reviewable raw/removal evidence. Preserve that recipe while refining the
+remaining station/bank-order and floodplain-routing cases. Method v11 extends
+bank-order repair to mapped-overbank sections and jointly plans endpoints and
+routes in bounded bend families. This implementation does not change the
+accepted pruning recipe or confer acceptance on unresolved routing or governed hydraulic results.
+The feature and performance audit own exact requirements, measurements and limits.
+
+Resolve routine implementation, integration and verification without separate
+owner handoffs. Record genuine unresolved scientific choices explicitly.
 
 ## Standing safeguards
 
