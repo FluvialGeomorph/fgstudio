@@ -607,6 +607,11 @@ later workflow boundaries.
 
 ## Lay out and review cross sections
 
+Method v11 is the accepted automatic-layout baseline, considered sufficiently
+performant and good for current use. Its bounded search can retain valid but
+tightly fanned or awkward shapes. Review each new Reach; further cosmetic
+perfection is not a prerequisite for using the accepted workflow.
+
 After saving Flowline Points, open **Cross Sections** and choose the Survey
 Event, Stream and Reach. All saved Reaches are supported; there is no R1-only
 restriction. The status and progress indicator above the map show input opening,

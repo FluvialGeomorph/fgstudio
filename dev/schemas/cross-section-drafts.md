@@ -109,7 +109,7 @@ Existing mouth_width/depth/advance keep their chord/local-tangent meanings.
 Only depth-screened lobes with a single connected attachment enter this review
 layer; it is not an inventory of every shallow raster-edge chip. Run parameters
 declare 0.5 m padding, 1 m depth, 0.5 depth/chord ratio and the numerical
-attachment-band tolerance. Advance no longer gates removal. Cleanup preserves
+attachment-band tolerance. Advance is diagnostic only. Cleanup preserves
 the reference route and source component count. Matched region artifacts retain
 an explicit prepare_channel choice; the normal app path enables it.
 
@@ -136,10 +136,11 @@ and ordered targets remain fixed during group repair. The selected family first
 maximizes complete routes, then reduces interior crowding without a channel-width
 or section-length objective.
 
-The owner accepts the method-v10 channel-pruning recipe and defaults as the
-preparation baseline. This acceptance does not change schema versions, confer
-hydraulic acceptance or approve unresolved bank-order/overbank-routing issues.
-The feature record owns the accepted method and pending refinements.
+The owner accepts method v11 as the sufficiently performant "80% solution"
+baseline (2026-11-19), retaining the accepted method-v10 pruning recipe. Known
+shape limitations are accepted for now; further optimization is parked.
+This changes no schema versions and does not confer hydraulic acceptance.
+The feature record owns the accepted requirements and scope boundaries.
 
 Method v11 keeps that pruning recipe and schema-9 fields. A bounded whole-bend
 pass jointly tests outer target measures and contained routes, with fixed banks
@@ -147,7 +148,8 @@ and external sections as barriers. Complete families take priority over adaptive
 endpoint spacing, then turn quality. Accepted target measures and existing
 left/right_group_routed flags survive publication/reopening. Method identity
 prevents automatic reuse of older layouts; it does not invalidate matching REMs
-or regional preparation artifacts. Earlier immutable drafts remain evidence.
+or regional preparation artifacts. Retained historical drafts remain comparison
+evidence; explicit lifecycle cleanup may retire redundant unedited revisions.
 
 channel_oriented and outer_chord_oriented are separate logical diagnostics.
 The established oriented column remains their conjunction; its meaning is not

@@ -1,5 +1,12 @@
 # Project plan
 
+Current position (2026-11-19): method-v11 cross-section tooling is an accepted,
+sufficiently performant "80% solution" and good for now. Further geometric
+optimization is parked. The next planning conversation is the
+[XS 268 stay-or-go gate](#near-term-decision-gate-the-xs-268-issue), before
+further feature expansion. The remaining roadmap is context, not authorization
+to skip that decision or resume completed cross-section experiments.
+
 ## Goal and design authority
 
 Let a browser user define a study and progress to desktop-equivalent L1 analysis
@@ -266,11 +273,11 @@ support any number of locally defined Survey Events through one synchronized
 selector and keep each Event's saved candidates separate. That navigation does
 not itself designate a base/comparison pair or perform calibration.
 
-## Cross sections: accepted MVP and operational qualification
+## Cross sections: accepted baseline and next planning gate
 
 ### Near-term decision gate: the XS 268 issue
 
-Owner direction: defer analysis today, but make a stay-or-go decision before
+Owner direction: make a stay-or-go decision in a dedicated planning discussion before
 further feature expansion. Should all Study Area stream linear referencing
 continue to use the saved Flowline, as it has for a decade, or migrate to a
 polygon-derived channel centerline? XS 268 exposes the difference between
@@ -288,28 +295,30 @@ with consequences. FGDB's longitudinal-reference model owns the governing
 contract. Current routing work preserves Flowline stationing and all established
 distance meanings. No migration or reprocessing is authorized by this reminder.
 
-### Current cross-section refinement
+### Closed cross-section increment
 
-The owner accepts the cross-section layout and deconfliction MVP. The
+On 2026-11-19 the owner accepts method v11 as an "80% solution," sufficiently
+performant and good for now. Cross-section geometry iteration is closed for
+this increment. Remaining shape limitations, including LOB 109-114, are parked
+rather than scheduled refinements. The
 [feature baseline](../features/cross-section-layout.md) owns the final
 requirements, intelligent defaults and scope; the draft schema owns exact
 storage. Keep those artifacts current rather than repeating requirements here.
 
-Documentation/artifact cleanup, computational performance auditing and visible
-loading feedback support continued qualification on other saved Reaches.
+The accepted workflow includes visible loading feedback, reusable preparation
+assets and immutable drafts, and supports testing on other saved Reaches.
 The [performance audit](../performance/cross-sections.md) owns measurements and
-verification limits. Preserve the accepted R1 result and upstream assets.
+verification limits. Preserve the current accepted R1/R2 drafts and upstream assets.
 There is no R1-only product restriction. Further browser editing, cross-Reach
 handling, hydraulic calculations, governed publication and legacy export are
 separate increments.
 
 The owner accepts method-v10 channel polygon pruning as the preparation baseline:
 it removes large, hooked, stubby and narrow arms while retaining the mainstem
-and reviewable raw/removal evidence. Preserve that recipe while refining the
-remaining station/bank-order and floodplain-routing cases. Method v11 extends
+and reviewable raw/removal evidence. Preserve that recipe in later work. Method v11 extends
 bank-order repair to mapped-overbank sections and jointly plans endpoints and
 routes in bounded bend families. This implementation does not change the
-accepted pruning recipe or confer acceptance on unresolved routing or governed hydraulic results.
+accepted pruning recipe or confer governed hydraulic acceptance.
 The feature and performance audit own exact requirements, measurements and limits.
 
 Resolve routine implementation, integration and verification without separate

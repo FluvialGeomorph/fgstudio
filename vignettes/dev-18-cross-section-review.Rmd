@@ -15,9 +15,11 @@ centerlines describe each region independently. They are
 reviewable geometric direction proxies, not measured hydraulic flow paths.
 The accepted MVP baseline in `dev/features/cross-section-layout.md` owns defaults,
 requirements and scientific limits. All saved Streams and Reaches are eligible.
-The owner accepts method-v10 channel polygon pruning and its defaults as the
-preparation baseline. Further station/bank-order, endpoint-distribution and
-bend-routing work must preserve that accepted recipe and its source evidence.
+On 2026-11-19 the owner accepts method v11 as an "80% solution," sufficiently
+performant and good for now. The geometric development increment is closed;
+residual shape optimization is parked. It retains the accepted method-v10
+channel-pruning recipe and defaults. The project plan owns the next planning
+gate: the XS 268 question about the basis for Study Area linear referencing.
 
 1. `mod_study_server()` mounts `cross_section_review_server()` with the linked
    Event selector and upstream revision signals. `load_flowline_points_review()`
@@ -182,11 +184,12 @@ Sibling `test_cross_section_regions.R`, `test_cross_section_layout.R` and
 `test_cross_section_bend.R` cover
 geometry, area/nonoverlap, side labels, containment, artifacts and cross sections.
 `test-cross-section-review.R` and `test-cross-section-store.R` cover interaction,
-invalidation, identity, metadata and GeoPackage reopening. The owner has accepted
-the method-v10 channel-pruning recipe and defaults after review of the R2 arm
-examples. Remaining layout refinements still require review of actual polygons,
+invalidation, identity, metadata and GeoPackage reopening. Owner acceptance of
+the current method-v11 geometric baseline includes its performance and known
+limitations. Testing new Reaches still requires review of actual polygons,
 centerlines and cross sections, especially narrow/disconnected components,
-branching routes and end caps. The legacy toolbox Centerline
+branching routes and end caps. It is not a requirement to continue refining
+the accepted R2 result. The legacy toolbox Centerline
 raster-thinning/PAEK code is inspected context and is not copied or invoked.
 
 `test-cross-section-loading.R` covers prepaint progress, matching-input reuse,
@@ -194,5 +197,6 @@ cancelled loads, Reach selection and worker phase delivery. Performance evidence
 and the repeatable audit entry point are in `dev/performance/cross-sections.md`.
 Backend planar operations use CRS-free working copies only after checking the
 projected source CRS and converting distances; returned geometry, units and
-source artifacts retain the original CRS. Earlier accepted R1 drafts remain
-unchanged; new layout methods create separate immutable revisions.
+source artifacts retain the original CRS. Current accepted R1/R2 revisions
+remain immutable; explicit lifecycle cleanup may retire redundant unedited
+automatic drafts while retaining useful comparison evidence.

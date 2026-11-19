@@ -1,11 +1,34 @@
 # Cross-section layout MVP
 
-Status: owner-accepted MVP requirements and method-v10 channel polygon pruning.
-Method v11 extends bank-order repair and joint endpoint/bend routing while
-retaining that pruning baseline. The accepted result establishes the feature
-requirements below. It is a per-Reach geometric workflow; hydraulic calculations,
-model acceptance, enterprise publication and legacy-format export have their own
-contracts.
+Status: owner-accepted method-v11 baseline, 2026-11-19. The owner considers the
+current result an "80% solution," sufficiently performant and good for now.
+This closes the active cross-section development increment, including the
+accepted method-v10 channel-pruning recipe retained within v11. Residual shape
+improvements are parked unless the owner reopens them. Acceptance covers this
+per-Reach geometric workflow; hydraulic calculations, model acceptance,
+enterprise publication and legacy-format export have separate contracts.
+
+## Design intent and stopping point
+
+Automatic deconfliction is the principal value of this tooling. Produce
+intelligent, deterministic defaults with minimal analyst input, reducing the
+need to hand-draw HEC-RAS-style cross sections. The channel, left descending-bank
+floodplain (LOB) and right descending-bank floodplain (ROB) are independently
+reviewable compartments. Their polygons and centerlines expose how direction
+and routing were derived, so hydraulic engineers can review the artifacts.
+These compartments can support separate future calculations; geometry alone
+does not implement or validate hydraulic formulas.
+
+The accepted balance favors complete, contained, ordered, nonintersecting
+sections over cosmetic perfection or exhaustive search. The tightly fanned
+LOB 109-114 result is an accepted limitation of the present bounded search,
+not an automatic next development task or proof that a better shape is
+impossible. Do not weaken accepted pruning, restore length minimization or
+expand search merely to make every remaining candidate look ideal. Additional
+browser editing, polygon subdivision/quartile guides and further optimization
+are unselected options. The next planning discussion is the
+[XS 268 reference decision](../goals/project-plan.md#near-term-decision-gate-the-xs-268-issue)
+before further feature expansion; this record does not choose a new reference.
 
 ## Final requirements and intelligent defaults
 
@@ -17,7 +40,7 @@ contracts.
 - Start at channel REM 103 ft and floodplain REM 109 ft, relative to 100. Keep
   channel below floodplain. Precompute and persist analytical/display REMs for
   reuse across sessions and layout settings.
-- Use 20 m cross-section spacing, beginning half a spacing upstream of the Reach
+- Use 20 m cross-section spacing along the saved Flowline, beginning half a spacing upstream of the Reach
   outlet. Number sections by mutable integer Seq increasing upstream. Use 20 m
   centerline tangent distance, 2 m polygon-boundary spacing and two Chaikin
   smoothing passes. Tangent distance measures direction; the latter two settings
@@ -28,7 +51,10 @@ contracts.
   explicitly flagged fallback when polygon-centerline direction is unavailable.
 - Deconflict automatically with minimal analyst input. Bank and outer-endpoint
   rank must follow section station order. Cross sections must not intersect or
-  touch one another. Preserve geometry/coverage evidence when a complete valid
+  touch one another, including coincident overbank endpoints. Seek meaningful
+  outer-edge spacing where feasible; numerical separation alone is not the
+  distribution objective, and no universal hydraulic minimum is asserted.
+  Preserve geometry/coverage evidence when a complete valid
   result cannot be constructed; never shorten a segment to conceal a conflict.
 - Allow additional floodplain vertices by default. Prefer feasible straight
   segments, adding multiple bends when needed anywhere inside their component.
@@ -53,6 +79,16 @@ contracts.
   and endpoint names, types and coordinate units. Keep local candidate identity
   distinct from governed FGDB identity. Save-time validation rechecks lineage;
   draft persistence does not confer hydraulic acceptance.
+
+Centerline tangent distance is the distance along a polygon centerline used to
+estimate local direction; it is not a smoothing control. Boundary spacing
+samples the polygon for Voronoi skeleton construction, while smoothing passes
+control the cartographic proposal. The polygon skeleton supplies a route, not
+a guarantee that every smoothed proposal remains contained. Inferred support
+means geometric direction evidence supplied through an indirect/contained
+association or fallback; it is not an observed hydraulic flow measurement.
+Keep direction uncertainty, absent mapped overbanks, failed routing and terrain
+coverage as separate diagnostics.
 
 ## Current geometric method
 
@@ -156,8 +192,7 @@ hydraulic or tributary classification rules. Raw channel, depth-screened
 candidate/removed lobes and reference centerline are
 retained for review. Removed areas remain in the total floodplain partition.
 
-Keep this accepted pruning recipe stable while addressing remaining stationing,
-bank-order and floodplain-routing issues. A routing failure is not evidence
+Keep this accepted pruning recipe stable in subsequent work. A routing failure is not evidence
 that pruning should be weakened or its removed areas excluded from overbanks.
 
 ## Current centerline and bend routing
@@ -185,7 +220,7 @@ It first maximizes complete routes, then reduces crowding of their interiors.
 Clearance preference is derived from neighboring bank spacing, not a channel-width
 or section-length objective. Banks and ordered targets stay fixed. Search is
 bounded and unresolved cases remain flagged. The [R2 investigation](../performance/cross-sections.md#r2-sinuosity-investigation)
-owns qualification evidence; the accepted R1 draft remains an immutable reference.
+owns qualification evidence; accepted R1/R2 method-v11 drafts are the current references.
 
 The loading cue occupies a reserved status slot. Its synchronous-work fallback
 appears only after 650 ms of continuous Shiny busy time; short worker polls do not
@@ -193,7 +228,8 @@ replace phase text or shift the controls/map.
 
 ## Whole-bend endpoint distribution and route quality
 
-The accepted pruning recipe does not resolve the remaining R2 layout issues.
+Channel preparation and cross-section routing are separate stages of the
+accepted method; routing limitations do not invalidate accepted pruning.
 The [tight-bend audit](../performance/cross-sections.md#remaining-tight-bends-and-endpoint-distribution)
 records the original causes and current qualification. Current stations
 are sampled along the saved Flowline, while channel direction comes from the

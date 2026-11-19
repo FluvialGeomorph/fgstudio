@@ -20,8 +20,9 @@ read for every lookup. Do not load every feature history or the entire generated
 network by default. These are
 reviewed navigation routes, not automatically proven runtime call sequences.
 
-For Cross Sections, the feature record identifies owner-accepted method-v10
-channel pruning. Method v11 extends channel repair and joint bend planning in
+For Cross Sections, the feature record owns the accepted method-v11 "80% solution"
+and its retained method-v10 pruning recipe. The increment is closed; residual
+shape/optimization work is parked. Method v11 implements joint bend planning in
 cross_section_bend.R. The performance audit owns qualification and limits; the
 project plan's XS 268 decision gate owns the deferred linear-reference question.
 Routing refinements do not change the accepted pruning recipe or station basis.
