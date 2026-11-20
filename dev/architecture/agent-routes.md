@@ -24,7 +24,15 @@ For Cross Sections, the feature record owns the accepted method-v11 "80% solutio
 and its retained method-v10 pruning recipe. The increment is closed; residual
 shape/optimization work is parked. Method v11 implements joint bend planning in
 cross_section_bend.R. The performance audit owns qualification and limits; the
-project plan's XS 268 decision gate owns the deferred linear-reference question.
+project plan's XS 268 decision records the accepted RAS-style/centerline direction
+for new work/rework and simple/Flowline for legacy compatibility. Centerline
+stationing and FGDB metadata integration remain unfinished; v11 drafts retain
+their actual Flowline stationing.
+The next functional increment follows `dev/goals/cross-section-implementation-plan.md`
+and FGDB ADR-0027: minimum reference/type contract, centerline-referenced RAS
+save/reopen, simple legacy producer replacement, then wider calibration/delivery
+qualification. Do not treat the existing `cross_section()` enrichment function
+as a replacement for the ArcPy `_11_XSLayout.py` generator.
 Routing refinements do not change the accepted pruning recipe or station basis.
 
 | Task | Article | App source | First tests | Backend boundary |

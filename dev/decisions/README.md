@@ -8,6 +8,8 @@ Use architectural decision records for consequential choices that should remain 
 
 ## Current decisions
 
+- [FGDB ADR-0027: two cross-section methods and reference families](../../../FGDB/dev/decisions/adr-0027-two-cross-section-methods-and-reference-families.md): governing cross-repository decision; RAS-style/centerline for new work and rework, simple/Flowline for legacy compatibility. Follow the [implementation plan](../goals/cross-section-implementation-plan.md).
+
 - [NSRS modernization and explicit elevation operations](adr-0009-nsrs-modernization-and-explicit-vertical-operations.md): modernization readiness, epochs, exact units and analyst-controlled vertical changes.
 
 - [Study Area analysis CRS and terrain masks](adr-0008-study-analysis-crs-and-terrain-masks.md): analysis CRS, Event output cell size, shared grid and hierarchical-mask requirements.

@@ -8,6 +8,14 @@ improvements are parked unless the owner reopens them. Acceptance covers this
 per-Reach geometric workflow; hydraulic calculations, model acceptance,
 enterprise publication and legacy-format export have separate contracts.
 
+The subsequent two-method direction is governed by
+[FGDB ADR-0027](../../../FGDB/dev/decisions/adr-0027-two-cross-section-methods-and-reference-families.md):
+RAS-style uses bankfull centerline stationing for new work/rework; simple retains
+Flowline referencing for legacy compatibility. Follow the
+[implementation plan](../goals/cross-section-implementation-plan.md). The baseline
+behavior described here remains Flowline-stationed until that integration lands;
+stationing changes do not reopen optional v11 geometry optimization.
+
 ## Design intent and stopping point
 
 Automatic deconfliction is the principal value of this tooling. Produce

@@ -2,10 +2,23 @@
 
 Current position (2026-11-19): method-v11 cross-section tooling is an accepted,
 sufficiently performant "80% solution" and good for now. Further geometric
-optimization is parked. The next planning conversation is the
+optimization is parked. The owner/team resolved the
 [XS 268 stay-or-go gate](#near-term-decision-gate-the-xs-268-issue), before
-further feature expansion. The remaining roadmap is context, not authorization
-to skip that decision or resume completed cross-section experiments.
+further feature expansion: RAS-style sections use bankfull centerline referencing
+for all new work/rework; simple sections retain Flowline referencing for legacy
+compatibility. FGDB must distinguish the two methods. The remaining roadmap is
+context, not authorization to resume completed cross-section experiments.
+
+Next-session entry point: read this plan, then the
+[two-method implementation plan](cross-section-implementation-plan.md) and
+[FGDB ADR-0027](../../../FGDB/dev/decisions/adr-0027-two-cross-section-methods-and-reference-families.md).
+The owner authorizes moving forward. Complete the minimum shared method/reference
+contract and deliver centerline-referenced RAS-style generation/save/reopen, then
+the open-source simple legacy layout and multi-event/delivery qualification in
+the documented dependency order. The recommended storage is one `cross_section`
+class with controlled method type plus edition/reference records; the exact
+binding remains to be finalized. Flowline remains required for REM creation.
+No optional geometry optimization or wholesale historical reprocessing is implied.
 
 ## Goal and design authority
 
@@ -277,21 +290,41 @@ not itself designate a base/comparison pair or perform calibration.
 
 ### Near-term decision gate: the XS 268 issue
 
-Owner direction: make a stay-or-go decision in a dedicated planning discussion before
-further feature expansion. Should all Study Area stream linear referencing
-continue to use the saved Flowline, as it has for a decade, or migrate to a
-polygon-derived channel centerline? XS 268 exposes the difference between
+Owner/team decision (2026-11-19): **RAS-style** sections use bankfull centerline
+linear referencing for all new work/rework. **Simple** (straight-ish) sections
+use Flowline referencing and remain the legacy backward-compatible method.
+Both geometries remain; Flowline still supports REM creation. FGDB stores method
+and exact reference-frame/geometry/calibration metadata, as specified in the
+[two-method contract](../../../FGDB/dev/schemas/cross-section-feature-contract.md#accepted-two-method-direction).
+The adoption gate is resolved. Physical schema and producer integration are
+unfinished; existing v11 drafts remain Flowline-stationed preparation evidence,
+not completed implementations of the new RAS-style reference contract.
+The [implementation plan](cross-section-implementation-plan.md) owns work order,
+source findings, dependencies, acceptance and the next cohesive delivery. Its
+phase 0 decision is recorded; code and physical schema phases remain unfinished.
+
+The [evidence assessment](xs-268-reference-analysis.md) contains the
+scientific benefits, FGDB coexistence proposal, read-only Copperas archive sample,
+migration/crosswalk options and remaining qualification work. FGDB reconstruction and scientific reprocessing
+are separate work packages; neither wholesale reprocessing nor migration is
+presumed necessary.
+
+The resolved question was whether Study Area stream linear referencing should
+continue to use saved Flowlines or adopt bankfull channel centerlines. FGDB must
+accommodate historical Flowline-referenced and new centerline-referenced
+observations without compulsory historical reprocessing. XS 268 exposes the difference between
 Flowline station spacing and channel-centerline geometry. This question affects
 the entire referencing system, not just cross-section labels or directions.
 
-The later analysis must compare scientific rationale, reproducibility and
+The analysis must compare scientific rationale, reproducibility and
 reference stability across Survey Events, channel thresholds/pruning and route
 versions; network/confluence continuity; historical calibration, reports,
 identities and downstream consumers; and the effort and validation needed to
 reprocess prior projects. Assess whether FGDB reconstruction already entails
 that reprocessing; it is not an established commitment. Evaluate explicit
-versioned migration/crosswalk options and produce a reviewed stay-or-go decision
-with consequences. FGDB's longitudinal-reference model owns the governing
+versioned migration/crosswalk options when common-frame comparisons need them.
+The team's decision supplies the direction; remaining qualification does not
+reopen the adoption gate by default. FGDB's longitudinal-reference model owns the governing
 contract. Current routing work preserves Flowline stationing and all established
 distance meanings. No migration or reprocessing is authorized by this reminder.
 
